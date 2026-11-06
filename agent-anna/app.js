@@ -185,7 +185,7 @@ function stopAudioVisualizer() {
     document.querySelectorAll('.eq-bar').forEach(bar => bar.style.height = '20%');
 }
 
-function toggleMic() {
+function Mic() {
     if (!recognition) initSpeechRecognition();
     if (!recognition) return showCyberNotification("Speech recognition unavailable.", true);
 
@@ -359,7 +359,7 @@ async function sendMessage(forcedQuery = null) {
 
     if (!apiKey) {
         showCyberNotification('Please tap ⚙️ KEYS and paste your Dahl API Key.', true);
-        toggleSettings();
+        Settings();
         return;
     }
     if (!query) return;
@@ -536,8 +536,10 @@ function toggleVoice() {
     }
 
     if (btn) {
+        // Force clean class toggle and update text content reliably
         btn.classList.toggle('active', isVoiceEnabled);
         btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
+        btn.style.pointerEvents = "auto"; // Ensures it never gets stuck locked
     }
     showCyberNotification(`Voice synthesis: ${isVoiceEnabled ? 'ONLINE (ON)' : 'MUTED (OFF)'}`);
 }
