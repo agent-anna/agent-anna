@@ -440,7 +440,7 @@ ${liveTelemetry}`;
     ];
 
     try {
-        const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", {
+      const res = await fetch("https://inference.dahl.global/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
@@ -450,7 +450,7 @@ ${liveTelemetry}`;
                 model: "MiniMaxAI/MiniMax-M2.7",
                 messages: messagesPayload,
                 temperature: 0.1,
-                max_tokens: 1000
+                max_tokens: 4000 // <--- Expanded headroom prevents text truncation
             })
         });
 
