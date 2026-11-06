@@ -46,25 +46,11 @@ window.onload = function() {
     preloadCoreKnowledge();
     initSpeechRecognition();
     initWavCanvas();
-    injectCyberScrollbars();
 };
 
 window.addEventListener('beforeunload', function (e) {
     autoLogSessionEnd();
 });
-
-function injectCyberScrollbars() {
-    if (document.getElementById('cyber-scrollbar-style')) return;
-    const style = document.createElement('style');
-    style.id = 'cyber-scrollbar-style';
-    style.innerHTML = `
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #07090e; }
-        ::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 2px; box-shadow: 0 0 8px rgba(0,255,204,0.4); }
-        ::-webkit-scrollbar-thumb:hover { background: #ff007f; box-shadow: 0 0 12px rgba(255,0,127,0.6); }
-    `;
-    document.head.appendChild(style);
-}
 
 function showCyberNotification(message, isError = false) {
     try {
@@ -307,12 +293,6 @@ async function fetchLiveTelemetry() {
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
     
-    const hasCodeBlock = text.includes('```') || text.includes('function ') || text.includes('const ') || text.length > 400;
-    if (hasCodeBlock) {
-        speakShortAnnouncement("Executing code synthesis silently, Commander.");
-        return;
-    }
-
     try {
         document.body.classList.remove('is-thinking');
         document.body.classList.add('is-speaking');
@@ -325,10 +305,6 @@ function speakText(text) {
 
         let voices = window.speechSynthesis.getVoices();
         if (!voices || voices.length === 0) voices = cachedVoices;
-        if (!voices || voices.length === 0) {
-            loadVoices();
-            voices = cachedVoices;
-        }
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
 
@@ -373,17 +349,6 @@ function speakText(text) {
         document.body.classList.remove('is-speaking');
         updateHUDState("READY");
     }
-}
-
-function speakShortAnnouncement(announcement) {
-    if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
-    try {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(announcement);
-        utterance.pitch = 1.02;
-        utterance.rate = 1.0;
-        window.speechSynthesis.speak(utterance);
-    } catch (e) {}
 }
 
 async function sendMessage(forcedQuery = null) {
@@ -443,7 +408,7 @@ ${liveTelemetry}`;
     ];
 
     try {
-        const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", {
+        const res = await fetch("https://inference.dahl.global/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
@@ -453,7 +418,7 @@ ${liveTelemetry}`;
                 model: "MiniMaxAI/MiniMax-M2.7",
                 messages: messagesPayload,
                 temperature: 0.1,
-                max_tokens: 4000
+                max_tokens: 1000
             })
         });
 
@@ -509,12 +474,12 @@ async function scrapeWebPage(forcedUrl = null) {
     if (input && !forcedUrl) input.value = '';
 
     const isUrl = targetQuery.startsWith('http://') || targetQuery.startsWith('https://');
-    const scoutUrl = isUrl ? targetQuery : `[https://html.duckduckgo.com/html/?q=$](https://html.duckduckgo.com/html/?q=$){encodeURIComponent(targetQuery)}`;
+    const scoutUrl = isUrl ? targetQuery : `https://html.duckduckgo.com/html/?q=${encodeURIComponent(targetQuery)}`;
 
     const proxyUrls = [
-        `[https://r.jina.ai/$](https://r.jina.ai/$){scoutUrl}`,
-        `[https://api.allorigins.win/get?url=$](https://api.allorigins.win/get?url=$){encodeURIComponent(scoutUrl)}`,
-        `[https://corsproxy.io/?$](https://corsproxy.io/?$){encodeURIComponent(scoutUrl)}`
+        `https://r.jina.ai/${scoutUrl}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(scoutUrl)}`,
+        `https://corsproxy.io/?${encodeURIComponent(scoutUrl)}`
     ];
 
     let rawData = "";
@@ -624,7 +589,7 @@ function clearLogs() {
             chatContainer.innerHTML = `
                 <div class="message assistant" id="msg_cleared">
                     <div class="msg-header">AA01 Core</div>
-                    <div class="msg-body">Console history and memory state cleared. Standby mode, Commander.</div>
+                    <div style="white-space:pre-wrap; margin-top: 6px;">Console history and memory state cleared. Standby mode, Commander.</div>
                     <div class="action-row">
                         <button class="action-chip" onclick="handleAction('summarize', 'msg_cleared')">1. SUMMARIZE</button>
                         <button class="action-chip" onclick="handleAction('save', 'msg_cleared')">2. SAVE AS .MD</button>
@@ -650,7 +615,7 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
         return false;
     }
 
-    const apiUrl = `[https://api.github.com/repos/$](https://api.github.com/repos/$){REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
 
     try {
         const getRes = await fetch(apiUrl, {
@@ -759,7 +724,7 @@ function appendMsg(text, sender, label, includeActions = true) {
     div.className = `message ${sender}`;
     div.id = messageId;
     
-    let actionsHTML = includeActions ? `
+    let actionsHTML = `
         <div class="action-row">
             <button class="action-chip" onclick="handleAction('summarize', '${messageId}')">1. SUMMARIZE</button>
             <button class="action-chip" onclick="handleAction('save', '${messageId}')">2. SAVE AS .MD</button>
@@ -767,11 +732,11 @@ function appendMsg(text, sender, label, includeActions = true) {
             <button class="action-chip" onclick="copyToClipboard('${messageId}', this)">COPY</button>
             <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
         </div>
-    ` : '';
+    `;
 
     div.innerHTML = `
-        <div class="msg-header">${label}</div>
-        <div class="msg-body">${text}</div>
+        <div class="msg-header"><span>${label}</span></div>
+        <div style="white-space:pre-wrap; margin-top: 6px;">${text}</div>
         ${actionsHTML}
     `;
 
