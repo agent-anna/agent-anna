@@ -53,8 +53,8 @@
             </div>
             
             <div class="agent-nameplate">
-                <h2 id="agent-title">AA01 // COMMANDER</h2>
-                <p>Autonomous Telemetry & Agent CEO</p>
+                <h2 id="agent-title">AA01 // SUB-APP CORE</h2>
+                <p>Autonomous Telemetry & Voice Unit</p>
             </div>
 
             <div class="eq-container">
@@ -67,10 +67,10 @@
         </div>
     </div>
 
-    <!-- RIGHT CHAT CONSOLE PANE (Width controlled naturally by CSS flex layout) -->
+    <!-- RIGHT CHAT CONSOLE PANE -->
     <div class="chat-console-pane">
         <div class="chat-header">
-            <span>AGENT [AA01]</span>
+            <span>CONSOLE [JUV NEURAL]</span>
             <span id="latency-display" class="latency-badge">TRIP LATENCY: 0.00s</span>
             <div style="display: flex; gap: 6px;">
                 <button class="ctrl-btn" onclick="clearLogs()" title="Clear Logs">🧹</button>
@@ -102,15 +102,18 @@
         </div>
 
         <div id="chat-container">
-            <div class="message assistant">
-                <div class="msg-header">AA01 Core</div>
-                <div class="msg-body">Sub-app isolated core online. Tactical layout locked. Direct PAT sync ready.</div>
+            <div class="message assistant" id="msg_init">
+                <div class="msg-header">
+                    <span>AA01 Core</span>
+                    <button class="action-chip del-btn" onclick="deleteMessage('msg_init')" title="Delete Message">🗑️ DEL</button>
+                </div>
+                <div class="msg-body">Sub-app isolated core online. Tactical layout locked. Direct PAT sync ready. Press backtick (`) anytime to toggle mic.</div>
             </div>
         </div>
 
         <div class="input-control-bar">
             <button class="ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Toggle Microphone">🎤</button>
-            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry..." onkeydown="handleKey(event)">
+            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry... (` to talk)" onkeydown="handleKey(event)">
             <button class="ctrl-btn" onclick="sendMessage()">SEND</button>
         </div>
     </div>
