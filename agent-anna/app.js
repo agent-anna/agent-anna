@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA // AUTONOMOUS SELF-SUFFICIENT CORE ENGINE
+// AGENT ANNA // AUTONOMOUS ENGINE & PERSISTENT MEMORY MATRIX
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -11,6 +11,9 @@ let isListening = false;
 let cachedVoices = [];
 let coreKnowledgeCache = null;
 let messagePayloadStore = {};
+
+// MULTI-TURN CONVERSATION MEMORY BUFFER
+let chatHistory = [];
 
 let audioCtx = null;
 let analyser = null;
@@ -44,7 +47,6 @@ window.onload = function() {
     initWavCanvas();
 };
 
-// AUTOMATED SESSION EXIT LOGGING HOOK
 window.addEventListener('beforeunload', function (e) {
     autoLogSessionEnd();
 });
@@ -142,7 +144,7 @@ function stopListeningUI() {
 }
 
 // =================================================================
-// 2. DYNAMIC KNOWLEDGE & PLANS MEMORY HARVESTER
+// 2. DYNAMIC KNOWLEDGE HARVESTER
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -162,7 +164,7 @@ async function preloadCoreKnowledge() {
     let snippets = [];
     await Promise.all(corePaths.map(async (path) => {
         try {
-            let res = await fetch(`${path}?t=${Date.now()}`);
+            let res = await fetch(`./${path}?t=${Date.now()}`);
             if (!res.ok) {
                 const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}?t=${Date.now()}`;
                 res = await fetch(rawUrl);
@@ -193,7 +195,7 @@ async function fetchLiveTelemetry() {
 
     let status = "SYNCHRONIZED", activeBot = "Grok Multi-Asset Scanner", signal = "Active";
     try {
-        const localRes = await fetch(`portal-relay.json?t=${Date.now()}`);
+        const localRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
         if (localRes.ok) {
             const data = await localRes.json();
             status = data.status || status;
@@ -216,7 +218,7 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIZER & INFERENCE LOOP
+// 3. VOICE SYNTHESIS & MULTI-TURN INFERENCE LOOP
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -270,6 +272,9 @@ async function sendMessage(forcedQuery = null) {
     appendMsg(query, 'user', 'Commander');
     if (input && !forcedQuery) input.value = '';
 
+    // RECORD USER QUERY IN CONVERSATION HISTORY
+    chatHistory.push({ role: "user", content: query });
+
     const startTime = performance.now();
 
     document.body.classList.remove('is-speaking');
@@ -282,13 +287,19 @@ async function sendMessage(forcedQuery = null) {
     const systemPrompt = `You are AGENT ANNA 01 (AA01). 
 Rules:
 1. Provide precise, executive answers suitable for speech synthesis.
-2. Integrate active persistent plans, roadmap targets, and consolidated memory into your responses.
+2. Maintain context awareness across the running conversation history.
 
 Persistent System Directives & Active Memory Matrix:
 ${coreKnowledgeCache}
 
 Telemetry & Live Market Data:
 ${liveTelemetry}`;
+
+    // CONSTRUCT FULL PAYLOAD WITH SYSTEM PROMPT & ENTIRE CONVERSATION HISTORY
+    const messagesPayload = [
+        { role: "system", content: systemPrompt },
+        ...chatHistory
+    ];
 
     try {
         const res = await fetch("https://inference.dahl.global/v1/chat/completions", {
@@ -299,10 +310,7 @@ ${liveTelemetry}`;
             },
             body: JSON.stringify({
                 model: "MiniMaxAI/MiniMax-M2.7",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: query }
-                ],
+                messages: messagesPayload,
                 temperature: 0.1,
                 max_tokens: 1000
             })
@@ -312,6 +320,9 @@ ${liveTelemetry}`;
 
         const data = await res.json();
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+        // RECORD ANNA'S RESPONSE IN CONVERSATION HISTORY
+        chatHistory.push({ role: "assistant", content: reply });
 
         const endTime = performance.now();
         const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
@@ -335,11 +346,13 @@ ${liveTelemetry}`;
 // 4. AUTONOMOUS GITHUB API COMMIT & INGESTION CORE ENGINE
 // =================================================================
 async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
-    let ghToken = localStorage.getItem('gh_pat_token');
+    const ghInput = document.getElementById('gh-token');
+    let ghToken = ghInput ? ghInput.value.trim() : localStorage.getItem('gh_pat_token');
+
     if (!ghToken) {
-        ghToken = prompt("Enter your GitHub Personal Access Token (PAT) with repo write permissions:");
-        if (ghToken) localStorage.setItem('gh_pat_token', ghToken.trim());
-        else return false;
+        alert("Please tap ⚙️ KEYS and paste your GitHub PAT token.");
+        toggleSettings();
+        return false;
     }
 
     const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
@@ -417,7 +430,7 @@ async function handleAction(actionType, messageId) {
 
 async function autoLogSessionEnd() {
     const timestamp = new Date().toISOString();
-    const logPayload = `### AUTOMATED SESSION CLOSE LOG [${timestamp}]\n- Session ended by Commander.\n- State matrix synchronized.`;
+    const logPayload = `### AUTOMATED SESSION CLOSE LOG [${timestamp}]\n- Session ended by Commander.\n- Context synchronized.`;
     commitFileToGitHub("agent-anna/plans/logs/session-log.md", logPayload, `Auto Session Close Log [${timestamp}]`);
 }
 
@@ -561,12 +574,13 @@ function handleKey(event) {
 
 function clearLogs() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    chatHistory = [];
     const chatContainer = document.getElementById('chat-container');
     if (chatContainer) {
         chatContainer.innerHTML = `
             <div class="message assistant">
                 <div class="msg-header">AA01 Core</div>
-                <div class="msg-body">Console history cleared. Standby mode.</div>
+                <div class="msg-body">Console history and memory state cleared. Standby mode.</div>
             </div>
         `;
     }
@@ -605,7 +619,7 @@ function appendMsg(text, sender, label, includeActions = false) {
 }
 
 // =================================================================
-// 5. DUAL NEURON CANVAS RENDERER (DUAL WAVE TRACES)
+// 5. DUAL NEURON CANVAS RENDERER
 // =================================================================
 function initWavCanvas() {
     const canvas = document.getElementById('wav-canvas');
