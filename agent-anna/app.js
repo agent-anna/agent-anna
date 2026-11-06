@@ -26,7 +26,7 @@ window.onload = function() {
             const keyInput = document.getElementById('api-key');
             if (keyInput) keyInput.value = savedKey;
         }
-        const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token');
+        const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN');
         if (savedGhToken) {
             const ghInput = document.getElementById('gh-token');
             if (ghInput) ghInput.value = savedGhToken;
@@ -51,60 +51,64 @@ window.addEventListener('beforeunload', function (e) {
 });
 
 function showCyberNotification(message, isError = false) {
-    let banner = document.getElementById('cyber-notification-banner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'cyber-notification-banner';
-        banner.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 99999;
-            padding: 14px 20px;
-            background: rgba(11, 15, 25, 0.95);
-            border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
-            color: ${isError ? '#ff0055' : '#00ffcc'};
-            font-family: monospace;
-            font-size: 12px;
-            letter-spacing: 1px;
-            box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
-            border-radius: 4px;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            opacity: 0;
-            transform: translateY(-10px);
-        `;
-        document.body.appendChild(banner);
-    }
+    try {
+        let banner = document.getElementById('cyber-notification-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'cyber-notification-banner';
+            banner.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 99999;
+                padding: 14px 20px;
+                background: rgba(11, 15, 25, 0.95);
+                border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
+                color: ${isError ? '#ff0055' : '#00ffcc'};
+                font-family: monospace;
+                font-size: 12px;
+                letter-spacing: 1px;
+                box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
+                border-radius: 4px;
+                transition: opacity 0.4s ease, transform 0.4s ease;
+                opacity: 0;
+                transform: translateY(-10px);
+            `;
+            document.body.appendChild(banner);
+        }
 
-    banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
-    banner.style.color = isError ? '#ff0055' : '#00ffcc';
-    banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
-    banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
+        banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
+        banner.style.color = isError ? '#ff0055' : '#00ffcc';
+        banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
+        banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
 
-    setTimeout(() => {
-        banner.style.opacity = '1';
-        banner.style.transform = 'translateY(0)';
-    }, 10);
+        setTimeout(() => {
+            banner.style.opacity = '1';
+            banner.style.transform = 'translateY(0)';
+        }, 10);
 
-    setTimeout(() => {
-        banner.style.opacity = '0';
-        banner.style.transform = 'translateY(-10px)';
-    }, 4000);
+        setTimeout(() => {
+            banner.style.opacity = '0';
+            banner.style.transform = 'translateY(-10px)';
+        }, 4000);
+    } catch (err) {}
 }
 
 function triggerHudStrobe() {
-    const hudPane = document.querySelector('.agent-hud-pane');
-    if (!hudPane) return;
+    try {
+        const hudPane = document.querySelector('.agent-hud-pane');
+        if (!hudPane) return;
 
-    let flashes = 0;
-    const interval = setInterval(() => {
-        hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 35px #00ffcc' : 'none';
-        flashes++;
-        if (flashes > 5) {
-            clearInterval(interval);
-            hudPane.style.boxShadow = 'inset 0 0 15px rgba(0, 255, 204, 0.05)';
-        }
-    }, 150);
+        let flashes = 0;
+        const interval = setInterval(() => {
+            hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 35px #00ffcc' : 'none';
+            flashes++;
+            if (flashes > 5) {
+                clearInterval(interval);
+                hudPane.style.boxShadow = 'inset 0 0 15px rgba(0, 255, 204, 0.05)';
+            }
+        }, 150);
+    } catch (e) {}
 }
 
 // =================================================================
@@ -204,7 +208,9 @@ function stopListeningUI() {
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
-    cachedVoices = window.speechSynthesis.getVoices();
+    try {
+        cachedVoices = window.speechSynthesis.getVoices();
+    } catch (e) {}
 }
 
 async function preloadCoreKnowledge() {
@@ -221,18 +227,14 @@ async function preloadCoreKnowledge() {
     await Promise.all(corePaths.map(async (path) => {
         try {
             let res = await fetch(`./${path}?t=${Date.now()}`);
-            if (!res.ok) {
-                const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}?t=${Date.now()}`;
-                res = await fetch(rawUrl);
-            }
             if (res.ok) {
                 const text = await res.text();
                 const cleanText = text.replace(/<[^>]*>/g, '').trim();
-                if (cleanText) snippets.push(`[PERSISTENT MATRIX SOURCE: ${path}]\n${cleanText}`);
+                if (cleanText) snippets.push(`[MATRIX SOURCE: ${path}]\n${cleanText}`);
             }
         } catch (e) {}
     }));
-    coreKnowledgeCache = snippets.join('\n\n---\n\n');
+    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Core knowledge matrix online.]";
 }
 
 async function fetchLiveTelemetry() {
@@ -276,64 +278,67 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & BRITISH LADY VOICE LOCK + KILLSWITCH
+// 3. VOICE SYNTHESIS & ROBUST CONTROLS
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
     
-    document.body.classList.remove('is-thinking');
-    document.body.classList.add('is-speaking');
-    updateHUDState("SPEAKING");
+    try {
+        document.body.classList.remove('is-thinking');
+        document.body.classList.add('is-speaking');
+        updateHUDState("SPEAKING");
 
-    window.speechSynthesis.cancel();
-    
-    const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
-    if (!cleanText) return;
+        window.speechSynthesis.cancel();
+        
+        const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
+        if (!cleanText) return;
 
-    let voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) voices = cachedVoices;
+        let voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) voices = cachedVoices;
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
+        const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    const englishLadyVoices = [
-        "Google UK English Female",
-        "en-GB-Neural2-F",
-        "Sonia",
-        "Hazel",
-        "Samantha",
-        "Victoria",
-        "Google US English"
-    ];
-    
-    let selectedVoice = voices.find(v => englishLadyVoices.some(p => v.name.includes(p)));
-    
-    if (!selectedVoice) {
-        selectedVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
+        const englishLadyVoices = [
+            "Google UK English Female",
+            "en-GB-Neural2-F",
+            "Sonia",
+            "Hazel",
+            "Samantha",
+            "Victoria",
+            "Google US English"
+        ];
+        
+        let selectedVoice = voices.find(v => englishLadyVoices.some(p => v.name.includes(p)));
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
+        }
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.startsWith('en'));
+        }
+
+        if (selectedVoice) utterance.voice = selectedVoice;
+        
+        utterance.pitch = 1.02;
+        utterance.rate = 0.98;
+
+        utterance.onstart = () => { 
+            document.body.classList.add('is-speaking'); 
+            updateHUDState("SPEAKING"); 
+        };
+        utterance.onend = () => { 
+            document.body.classList.remove('is-speaking'); 
+            updateHUDState("READY"); 
+        };
+        utterance.onerror = () => { 
+            document.body.classList.remove('is-speaking'); 
+            updateHUDState("READY"); 
+        };
+
+        window.speechSynthesis.speak(utterance);
+    } catch (e) {
+        document.body.classList.remove('is-speaking');
+        updateHUDState("READY");
     }
-
-    if (!selectedVoice) {
-        selectedVoice = voices.find(v => v.lang.startsWith('en'));
-    }
-
-    if (selectedVoice) utterance.voice = selectedVoice;
-    
-    utterance.pitch = 1.02;
-    utterance.rate = 0.98;
-
-    utterance.onstart = () => { 
-        document.body.classList.add('is-speaking'); 
-        updateHUDState("SPEAKING"); 
-    };
-    utterance.onend = () => { 
-        document.body.classList.remove('is-speaking'); 
-        updateHUDState("READY"); 
-    };
-    utterance.onerror = () => { 
-        document.body.classList.remove('is-speaking'); 
-        updateHUDState("READY"); 
-    };
-
-    window.speechSynthesis.speak(utterance);
 }
 
 async function sendMessage(forcedQuery = null) {
@@ -410,7 +415,12 @@ ${liveTelemetry}`;
             })
         });
 
-        if (!res.ok) throw new Error(`API Error ${res.status}`);
+        if (!res.ok) {
+            if (res.status === 429) {
+                throw new Error("API Rate Limit / Quota Exceeded (429). Please rotate your Dahl API key or wait a moment.");
+            }
+            throw new Error(`API Error ${res.status}`);
+        }
 
         const data = await res.json();
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
@@ -431,16 +441,82 @@ ${liveTelemetry}`;
     } catch (err) {
         document.body.classList.remove('is-thinking');
         updateHUDState("ERROR");
-        appendMsg(`Execution Error: ${err.message}.`, 'assistant', 'System Alert', false);
+        appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
     }
 }
 
 // =================================================================
-// 4. AUTONOMOUS GITHUB API COMMIT & INGESTION CORE ENGINE
+// 4. UI INTERACTION & ACTION ROW HANDLERS
 // =================================================================
+function toggleVoice() {
+    isVoiceEnabled = !isVoiceEnabled;
+    const btn = document.getElementById('voice-btn');
+    
+    if (!isVoiceEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        document.body.classList.remove('is-speaking');
+        updateHUDState("READY");
+    }
+
+    if (btn) {
+        btn.className = isVoiceEnabled ? "ctrl-btn active" : "ctrl-btn";
+        btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
+    }
+}
+
+function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    if (panel) {
+        panel.style.display = (panel.style.display === 'block' || panel.style.display === '') ? 'none' : 'block';
+    }
+}
+
+function saveKey() {
+    try {
+        const el = document.getElementById('api-key');
+        const ghEl = document.getElementById('gh-token');
+        
+        if (el) {
+            const val = el.value.trim();
+            localStorage.setItem('dahl_key', val);
+            sessionStorage.setItem('dahl_key', val);
+        }
+        if (ghEl) {
+            const val = ghEl.value.trim();
+            localStorage.setItem('gh_pat_token', val);
+            sessionStorage.setItem('gh_pat_token', val);
+            localStorage.setItem('GH_TOKEN', val);
+        }
+        showCyberNotification("Credentials saved successfully.");
+        toggleSettings();
+    } catch (e) {
+        showCyberNotification("Error saving credentials.", true);
+    }
+}
+
+function clearLogs() {
+    try {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        chatHistory = [];
+        const chatContainer = document.getElementById('chat-container');
+        if (chatContainer) {
+            chatContainer.innerHTML = `
+                <div class="message assistant" id="msg_cleared">
+                    <div class="msg-header">AA01 Core</div>
+                    <div class="msg-body">Console history and memory state cleared. Standby mode.</div>
+                    <div class="action-row">
+                        <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_cleared')">🗑️ DEL</button>
+                    </div>
+                </div>
+            `;
+        }
+        showCyberNotification("Console logs cleared.");
+    } catch (e) {}
+}
+
 async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     const ghInput = document.getElementById('gh-token');
-    let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || "");
+    let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
 
     if (!ghToken) {
         showCyberNotification("Please tap ⚙️ KEYS and paste your GitHub PAT token.", true);
@@ -503,6 +579,7 @@ async function handleAction(actionType, messageId) {
         a.download = `agent-anna-report-${Date.now()}.md`;
         a.click();
         URL.revokeObjectURL(url);
+        showCyberNotification("Report successfully downloaded as .md file.");
     } else if (actionType === 'ingest') {
         updateHUDState("INGESTING");
         const timestamp = new Date().toISOString();
@@ -522,110 +599,6 @@ async function handleAction(actionType, messageId) {
     }
 }
 
-function deleteMessage(messageId) {
-    const msgElement = document.getElementById(messageId);
-    if (msgElement) {
-        const textContent = messagePayloadStore[messageId];
-        if (textContent) {
-            chatHistory = chatHistory.filter(item => item.content !== textContent);
-            delete messagePayloadStore[messageId];
-        }
-        msgElement.remove();
-        showCyberNotification("Message purged from session and memory buffer.");
-    }
-}
-
-async function autoLogSessionEnd() {
-    const timestamp = new Date().toISOString();
-    const logPayload = `### AUTOMATED SESSION CLOSE LOG [${timestamp}]\n- Session ended by Commander.\n- Context synchronized.`;
-    commitFileToGitHub("agent-anna/plans/logs/session-log.md", logPayload, `Auto Session Close Log [${timestamp}]`);
-}
-
-function launchLocalServer() {
-    window.open('http://localhost:8000', '_blank');
-    const msg = "Local server portal accessed. Run 'python -m http.server 8000' in PowerShell.";
-    appendMsg(msg, 'assistant', 'AA01 Tactical Alert', true);
-    speakText(msg);
-}
-
-function triggerManualTelemetry() {
-    sendMessage("Provide live crypto market telemetry including BTC, ETH, BNB, DOGE, and DRC-20 SHI* token rates.");
-}
-
-async function scrapeWebPage(forcedUrl = null) {
-    const input = document.getElementById('user-input');
-    const targetQuery = forcedUrl || (input ? input.value.trim() : "");
-    
-    if (!targetQuery) {
-        showCyberNotification("Enter a search term or target URL in the input box first.", true);
-        if (input) input.focus();
-        return;
-    }
-
-    const startTime = performance.now();
-    document.body.classList.add('is-thinking');
-    updateHUDState("SCRAPING");
-    appendMsg(`Executing Global Scout: "${targetQuery}"`, 'user', 'Commander');
-    if (input && !forcedUrl) input.value = '';
-
-    const isUrl = targetQuery.startsWith('http://') || targetQuery.startsWith('https://');
-    const scoutUrl = isUrl ? targetQuery : `https://html.duckduckgo.com/html/?q=${encodeURIComponent(targetQuery)}`;
-
-    const proxyUrls = [
-        `https://r.jina.ai/${scoutUrl}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(scoutUrl)}`,
-        `https://corsproxy.io/?${encodeURIComponent(scoutUrl)}`
-    ];
-
-    let rawData = "";
-    let success = false;
-
-    for (const pUrl of proxyUrls) {
-        try {
-            const res = await fetch(pUrl, { signal: AbortSignal.timeout(8000) });
-            if (res.ok) {
-                if (pUrl.includes('allorigins')) {
-                    const json = await res.json();
-                    rawData = json.contents || "";
-                } else {
-                    rawData = await res.text();
-                }
-                if (rawData && rawData.length > 30) {
-                    success = true;
-                    break;
-                }
-            }
-        } catch (e) {}
-    }
-
-    if (!success) {
-        rawData = `[FALLBACK SCOUT HARVEST REPORT FOR: "${targetQuery}"]\n- Target query successfully processed through local inference fallback matrix.\n- Context verified against active knowledge directives.\n- Status: Operational intelligence ready for executive summarization.`;
-    }
-
-    const cleanText = rawData.replace(/<[^>]*>/g, '\n').replace(/\n+/g, '\n').trim();
-    const lines = cleanText.split('\n').filter(l => l.trim().length > 2);
-    const snippet = lines.slice(0, 50).join('\n');
-    
-    const report = `[LIVE WEB SCOUT HARVEST: "${targetQuery}"]\n-----------------------------------\n${snippet}\n... [Harvest complete. Ready for summarization or ingestion.]`;
-
-    const endTime = performance.now();
-    const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
-    const latencyBadge = document.getElementById('latency-display');
-    if (latencyBadge) latencyBadge.innerText = `SCRAPE LATENCY: ${tripSeconds}s`;
-
-    document.body.classList.remove('is-thinking');
-    updateHUDState("READY");
-
-    appendMsg(report, 'assistant', `AA01 Scout Link [${tripSeconds}s]`, true);
-    speakText(`Global scout harvest complete for ${targetQuery}. Ready for command.`);
-}
-
-function triggerMilitaryProtocol() {
-    const protocolText = "MILITARY PROTOCOL ENGAGED: Executing deep diagnostic sweep and telemetry verification.";
-    appendMsg(protocolText, 'assistant', 'AA01 TACTICAL COMMAND', true);
-    speakText(protocolText);
-}
-
 function copyToClipboard(messageId, btnElement) {
     const textContent = messagePayloadStore[messageId] || "";
     navigator.clipboard.writeText(textContent).then(() => {
@@ -634,80 +607,18 @@ function copyToClipboard(messageId, btnElement) {
             btnElement.innerText = "COPIED!";
             setTimeout(() => { btnElement.innerText = originalText; }, 1500);
         }
-    }).catch(err => {});
+        showCyberNotification("Message copied to clipboard.");
+    }).catch(err => {
+        showCyberNotification("Failed to copy to clipboard.", true);
+    });
 }
 
-function updateHUDState(stateLabel) {
-    const stateText = document.getElementById('state-text');
-    if (stateText) stateText.innerText = stateLabel;
-    const statusBar = document.getElementById('status-bar');
-    if (statusBar) {
-        if (["REASONING", "LISTENING", "SCRAPING", "INGESTING"].includes(stateLabel)) {
-            statusBar.classList.add('active');
-        } else {
-            statusBar.classList.remove('active');
-        }
-    }
-}
-
-function toggleVoice() {
-    isVoiceEnabled = !isVoiceEnabled;
-    const btn = document.getElementById('voice-btn');
-    
-    if (!isVoiceEnabled && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        document.body.classList.remove('is-speaking');
-        updateHUDState("READY");
-    }
-
-    if (btn) {
-        btn.className = isVoiceEnabled ? "ctrl-btn active" : "ctrl-btn";
-        btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
-    }
-}
-
-function toggleSettings() {
-    const panel = document.getElementById('settings-panel');
-    if (panel) panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
-}
-
-function saveKey() {
-    const el = document.getElementById('api-key');
-    const ghEl = document.getElementById('gh-token');
-    
-    if (el) {
-        const val = el.value.trim();
-        localStorage.setItem('dahl_key', val);
-        sessionStorage.setItem('dahl_key', val);
-    }
-    if (ghEl) {
-        const val = ghEl.value.trim();
-        localStorage.setItem('gh_pat_token', val);
-        sessionStorage.setItem('gh_pat_token', val);
-    }
-}
-
-function handleKey(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        sendMessage();
-    }
-}
-
-function clearLogs() {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    chatHistory = [];
-    const chatContainer = document.getElementById('chat-container');
-    if (chatContainer) {
-        chatContainer.innerHTML = `
-            <div class="message assistant" id="msg_cleared">
-                <div class="msg-header">AA01 Core</div>
-                <div class="msg-body">Console history and memory state cleared. Standby mode.</div>
-                <div class="action-row">
-                    <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_cleared')">🗑️ DEL</button>
-                </div>
-            </div>
-        `;
+function deleteMessage(messageId) {
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) {
+        delete messagePayloadStore[messageId];
+        msgElement.remove();
+        showCyberNotification("Message purged from buffer.");
     }
 }
 
@@ -749,6 +660,19 @@ function appendMsg(text, sender, label, includeActions = false) {
 
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+}
+
+function updateHUDState(stateLabel) {
+    const stateText = document.getElementById('state-text');
+    if (stateText) stateText.innerText = stateLabel;
+    const statusBar = document.getElementById('status-bar');
+    if (statusBar) {
+        if (["REASONING", "LISTENING", "SCRAPING", "INGESTING"].includes(stateLabel)) {
+            statusBar.classList.add('active');
+        } else {
+            statusBar.classList.remove('active');
+        }
+    }
 }
 
 // =================================================================
@@ -804,4 +728,25 @@ function initWavCanvas() {
         requestAnimationFrame(drawDualWaves);
     }
     drawDualWaves();
+}
+
+async function autoLogSessionEnd() {}
+
+function launchLocalServer() {
+    window.open('http://localhost:8000', '_blank');
+}
+
+function triggerManualTelemetry() {
+    sendMessage("Provide live crypto market telemetry including BTC, ETH, BNB, DOGE, and DRC-20 SHI* token rates.");
+}
+
+function triggerMilitaryProtocol() {
+    sendMessage("MILITARY PROTOCOL ENGAGED: Executing deep diagnostic sweep.");
+}
+
+function handleKey(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
 }
