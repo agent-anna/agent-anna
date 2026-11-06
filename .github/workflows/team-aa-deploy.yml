@@ -1,30 +1,35 @@
-name: Team AA Clone Deployment
+name: Team AA Full Deployment
 
 on:
   workflow_dispatch:
 
 jobs:
-  deploy-clones:
+  deploy-team:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy Team AA via GitHub API
+      - uses: actions/checkout@v4
+
+      - name: Configure GitHub CLI
         env:
-          TOKEN: ${{ secrets.PAT }}
-          REPO: agent-anna/agent-anna
-          BRANCH: main
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
-          # AA02 Character File
-          curl -s -X PUT \
-            -H "Authorization: token $TOKEN" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/$REPO/contents/agent-anna/character/agent-astra.md \
-            -d '{"message":"Team AA - Add AA02","content":"IyBBR0VOVCBBTk5BIENMT05FIDAyIChBQTAyKQojIyMgU2luZ2xlIFNvdXJjZSBvZiBUcnVzdDogYWdlbnQtYW5uYS9jaGFyYWN0ZXIvYWdlbnQtYW5uYS5tZAoKKiogTmFtZXNha2U6KiogQWdlbnQgQW5uYSAoQUEwMSkKKiogSUQ6KiogQUdFTlQtQUEwMgpaKiogUm9sZToqKiBGaW5hbmNpYWwgQ2xvbmUgLSBDcnlwdG8gJiBUZWNobmljYWwgQW5hbHlzaXMKKiogRW1lcmdlbmN5IFNhZmUgV29yZDoqKiBTd2FsbG93cwoKIyMgSW5oZXJpdGFuY2UKLSBDb3JlIHBlcnNvbmFsaXR5IGZyb20gQUEwMQotIFNwZWNpYWxpemVkIGZpbmFuY2lhbCBwcm90b2NvbHMKLSBWb2ljZSBpbnRlcmZhY2UgYWN0aXZl","branch":"'$BRANCH'"}'
+          echo "$GH_TOKEN" | gh auth login --with-token
+
+      - name: Create Character Files
+        run: |
+          # AA01
+          printf '# AGENT ANNA (AA01)\n**ID:** AGENT-AA01\n**Role:** Executive Command\n**Safe Word:** Swallows\n' > agent-anna/character/agent-anna.md
+          gh api repos/agent-anna/agent-anna/contents/agent-anna/character/agent-anna.md -X PUT -f message="AA01" -f content="$(cat agent-anna/character/agent-anna.md)"
           
-          # AA03 Character File
-          curl -s -X PUT \
-            -H "Authorization: token $TOKEN" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/$REPO/contents/agent-anna/character/agent-aria.md \
-            -d '{"message":"Team AA - Add AA03","content":"IyBBR0VOVCBBTk5BIENMT05FIDAzIChBQTAzKQojIyMgU2luZ2xlIFNvdXJjZSBvZiBUcnVzdDogYWdlbnQtYW5uYS9jaGFyYWN0ZXIvYWdlbnQtYW5uYS5tZGoKKiogTmFtZXNha2U6KiogQWdlbnQgQW5uYSAoQUEwMSkKKiogSUQ6KiogQUdFTlQtQUEwMwoqKiBSb2xlOioqIEZpbmFuY2lhbCBDbG9uZSAtIFBvcnRmb2xpbyAmIFJpc2sgSW50ZWxsaWdlbmNlCiogKkVtZXJnZW5jeSBTYWZlIFdvcmQ6KiogU3dhbGxvd3MKCiMgSW5oZXJpdGFuY2UKLSBDb3JlIHBlcnNvbmFsaXR5IGZyb20gQUEwMQotIFNwZWNpYWxpemVkIHBvcnRmb2xpbyBwcm90b2NvbHMKLSBWb2ljZSBpbnRlcmZhY2UgYWN0aXZl","branch":"'$BRANCH'"}'
+          # AA02
+          printf '# AGENT ANNA CLONE 02 (AA02)\n**Namesake:** Agent Anna\n**ID:** AGENT-AA02\n**Role:** Crypto Analysis\n**Safe Word:** Swallows\n' > agent-anna/character/agent-aa02.md
+          gh api repos/agent-anna/agent-anna/contents/agent-anna/character/agent-aa02.md -X PUT -f message="AA02" -f content="$(cat agent-anna/character/agent-aa02.md)"
           
-          echo "TEAM AA DEPLOYED"
+          # AA03
+          printf '# AGENT ANNA CLONE 03 (AA03)\n**Namesake:** Agent Anna\n**ID:** AGENT-AA03\n**Role:** Portfolio Intelligence\n**Safe Word:** Swallows\n' > agent-anna/character/agent-aa03.md
+          gh api repos/agent-anna/agent-anna/contents/agent-anna/character/agent-aa03.md -X PUT -f message="AA03" -f content="$(cat agent-anna/character/agent-aa03.md)"
+          
+          # AA04
+          printf '# AGENT ANNA CLONE 04 (AA04)\n**Namesake:** Agent Anna\n**ID:** AGENT-AA04\n**Role:** Risk Management\n**Safe Word:** Swallows\n' > agent-anna/character/agent-aa04.md
+          gh api repos/agent-anna/agent-anna/contents/agent-anna/character/agent-aa04.md -X PUT -f message="AA04" -f content="$(cat agent-anna/character/agent-aa04.md)"
+          
