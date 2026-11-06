@@ -200,7 +200,7 @@ function stopListeningUI() {
 }
 
 // =================================================================
-// 2. DYNAMIC KNOWLEDGE HARVESTER
+// 2. DYNAMIC KNOWLEDGE HARVESTER (WITH BNB ADDED)
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -236,14 +236,15 @@ async function preloadCoreKnowledge() {
 }
 
 async function fetchLiveTelemetry() {
-    let btc = "$98,450.00", eth = "$2,850.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
+    let btc = "$98,450.00", eth = "$2,850.00", bnb = "$620.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
     
     try {
-        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin,solana&vs_currencies=usd");
+        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,dogecoin,solana&vs_currencies=usd");
         if (cryptoRes.ok) {
             const prices = await cryptoRes.json();
             if (prices.bitcoin) btc = `$${prices.bitcoin.usd.toLocaleString()}`;
             if (prices.ethereum) eth = `$${prices.ethereum.usd.toLocaleString()}`;
+            if (prices.binancecoin) bnb = `$${prices.binancecoin.usd.toLocaleString()}`;
             if (prices.dogecoin) doge = `$${prices.dogecoin.usd.toFixed(4)}`;
             if (prices.solana) sol = `$${prices.solana.usd.toFixed(2)}`;
         }
@@ -268,6 +269,7 @@ async function fetchLiveTelemetry() {
 - Solana Equity: ${sol}
 - Bitcoin (BTC): ${btc}
 - Ethereum (ETH): ${eth}
+- Binance Coin (BNB): ${bnb}
 - Dogecoin (DOGE): ${doge}
 - DRC-20 Token (SHI*): ${shi}
 - Latest Signal: ${signal}`;
@@ -391,7 +393,7 @@ ${liveTelemetry}`;
     } catch (err) {
         document.body.classList.remove('is-thinking');
         updateHUDState("ERROR");
-        appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
+        appendMsg(`Execution Error: ${err.message}. (Check network or Dahl API key connectivity)`, 'assistant', 'System Alert', false);
     }
 }
 
@@ -509,7 +511,7 @@ function launchLocalServer() {
 }
 
 function triggerManualTelemetry() {
-    sendMessage("Provide live crypto market telemetry including BTC, ETH, DOGE, and DRC-20 SHI* token rates.");
+    sendMessage("Provide live crypto market telemetry including BTC, ETH, BNB, DOGE, and DRC-20 SHI* token rates.");
 }
 
 async function scrapeWebPage(forcedUrl = null) {
