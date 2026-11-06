@@ -102,7 +102,7 @@ function triggerHudStrobe() {
         flashes++;
         if (flashes > 5) {
             clearInterval(interval);
-            hudPane.style.boxShadow = 'inset 0 0 35px rgba(0, 255, 204, 0.2), 0 0 30px rgba(0, 255, 204, 0.25)';
+            hudPane.style.boxShadow = 'inset 0 0 15px rgba(0, 255, 204, 0.05)';
         }
     }, 150);
 }
@@ -200,7 +200,7 @@ function stopListeningUI() {
 }
 
 // =================================================================
-// 2. DYNAMIC KNOWLEDGE HARVESTER & FEMALE VOICE LOCK
+// 2. DYNAMIC KNOWLEDGE HARVESTER & VOICE SYNC
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -276,7 +276,7 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & MULTI-TURN INFERENCE LOOP
+// 3. VOICE SYNTHESIS & PREMIUM NATURAL VOICE PROFILE
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -290,27 +290,53 @@ function speakText(text) {
     const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
     if (!cleanText) return;
 
-    // Force load voices if list was empty
     let voices = window.speechSynthesis.getVoices();
     if (!voices || voices.length === 0) voices = cachedVoices;
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    // Guaranteed female voice selection matrix
-    const preferredFemaleNames = ["Google UK English Female", "en-GB-Neural2-F", "Sonia", "Hazel", "Samantha", "Google US English", "Victoria", "Karen", "Zira"];
-    let selectedVoice = voices.find(v => preferredFemaleNames.some(p => v.name.includes(p)));
+    // Premium natural voice profile selection list
+    const premiumVoices = [
+        "Google UK English Female", 
+        "en-GB-Neural2-F", 
+        "Sonia", 
+        "Hazel", 
+        "Samantha", 
+        "Google US English", 
+        "Victoria", 
+        "Karen", 
+        "Zira",
+        "Microsoft Zira"
+    ];
+    
+    let selectedVoice = voices.find(v => premiumVoices.some(p => v.name.includes(p)));
     
     if (!selectedVoice) {
-        selectedVoice = voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male'));
+        selectedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Natural') || v.name.includes('Neural')));
+    }
+    
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en'));
     }
 
     if (selectedVoice) utterance.voice = selectedVoice;
-    utterance.pitch = 1.05;
-    utterance.rate = 0.96;
+    
+    // Tuned for natural cadence
+    utterance.pitch = 1.02;
+    utterance.rate = 0.98;
 
-    utterance.onstart = () => { document.body.classList.add('is-speaking'); updateHUDState("SPEAKING"); };
-    utterance.onend = () => { document.body.classList.remove('is-speaking'); updateHUDState("READY"); };
-    utterance.onerror = () => { document.body.classList.remove('is-speaking'); updateHUDState("READY"); };
+    utterance.onstart = () => { 
+        document.body.classList.add('is-speaking'); 
+        updateHUDState("SPEAKING"); 
+    };
+    utterance.onend = () => { 
+        document.body.classList.remove('is-speaking'); 
+        updateHUDState("READY"); 
+    };
+    utterance.onerror = () => { 
+        document.body.classList.remove('is-speaking'); 
+        updateHUDState("READY"); 
+    };
 
     window.speechSynthesis.speak(utterance);
 }
