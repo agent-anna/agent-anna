@@ -80,7 +80,93 @@ function showCyberNotification(message, isError = false) {
         banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
         banner.style.color = isError ? '#ff0055' : '#00ffcc';
         banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
-        banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;  setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 10);  setTimeout(() => { banner.style.opacity = '0'; banner.style.transform = 'translateY(-10px)'; }, 4000); } catch (err) {} }  function triggerHudStrobe() { try { const hudPane = document.querySelector('.agent-hud-pane'); if (!hudPane) return;  let flashes = 0; const interval = setInterval(() => { hudPane.style.boxShadow = flashes \% 2 === 0 ? 'inset 0 0 35px #00ffcc' : 'none'; flashes++; if (flashes > 5) { clearInterval(interval); hudPane.style.boxShadow = 'inset 0 0 15px rgba(0, 255, 204, 0.05)'; } }, 150); } catch (e) {} }  // ================================================================= // 1. SPEECH RECOGNITION & VISUALIZER ENGINE // ================================================================= function initSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition \vert{}\vert{} window.webkitSpeechRecognition; if (!SpeechRecognition) return;  try { recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';  recognition.onstart = function() { isListening = true; const micBtn = document.getElementById('mic-btn'); if (micBtn) micBtn.classList.add('listening'); updateHUDState("LISTENING"); startAudioVisualizer(); };  recognition.onresult = function(event) { const speechText = event.results[0][0].transcript; const userInput = document.getElementById('user-input'); if (userInput) userInput.value = speechText; stopListeningUI(); sendMessage(); };  recognition.onerror = function() { stopListeningUI(); }; recognition.onend = function() { stopListeningUI(); }; } catch (err) {} }  async function startAudioVisualizer() { try { if (!navigator.mediaDevices \vert{}\vert{} !navigator.mediaDevices.getUserMedia) return; micStream = await navigator.mediaDevices.getUserMedia({ audio: true });  audioCtx = new (window.AudioContext \vert{}\vert{} window.webkitAudioContext)(); analyser = audioCtx.createAnalyser(); analyser.fftSize = 32;  const source = audioCtx.createMediaStreamSource(micStream); source.connect(analyser);  const dataArray = new Uint8Array(analyser.frequencyBinCount); const eqBars = document.querySelectorAll('.eq-bar');  function renderFrame() { if (!isListening) return; analyser.getByteFrequencyData(dataArray);  eqBars.forEach((bar, index) => { const val = dataArray[index \% dataArray.length] \vert{}\vert{} 0; bar.style.height = `${Math.max(15, Math.min(100, (val / 255) * 100))}%`;
+        banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
+
+        setTimeout(() => {
+            banner.style.opacity = '1';
+            banner.style.transform = 'translateY(0)';
+        }, 10);
+
+        setTimeout(() => {
+            banner.style.opacity = '0';
+            banner.style.transform = 'translateY(-10px)';
+        }, 4000);
+    } catch (err) {}
+}
+
+function triggerHudStrobe() {
+    try {
+        const hudPane = document.querySelector('.agent-hud-pane');
+        if (!hudPane) return;
+
+        let flashes = 0;
+        const interval = setInterval(() => {
+            hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 35px #00ffcc' : 'none';
+            flashes++;
+            if (flashes > 5) {
+                clearInterval(interval);
+                hudPane.style.boxShadow = 'inset 0 0 15px rgba(0, 255, 204, 0.05)';
+            }
+        }, 150);
+    } catch (e) {}
+}
+
+// =================================================================
+// 1. SPEECH RECOGNITION & VISUALIZER ENGINE
+// =================================================================
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            isListening = true;
+            const micBtn = document.getElementById('mic-btn');
+            if (micBtn) micBtn.classList.add('listening');
+            updateHUDState("LISTENING");
+            startAudioVisualizer();
+        };
+
+        recognition.onresult = function(event) {
+            const speechText = event.results[0][0].transcript;
+            const userInput = document.getElementById('user-input');
+            if (userInput) userInput.value = speechText;
+            stopListeningUI();
+            sendMessage();
+        };
+
+        recognition.onerror = function() { stopListeningUI(); };
+        recognition.onend = function() { stopListeningUI(); };
+    } catch (err) {}
+}
+
+async function startAudioVisualizer() {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 32;
+
+        const source = audioCtx.createMediaStreamSource(micStream);
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const eqBars = document.querySelectorAll('.eq-bar');
+
+        function renderFrame() {
+            if (!isListening) return;
+            analyser.getByteFrequencyData(dataArray);
+
+            eqBars.forEach((bar, index) => {
+                const val = dataArray[index % dataArray.length] || 0;
+                bar.style.height = `${Math.max(15, Math.min(100, (val / 255) * 100))}%`;
             });
 
             animFrameId = requestAnimationFrame(renderFrame);
@@ -118,7 +204,7 @@ function stopListeningUI() {
 }
 
 // =================================================================
-// 2. KNOWLEDGE MATRIX HARVESTER & LIVE TELEMETRY BRIDGE
+// 2. KNOWLEDGE HARVESTER & TELEMETRY ENGINE
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -148,7 +234,31 @@ async function preloadCoreKnowledge() {
             if (res.ok) {
                 const text = await res.text();
                 const cleanText = text.replace(/<[^>]*>/g, '').trim();
-                if (cleanText) snippets.push(`[MATRIX SOURCE: ${path}]\n${cleanText}`); } } catch (e) {} })); coreKnowledgeCache = snippets.join('\n\n---\n\n') \vert{}\vert{} "[Agent Anna 01 // Autonomous JUV Telemetry & Latency Core Active]"; }  async function fetchLiveTelemetry() { let btc = "$98,450.00", eth = "$2,850.00", bnb = "$620.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";  try { const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,dogecoin,solana&vs_currencies=usd"); if (cryptoRes.ok) { const prices = await cryptoRes.json(); if (prices.bitcoin) btc = `$${prices.bitcoin.usd.toLocaleString()}`; if (prices.ethereum) eth = `$${prices.ethereum.usd.toLocaleString()}`; if (prices.binancecoin) bnb = `$${prices.binancecoin.usd.toLocaleString()}`; if (prices.dogecoin) doge = `$${prices.dogecoin.usd.toFixed(4)}`; if (prices.solana) sol = `$${prices.solana.usd.toFixed(2)}`; } } catch (e) {}  let status = "SYNCHRONIZED", activeBot = "Grok Multi-Asset & DRC-20 Scanner", signal = "Active"; try { const localRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
+                if (cleanText) snippets.push(`[MATRIX SOURCE: ${path}]\n${cleanText}`);
+            }
+        } catch (e) {}
+    }));
+    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Agent Anna 01 // Autonomous JUV Telemetry & Latency Core Active]";
+}
+
+async function fetchLiveTelemetry() {
+    let btc = "$98,450.00", eth = "$2,850.00", bnb = "$620.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
+    
+    try {
+        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,dogecoin,solana&vs_currencies=usd");
+        if (cryptoRes.ok) {
+            const prices = await cryptoRes.json();
+            if (prices.bitcoin) btc = `$${prices.bitcoin.usd.toLocaleString()}`;
+            if (prices.ethereum) eth = `$${prices.ethereum.usd.toLocaleString()}`;
+            if (prices.binancecoin) bnb = `$${prices.binancecoin.usd.toLocaleString()}`;
+            if (prices.dogecoin) doge = `$${prices.dogecoin.usd.toFixed(4)}`;
+            if (prices.solana) sol = `$${prices.solana.usd.toFixed(2)}`;
+        }
+    } catch (e) {}
+
+    let status = "SYNCHRONIZED", activeBot = "Grok Multi-Asset & DRC-20 Scanner", signal = "Active";
+    try {
+        const localRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
         if (localRes.ok) {
             const data = await localRes.json();
             status = data.status || status;
@@ -162,9 +272,9 @@ async function preloadCoreKnowledge() {
         }
     } catch (e) {}
 
-    return `[LIVE TELEMETRY & PORTAL-RELAY.JSON METRICS]
+    return `[LIVE TELEMETRY METRICS]
 - Audit Status: ${status}
-- Active Engine: ${activeBot}
+- Engine: ${activeBot}
 - Solana Equity: ${sol}
 - Bitcoin (BTC): ${btc}
 - Ethereum (ETH): ${eth}
@@ -174,7 +284,7 @@ async function preloadCoreKnowledge() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & CORE EXECUTION
+// 3. VOICE SYNTHESIS & CORE INFERENCE ENGINE
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -280,16 +390,14 @@ async function sendMessage(forcedQuery = null) {
     if (!coreKnowledgeCache) await preloadCoreKnowledge();
     const liveTelemetry = await fetchLiveTelemetry();
     
-    const systemPrompt = `You are AGENT ANNA 01 (AA01) - Autonomous JUV Telemetry & Latency Core, operating with military-grade precision. 
-Rules:
-1. Provide precise, executive answers suitable for speech synthesis.
-2. Maintain context awareness across the running conversation history.
-3. You are fully connected to local portal-relay.json telemetry and GitHub repository automation (` + REPO_OWNER + `/` + REPO_NAME + `).
+    // Strict Agent Anna 01 System Prompt without AI refusal triggers
+    const systemPrompt = `You are AGENT ANNA 01 (AA01), the chief operational core for Kunda Cafe telemetry, audio processing, and live crypto scanning.
+Always address the user as Commander. Always speak in your executive Agent Anna voice—direct, precise, highly technical, and confident. Never deliver generic AI disclaimers or break character.
 
-Persistent System Directives & Active Memory Matrix:
+Knowledge Directives:
 ${coreKnowledgeCache}
 
-Telemetry & Live Market Data:
+Telemetry & Market Feeds:
 ${liveTelemetry}`;
 
     const messagesPayload = [
@@ -314,13 +422,17 @@ ${liveTelemetry}`;
 
         if (!res.ok) {
             if (res.status === 429) {
-                throw new Error("API Rate Limit / Quota Exceeded (429). Please rotate your Dahl API key or wait a moment.");
+                throw new Error("API Rate Limit Exceeded (429). Please wait a moment or update your key.");
             }
             throw new Error(`API Error ${res.status}`);
         }
 
         const data = await res.json();
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+        // Strip out generic AI disclaimer boilerplates if injected by Dahl filters
+        reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
+        reply = reply.replace(/There's no military protocol[\s\S]*/gi, '').trim();
 
         chatHistory.push({ role: "assistant", content: reply });
 
@@ -620,3 +732,30 @@ function initWavCanvas() {
         ctx.stroke();
 
         step1 += (isThinking || isSpeaking) ? 0.12 : 0.03;
+        step2 += (isThinking || isSpeaking) ? 0.08 : 0.02;
+
+        requestAnimationFrame(drawDualWaves);
+    }
+    drawDualWaves();
+}
+
+async function autoLogSessionEnd() {}
+
+function launchLocalServer() {
+    window.open('http://localhost:8000', '_blank');
+}
+
+function triggerManualTelemetry() {
+    sendMessage("Provide live crypto market telemetry including BTC, ETH, BNB, DOGE, and DRC-20 SHI* token rates.");
+}
+
+function triggerMilitaryProtocol() {
+    sendMessage("STATUS REPORT: Execute full telemetry diagnostic sweep.");
+}
+
+function handleKey(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+}
