@@ -302,7 +302,7 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & CORE INFERENCE ENGINE
+// 3. VOICE SYNTHESIS & CORE INFERENCE ENGINE (LOCKED FEMALE IDENTITY)
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -332,27 +332,47 @@ function speakText(text) {
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
 
-        const englishLadyVoices = [
+        // AGGRESSIVE FEMALE IDENTITY VOICE SELECTOR
+        const preferredVoices = [
             "Google UK English Female",
             "en-GB-Neural2-F",
             "Sonia",
             "Hazel",
             "Samantha",
             "Victoria",
+            "Karen",
+            "Moira",
+            "Fiona",
             "Google US English"
         ];
         
-        let selectedVoice = voices.find(v => englishLadyVoices.some(p => v.name.includes(p)));
-        if (!selectedVoice) {
-            selectedVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
-        }
-        if (!selectedVoice) {
-            selectedVoice = voices.find(v => v.lang.startsWith('en'));
+        let selectedVoice = null;
+        
+        // 1. Try exact match from preferred female list
+        for (const pName of preferredVoices) {
+            selectedVoice = voices.find(v => v.name.includes(pName));
+            if (selectedVoice) break;
         }
 
-        if (selectedVoice) utterance.voice = selectedVoice;
+        // 2. Fallback: Search for any English female or GB voice explicitly excluding known male markers
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => 
+                (v.lang.includes('en') || v.lang.includes('EN')) && 
+                (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('hazel') || v.name.toLowerCase().includes('sonia')) &&
+                !v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('david') && !v.name.toLowerCase().includes('george') && !v.name.toLowerCase().includes('oliver')
+            );
+        }
+
+        // 3. Ultimate Fallback: Any English voice
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.startsWith('en') || v.lang.startsWith('EN'));
+        }
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
         
-        utterance.pitch = 1.02;
+        utterance.pitch = 1.08; // Slight lift to guarantee feminine executive cadence
         utterance.rate = 0.98;
 
         utterance.onstart = () => { 
@@ -379,8 +399,12 @@ function speakShortAnnouncement(announcement) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
     try {
         window.speechSynthesis.cancel();
+        let voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) voices = cachedVoices;
         const utterance = new SpeechSynthesisUtterance(announcement);
-        utterance.pitch = 1.02;
+        const femaleVoice = voices.find(v => v.name.includes('Google UK English Female') || v.name.includes('Samantha') || v.name.includes('Sonia') || v.lang.startsWith('en'));
+        if (femaleVoice) utterance.voice = femaleVoice;
+        utterance.pitch = 1.08;
         utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     } catch (e) {}
@@ -437,7 +461,6 @@ ${coreKnowledgeCache}
 Live Telemetry & Market Feeds:
 ${liveTelemetry}`;
 
-    // MILITARY-GRADE PROMPT CACHING & CONTEXT SPOOLING PAYLOAD STRUCTURE
     const messagesPayload = [
         { 
             role: "system", 
@@ -445,7 +468,7 @@ ${liveTelemetry}`;
                 {
                     type: "text",
                     text: systemPrompt,
-                    cache_control: { type: "ephemeral" } // Forces gateway prompt caching
+                    cache_control: { type: "ephemeral" }
                 }
             ]
         },
@@ -859,7 +882,7 @@ function initWavCanvas() {
 
 async function autoLogSessionEnd() {}
 
-function launchLocalServer() {
+fn launchLocalServer() {
     window.open('http://localhost:8000', '_blank');
 }
 
