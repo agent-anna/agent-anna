@@ -688,7 +688,6 @@ function appendMsg(text, sender, label, includeActions = false) {
             </div>
         `;
     } else {
-        // Even user messages get a delete option so they can be cleaned up
         actionsHTML = `
             <div class="action-row">
                 <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
