@@ -33,6 +33,9 @@ window.onload = function() {
         }
     } catch (e) {}
 
+    // Register initial welcome message into payload store so DEL works instantly
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Zero-bloat markdown sync active. Ready for command, Commander.";
+
     const inputEl = document.getElementById('user-input');
     if (inputEl) inputEl.focus();
     
@@ -390,14 +393,13 @@ async function sendMessage(forcedQuery = null) {
     if (!coreKnowledgeCache) await preloadCoreKnowledge();
     const liveTelemetry = await fetchLiveTelemetry();
     
-    // Strict Agent Anna 01 System Prompt without AI refusal triggers
-    const systemPrompt = `You are AGENT ANNA 01 (AA01), the chief operational core for Kunda Cafe telemetry, audio processing, and live crypto scanning.
-Always address the user as Commander. Always speak in your executive Agent Anna voice—direct, precise, highly technical, and confident. Never deliver generic AI disclaimers or break character.
+    // LOCKED AGENT ANNA PERSONA PROMPT
+    const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry and trading operations core. You are fully operational, connected to local relay scripts (bridge.ps1) and GitHub repository management. Always respond in character as Commander's executive AI clone. Never break character, never output generic AI disclaimers, and never say you are just a standard assistant.
 
-Knowledge Directives:
+Persistent System Directives & Memory Matrix:
 ${coreKnowledgeCache}
 
-Telemetry & Market Feeds:
+Live Telemetry & Market Feeds:
 ${liveTelemetry}`;
 
     const messagesPayload = [
@@ -422,7 +424,7 @@ ${liveTelemetry}`;
 
         if (!res.ok) {
             if (res.status === 429) {
-                throw new Error("API Rate Limit Exceeded (429). Please wait a moment or update your key.");
+                throw new Error("API Rate Limit Exceeded (429). Please rotate your key or wait a moment.");
             }
             throw new Error(`API Error ${res.status}`);
         }
@@ -430,9 +432,8 @@ ${liveTelemetry}`;
         const data = await res.json();
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
-        // Strip out generic AI disclaimer boilerplates if injected by Dahl filters
+        // Strip backend canned boilerplate if present
         reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
-        reply = reply.replace(/There's no military protocol[\s\S]*/gi, '').trim();
 
         chatHistory.push({ role: "assistant", content: reply });
 
@@ -455,7 +456,7 @@ ${liveTelemetry}`;
 }
 
 // =================================================================
-// 4. UI INTERACTION & ACTION ROW HANDLERS
+// 4. UI INTERACTION & ACTION ROW HANDLERS (FULLY FIXED TOGGLES)
 // =================================================================
 function toggleVoice() {
     isVoiceEnabled = !isVoiceEnabled;
@@ -471,6 +472,7 @@ function toggleVoice() {
         btn.className = isVoiceEnabled ? "ctrl-btn active" : "ctrl-btn";
         btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
     }
+    showCyberNotification(`Voice synthesis status: ${isVoiceEnabled ? 'ONLINE (ON)' : 'MUTED (OFF)'}`);
 }
 
 function toggleSettings() {
@@ -512,12 +514,17 @@ function clearLogs() {
             chatContainer.innerHTML = `
                 <div class="message assistant" id="msg_cleared">
                     <div class="msg-header">AA01 Core</div>
-                    <div class="msg-body">Console history and memory state cleared. Standby mode.</div>
+                    <div style="white-space:pre-wrap; margin-top: 6px;">Console history and memory state cleared. Standby mode, Commander.</div>
                     <div class="action-row">
+                        <button class="action-chip" onclick="handleAction('summarize', 'msg_cleared')">1. SUMMARIZE</button>
+                        <button class="action-chip" onclick="handleAction('save', 'msg_cleared')">2. SAVE AS .MD</button>
+                        <button class="action-chip" onclick="handleAction('ingest', 'msg_cleared')">3. INGEST TO CORE</button>
+                        <button class="action-chip" onclick="copyToClipboard('msg_cleared', this)">COPY</button>
                         <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_cleared')">🗑️ DEL</button>
                     </div>
                 </div>
             `;
+            messagePayloadStore['msg_cleared'] = "Console history and memory state cleared. Standby mode, Commander.";
         }
         showCyberNotification("Console logs cleared.");
     } catch (e) {}
@@ -631,7 +638,7 @@ function deleteMessage(messageId) {
     }
 }
 
-function appendMsg(text, sender, label, includeActions = false) {
+function appendMsg(text, sender, label, includeActions = true) {
     const container = document.getElementById('chat-container');
     if (!container) return;
 
@@ -642,24 +649,15 @@ function appendMsg(text, sender, label, includeActions = false) {
     div.className = `message ${sender}`;
     div.id = messageId;
     
-    let actionsHTML = "";
-    if (includeActions) {
-        actionsHTML = `
-            <div class="action-row">
-                <button class="action-chip" onclick="handleAction('summarize', '${messageId}')">1. SUMMARIZE</button>
-                <button class="action-chip" onclick="handleAction('save', '${messageId}')">2. SAVE AS .MD</button>
-                <button class="action-chip" onclick="handleAction('ingest', '${messageId}')">3. INGEST TO CORE</button>
-                <button class="action-chip" onclick="copyToClipboard('${messageId}', this)">COPY</button>
-                <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
-            </div>
-        `;
-    } else {
-        actionsHTML = `
-            <div class="action-row">
-                <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
-            </div>
-        `;
-    }
+    let actionsHTML = `
+        <div class="action-row">
+            <button class="action-chip" onclick="handleAction('summarize', '${messageId}')">1. SUMMARIZE</button>
+            <button class="action-chip" onclick="handleAction('save', '${messageId}')">2. SAVE AS .MD</button>
+            <button class="action-chip" onclick="handleAction('ingest', '${messageId}')">3. INGEST TO CORE</button>
+            <button class="action-chip" onclick="copyToClipboard('${messageId}', this)">COPY</button>
+            <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
+        </div>
+    `;
 
     div.innerHTML = `
         <div class="msg-header"><span>${label}</span></div>
@@ -750,7 +748,7 @@ function triggerManualTelemetry() {
 }
 
 function triggerMilitaryProtocol() {
-    sendMessage("STATUS REPORT: Execute full telemetry diagnostic sweep.");
+    sendMessage("MILITARY PROTOCOL ENGAGED: Executing deep diagnostic sweep.");
 }
 
 function handleKey(event) {
