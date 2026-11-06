@@ -26,7 +26,7 @@ window.onload = function() {
             const keyInput = document.getElementById('api-key');
             if (keyInput) keyInput.value = savedKey;
         }
-        const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token');
+        const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN');
         if (savedGhToken) {
             const ghInput = document.getElementById('gh-token');
             if (ghInput) ghInput.value = savedGhToken;
@@ -484,10 +484,13 @@ function saveKey() {
             const val = ghEl.value.trim();
             localStorage.setItem('gh_pat_token', val);
             sessionStorage.setItem('gh_pat_token', val);
+            localStorage.setItem('GH_TOKEN', val);
         }
-        showCyberNotification("Credentials saved successfully.");
+        showCyberNotification("Credentials saved successfully (Dahl & GH_TOKEN Matrix Locked).");
         toggleSettings();
-    } catch (e) {}
+    } catch (e) {
+        showCyberNotification("Error saving credentials.", true);
+    }
 }
 
 function clearLogs() {
@@ -618,9 +621,7 @@ function initWavCanvas() {
     drawDualWaves();
 }
 
-async function autoLogSessionEnd() {
-    // Silent background telemetry close handler
-}
+async function autoLogSessionEnd() {}
 
 function copyToClipboard(messageId, btnElement) {
     const textContent = messagePayloadStore[messageId] || "";
