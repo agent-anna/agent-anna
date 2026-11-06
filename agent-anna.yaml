@@ -5,7 +5,7 @@
 
 version: "2.0"
 repository: "agent-anna"
-owner: "agent anna & strayd"
+owner: "agent-anna"
 
 config:
   locale: "en-US"
