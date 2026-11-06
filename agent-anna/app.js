@@ -207,7 +207,7 @@ function stopListeningUI() {
 }
 
 // =================================================================
-// 2. KNOWLEDGE HARVESTER & TELEMETRY ENGINE
+// 2. KNOWLEDGE HARVESTER & TELEMETRY ENGINE (FIXED PATHS)
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -218,13 +218,13 @@ function loadVoices() {
 
 async function preloadCoreKnowledge() {
     const corePaths = [
-        "agent-anna/character/agent-anna.md",
-        "agent-anna/knowledge/agents.md",
-        "agent-anna/knowledge/lessons.md",
-        "agent-anna/knowledge/rules.md",
-        "agent-anna/plans/active/current-plan.md",
-        "agent-anna/plans/active/roadmap.md",
-        "agent-anna/plans/logs/session-log.md"
+        "character/agent-anna.md",
+        "knowledge/agents.md",
+        "knowledge/lessons.md",
+        "knowledge/rules.md",
+        "plans/active/current-plan.md",
+        "plans/active/roadmap.md",
+        "plans/logs/session-log.md"
     ];
     let snippets = [];
     await Promise.all(corePaths.map(async (path) => {
