@@ -5,24 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Anna 01 - Commander</title>
     <link rel="icon" type="image/png" href="./favicon.png">
-    <!-- INCORRECT (Breaks on GitHub Pages subpath) -->
-<link rel="stylesheet" href="/styles.css">
-<script src="/app.js"></script>
-
-<!-- CORRECT (Resolves perfectly relative to index.html) -->
-<link rel="stylesheet" href="styles.css">
-<script src="app.js"></script>
-</head>
-    <!-- Dynamic Asset Path Resolver for Local & GitHub Pages Parity -->
-    <script>
-        const isGitHub = window.location.hostname.includes('github.io');
-        const basePath = isGitHub ? '/podcast/agent-anna/' : './';
-        
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = basePath + 'styles.css';
-        document.head.appendChild(link);
-    </script>
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
@@ -82,8 +65,9 @@
             <button class="ctrl-btn military-btn" onclick="triggerMilitaryProtocol()" title="Advanced Military Trigger">⚡ PROTOCOL</button>
         </div>
 
-        <div id="settings-panel">
-            <input type="password" id="api-key" placeholder="Enter Dahl API Key (sk-...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px;" oninput="saveKey()">
+        <div id="settings-panel" style="display:none; padding: 8px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color);">
+            <input type="password" id="api-key" placeholder="Enter Dahl API Key (sk-...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px; margin-bottom: 6px;" oninput="saveKey()">
+            <input type="password" id="gh-token" placeholder="Enter GitHub PAT Token (ghp_...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px;" oninput="saveKey()">
         </div>
 
         <div class="thinking-banner" id="thinking-banner">
@@ -104,14 +88,7 @@
         </div>
     </div>
 
-    <!-- Dynamic Script Loader for Local & GitHub Pages Parity -->
-    <script>
-        const isGH = window.location.hostname.includes('github.io');
-        const rootPath = isGH ? '/podcast/agent-anna/' : './';
-        
-        const script = document.createElement('script');
-        script.src = rootPath + 'app.js';
-        document.body.appendChild(script);
-    </script>
+    <!-- Core Engine Script -->
+    <script src="./app.js"></script>
 </body>
 </html>
