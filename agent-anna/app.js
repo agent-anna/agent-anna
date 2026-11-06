@@ -2,8 +2,8 @@
 // AGENT ANNA // AUTONOMOUS SELF-SUFFICIENT CORE ENGINE
 // =================================================================
 
-const REPO_OWNER = "suzukistrayd";
-const REPO_NAME = "podcast";
+const REPO_OWNER = "agent-anna";
+const REPO_NAME = "agent-anna";
 
 let isVoiceEnabled = true;
 let recognition = null;
