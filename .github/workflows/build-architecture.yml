@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -25,22 +27,29 @@ jobs:
           echo "Building architecture from agent-anna.yaml..."
           
           # Create directories
-          mkdir -p character knowledge plans/active plans/archive plans/logs .github/workflows
+          mkdir -p agent-anna/character agent-anna/knowledge agent-anna/plans/active agent-anna/plans/archive agent-anna/plans/logs .github/workflows
           
-          # Initialize safe baseline files if they don't already exist
-          [ -f character/agent-anna.md ] || echo "# AGENT ANNA // CORE" > character/agent-anna.md
-          [ -f knowledge/agents.md ] || echo "# AGENTS" > knowledge/agents.md
-          [ -f knowledge/lessons.md ] || echo "# LESSONS" > knowledge/lessons.md
-          [ -f knowledge/rules.md ] || echo "# RULES" > knowledge/rules.md
-          [ -f plans/active/current-plan.md ] || echo "# CURRENT PLAN" > plans/active/current-plan.md
-          [ -f plans/active/roadmap.md ] || echo "# ROADMAP" > roadmap.md
-          [ -f plans/logs/session-log.md ] || echo "# LOGS" > session-log.md
+          # Initialize baseline files inside agent-anna directory
+          [ -f agent-anna/character/agent-anna.md ] || echo "# AGENT ANNA // CORE" > agent-anna/character/agent-anna.md
+          [ -f agent-anna/knowledge/agents.md ] || echo "# AGENTS" > agent-anna/knowledge/agents.md
+          [ -f agent-anna/knowledge/lessons.md ] || echo "# LESSONS" > agent-anna/knowledge/lessons.md
+          [ -f agent-anna/knowledge/rules.md ] || echo "# RULES" > agent-anna/knowledge/rules.md
+          [ -f agent-anna/plans/active/current-plan.md ] || echo "# CURRENT PLAN" > agent-anna/plans/active/current-plan.md
+          [ -f agent-anna/plans/active/roadmap.md ] || echo "# ROADMAP" > agent-anna/plans/active/roadmap.md
+          [ -f agent-anna/plans/logs/session-log.md ] || echo "# LOGS" > agent-anna/plans/logs/session-log.md
           [ -f portal-relay.json ] || echo '{"status":"SYNCHRONIZED"}' > portal-relay.json
 
           echo "Architecture scaffold complete."
+
+      - name: Pull Remote Changes To Prevent Push Rejection
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase || true
 
       - name: Commit & Push Scaffolded Files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Automated architecture build from agent-anna.yaml manifest"
           branch: main
+          push_options: '--force-with-lease'
