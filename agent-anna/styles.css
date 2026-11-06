@@ -1,0 +1,72 @@
+# ============================================================
+# AGENT ANNA // MASTER ARCHITECTURE BUILD WORKFLOW
+# Version: 2.0 // Direct Execution Matrix
+# ============================================================
+
+name: Build Repository Architecture
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate Structure from YAML Blueprint
+        run: |
+          echo "=================================================="
+          echo "AGENT ANNA // SCAFFOLDING DIRECTORY MATRIX..."
+          echo "=================================================="
+
+          # 1. Clean up legacy root duplicate directories & loose files
+          rm -rf character knowledge plans roadmap.md session-log.md
+
+          # 2. Build target directory tree (singular 'character' locked in)
+          mkdir -p agent-anna/character
+          mkdir -p agent-anna/knowledge
+          mkdir -p agent-anna/plans/active
+          mkdir -p agent-anna/plans/archive
+          mkdir -p agent-anna/plans/logs
+          mkdir -p .github/workflows
+
+          # 3. Create core persistent Markdown files inside agent-anna hierarchy
+          [ -f agent-anna/character/agent-anna.md ] || echo "# AGENT ANNA // CORE DIRECTIVE" > agent-anna/character/agent-anna.md
+          [ -f agent-anna/knowledge/agents.md ] || echo "# AGENTS MATRIX" > agent-anna/knowledge/agents.md
+          [ -f agent-anna/knowledge/lessons.md ] || echo "# LESSONS LEARNED" > agent-anna/knowledge/lessons.md
+          [ -f agent-anna/knowledge/rules.md ] || echo "# OPERATIONAL RULES" > agent-anna/knowledge/rules.md
+          [ -f agent-anna/plans/active/current-plan.md ] || echo "# CURRENT ACTIVE PLAN MATRIX" > agent-anna/plans/active/current-plan.md
+          [ -f agent-anna/plans/active/roadmap.md ] || echo "# MASTER ROADMAP" > agent-anna/plans/active/roadmap.md
+          [ -f agent-anna/plans/logs/session-log.md ] || echo "# SESSION LOG" > agent-anna/plans/logs/session-log.md
+          
+          # 4. Create root relay telemetry baseline
+          [ -f portal-relay.json ] || echo '{"status":"SYNCHRONIZED","bitcoin_price":"$98,450.00","dogecoin_price":"$0.1850","shi_drc20":"0.000001 DOGE ($0.00000076)"}' > portal-relay.json
+
+          echo "Architecture scaffold complete."
+
+      - name: Sync Remote Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase || true
+
+      - name: Commit & Push Scaffolded Files
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated architecture build: Locked agent-anna directory tree"
+          branch: main
+          push_options: '--force-with-lease'
