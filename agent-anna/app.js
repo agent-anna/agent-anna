@@ -351,6 +351,16 @@ function speakText(text) {
     }
 }
 
+// HARD KILLSWITCH FUNCTION FOR THE STFU BUTTON
+function executeStfuProtocol() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    document.body.classList.remove('is-speaking', 'is-thinking');
+    updateHUDState("READY");
+    showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
+}
+
 async function sendMessage(forcedQuery = null) {
     const keyEl = document.getElementById('api-key');
     const input = document.getElementById('user-input');
@@ -365,9 +375,7 @@ async function sendMessage(forcedQuery = null) {
     if (!query) return;
 
     if (query.toUpperCase() === "SHUT UP" || query.toUpperCase() === "STFU") {
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        document.body.classList.remove('is-speaking', 'is-thinking');
-        updateHUDState("READY");
+        executeStfuProtocol();
         appendMsg(query, 'user', 'Commander');
         appendMsg("Audio stream terminated by command.", 'assistant', 'AA01 Core', false);
         if (input && !forcedQuery) input.value = '';
@@ -595,6 +603,7 @@ function clearLogs() {
                         <button class="action-chip" onclick="handleAction('save', 'msg_cleared')">2. SAVE AS .MD</button>
                         <button class="action-chip" onclick="handleAction('ingest', 'msg_cleared')">3. INGEST TO CORE</button>
                         <button class="action-chip" onclick="copyToClipboard('msg_cleared', this)">COPY</button>
+                        <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="executeStfuProtocol()">🛑 STFU</button>
                         <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_cleared')">🗑️ DEL</button>
                     </div>
                 </div>
@@ -724,15 +733,16 @@ function appendMsg(text, sender, label, includeActions = true) {
     div.className = `message ${sender}`;
     div.id = messageId;
     
-    let actionsHTML = `
+    let actionsHTML = includeActions ? `
         <div class="action-row">
             <button class="action-chip" onclick="handleAction('summarize', '${messageId}')">1. SUMMARIZE</button>
             <button class="action-chip" onclick="handleAction('save', '${messageId}')">2. SAVE AS .MD</button>
             <button class="action-chip" onclick="handleAction('ingest', '${messageId}')">3. INGEST TO CORE</button>
             <button class="action-chip" onclick="copyToClipboard('${messageId}', this)">COPY</button>
+            <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="executeStfuProtocol()">🛑 STFU</button>
             <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
         </div>
-    `;
+    ` : '';
 
     div.innerHTML = `
         <div class="msg-header"><span>${label}</span></div>
