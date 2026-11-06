@@ -50,9 +50,6 @@ window.addEventListener('beforeunload', function (e) {
     autoLogSessionEnd();
 });
 
-// =================================================================
-// FUTURISTIC CYBER HUD NOTIFICATION SYSTEM (REPLACES ALERTS)
-// =================================================================
 function showCyberNotification(message, isError = false) {
     let banner = document.getElementById('cyber-notification-banner');
     if (!banner) {
@@ -84,20 +81,17 @@ function showCyberNotification(message, isError = false) {
     banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
     banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
 
-    // Fade in
     setTimeout(() => {
         banner.style.opacity = '1';
         banner.style.transform = 'translateY(0)';
     }, 10);
 
-    // Auto fade out after 4 seconds
     setTimeout(() => {
         banner.style.opacity = '0';
         banner.style.transform = 'translateY(-10px)';
     }, 4000);
 }
 
-// HUD Strobe Effect for Success / Completion Feedback
 function triggerHudStrobe() {
     const hudPane = document.querySelector('.agent-hud-pane');
     if (!hudPane) return;
@@ -480,11 +474,25 @@ async function handleAction(actionType, messageId) {
         updateHUDState("READY");
 
         if (planSuccess && logSuccess) {
-            triggerHudStrobe(); // Strobes HUD green when complete!
+            triggerHudStrobe();
             showCyberNotification("SUCCESS: Payload autonomously ingested into active plans & session log!");
         } else {
             showCyberNotification("Ingestion Warning: Check your GitHub PAT in settings or network connectivity.", true);
         }
+    }
+}
+
+// DELETE SINGLE MESSAGE & PURGE FROM MEMORY
+function deleteMessage(messageId) {
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) {
+        const textContent = messagePayloadStore[messageId];
+        if (textContent) {
+            chatHistory = chatHistory.filter(item => item.content !== textContent);
+            delete messagePayloadStore[messageId];
+        }
+        msgElement.remove();
+        showCyberNotification("Message purged from session and memory buffer.");
     }
 }
 
@@ -647,8 +655,11 @@ function clearLogs() {
     const chatContainer = document.getElementById('chat-container');
     if (chatContainer) {
         chatContainer.innerHTML = `
-            <div class="message assistant">
-                <div class="msg-header">AA01 Core</div>
+            <div class="message assistant" id="msg_cleared">
+                <div class="msg-header">
+                    <span>AA01 Core</span>
+                    <button class="action-chip del-btn" onclick="deleteMessage('msg_cleared')" title="Delete Message">🗑️ DEL</button>
+                </div>
                 <div class="msg-body">Console history and memory state cleared. Standby mode.</div>
             </div>
         `;
@@ -664,6 +675,7 @@ function appendMsg(text, sender, label, includeActions = false) {
 
     const div = document.createElement('div');
     div.className = `message ${sender}`;
+    div.id = messageId;
     
     let actionsHTML = "";
     if (includeActions) {
@@ -678,7 +690,10 @@ function appendMsg(text, sender, label, includeActions = false) {
     }
 
     div.innerHTML = `
-        <div class="msg-header"><span>${label}</span></div>
+        <div class="msg-header">
+            <span>${label}</span>
+            <button class="action-chip del-btn" onclick="deleteMessage('${messageId}')" title="Delete Message">🗑️ DEL</button>
+        </div>
         <div style="white-space:pre-wrap; margin-top: 6px;">${text}</div>
         ${actionsHTML}
     `;
