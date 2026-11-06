@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Anna 01 - Commander</title>
+    <title>Agent Anna 01 - Core Sub-App</title>
+    
+    <!-- EXPLICIT LOCAL SIBLING RESOLUTION (Locks into /agent-anna/styles.css) -->
     <link rel="icon" type="image/png" href="./favicon.png">
-    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" type="text/css" href="./styles.css">
 </head>
 <body>
 
@@ -30,7 +32,7 @@
             </div>
             
             <div class="agent-nameplate">
-                <h2 id="agent-title">AA01 // CORE</h2>
+                <h2 id="agent-title">AA01 // SUB-APP CORE</h2>
                 <p>Autonomous Telemetry & Voice Unit</p>
             </div>
 
@@ -77,7 +79,7 @@
         <div id="chat-container">
             <div class="message assistant">
                 <div class="msg-header">AA01 Core</div>
-                <div class="msg-body">Military-grade telemetry core online. Zero-bloat markdown sync active. Ready for command.</div>
+                <div class="msg-body">Sub-app isolated core online. Zero-bloat local styling active. Ready for command.</div>
             </div>
         </div>
 
@@ -88,7 +90,7 @@
         </div>
     </div>
 
-    <!-- Core Engine Script -->
+    <!-- EXPLICIT LOCAL SIBLING SCRIPT (Locks into /agent-anna/app.js) -->
     <script src="./app.js"></script>
 </body>
 </html>
