@@ -5,9 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Anna 01 - Core Sub-App</title>
     
-    <!-- EXPLICIT LOCAL SIBLING RESOLUTION (Locks into /agent-anna/styles.css) -->
-    <link rel="icon" type="image/png" href="../favicon.png">
-<link rel="stylesheet" type="text/css" href="../styles.css">
+    <link rel="icon" type="image/png" href="./favicon.png">
+
+    <!-- MILITARY-GRADE DYNAMIC CSS RESOLVER -->
+    <script>
+        (function resolveStyles() {
+            const cssPaths = [
+                './styles.css',
+                '../styles.css',
+                '/agent-anna/styles.css',
+                '/agent-anna/agent-anna/styles.css',
+                'styles.css'
+            ];
+            
+            let loaded = false;
+            cssPaths.forEach(path => {
+                if (loaded) return;
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = path;
+                document.head.appendChild(link);
+            });
+        })();
+    </script>
 </head>
 <body>
 
@@ -46,8 +67,8 @@
         </div>
     </div>
 
-    <!-- RIGHT CHAT CONSOLE PANE (45% Width) -->
-    <div class="chat-console-pane">
+    <!-- RIGHT CHAT CONSOLE PANE (40% Dedicated Right Side) -->
+    <div class="chat-console-pane" style="width: 40%; flex-shrink: 0;">
         <div class="chat-header">
             <span>CONSOLE [JUV NEURAL]</span>
             <span id="latency-display" class="latency-badge">TRIP LATENCY: 0.00s</span>
@@ -67,8 +88,12 @@
             <button class="ctrl-btn military-btn" onclick="triggerMilitaryProtocol()" title="Advanced Military Trigger">⚡ PROTOCOL</button>
         </div>
 
-        <div id="settings-panel" style="display:none; padding: 8px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color);">
-            <input type="password" id="api-key" placeholder="Enter API Key (sk-...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px; margin-bottom: 6px;" oninput="saveKey()">
+        <!-- SECURE KEYS & PAT TOKEN STORAGE PANEL -->
+        <div id="settings-panel" style="display:none; padding: 8px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border-color);">
+            <div style="font-size: 10px; color: #888; margin-bottom: 4px; font-family: monospace;">DAHL INFERENCE API KEY:</div>
+            <input type="password" id="api-key" placeholder="Enter Dahl API Key (sk-...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px; margin-bottom: 8px;" oninput="saveKey()">
+            
+            <div style="font-size: 10px; color: #888; margin-bottom: 4px; font-family: monospace;">GITHUB PERSONAL ACCESS TOKEN (PAT):</div>
             <input type="password" id="gh-token" placeholder="Enter GitHub PAT Token (ghp_...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px;" oninput="saveKey()">
         </div>
 
@@ -79,7 +104,7 @@
         <div id="chat-container">
             <div class="message assistant">
                 <div class="msg-header">AA01 Core</div>
-                <div class="msg-body">Sub-app isolated core online. Zero-bloat local styling active. Ready for command.</div>
+                <div class="msg-body">Sub-app isolated core online. Tactical layout locked. Direct PAT sync ready.</div>
             </div>
         </div>
 
@@ -90,7 +115,30 @@
         </div>
     </div>
 
-    <!-- EXPLICIT LOCAL SIBLING SCRIPT (Locks into /agent-anna/app.js) -->
-    <script src="./app.js"></script>
+    <!-- MILITARY-GRADE DYNAMIC SCRIPT LOAD FALLBACK -->
+    <script>
+        (function loadScriptWithFallback() {
+            const scriptPaths = [
+                './app.js',
+                '../app.js',
+                '/agent-anna/app.js',
+                '/agent-anna/agent-anna/app.js',
+                'app.js'
+            ];
+
+            let index = 0;
+            function tryNextScript() {
+                if (index >= scriptPaths.length) return;
+                const script = document.createElement('script');
+                script.src = scriptPaths[index];
+                script.onerror = function() {
+                    index++;
+                    tryNextScript();
+                };
+                document.body.appendChild(script);
+            }
+            tryNextScript();
+        })();
+    </script>
 </body>
 </html>
