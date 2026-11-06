@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // MILITARY-GRADE CORE & STABLE TELEMETRY MATRIX
+// AGENT ANNA 01 // STABLE MILITARY-GRADE TELEMETRY CORE
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -32,7 +32,7 @@ window.onload = function() {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Send loop active. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Send loop stable. Ready for command, Commander.";
 
     const inputEl = document.getElementById('user-input');
     if (inputEl) inputEl.focus();
@@ -67,25 +67,31 @@ function injectCyberScrollbars() {
 }
 
 function initClipboardPaste() {
-    const userInput = document.getElementById('user-input');
-    if (!userInput) return;
-    userInput.addEventListener('paste', function(event) {
-        const items = (event.clipboardData || event.clipboardData).items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                event.preventDefault();
-                const blob = items[i].getAsFile();
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64Data = e.target.result;
-                    appendMsg(`[CLIPBOARD IMAGE CAPTURED: Size ${Math.round(blob.size/1024)} KB]`, 'user', 'Commander');
-                    sendMessage(`I have pasted an image from my clipboard into telemetry buffer. Analyze this image data payload and assist with layout or diagnostics: ${base64Data.substring(0, 60)}...`);
-                };
-                reader.readAsDataURL(blob);
-                showCyberNotification("Image captured from clipboard and loaded into telemetry.");
-            }
-        }
-    });
+    try {
+        const userInput = document.getElementById('user-input');
+        if (!userInput) return;
+        userInput.addEventListener('paste', function(event) {
+            try {
+                const items = event.clipboardData && event.clipboardData.items;
+                if (!items) return;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        event.preventDefault();
+                        const blob = items[i].getAsFile();
+                        if (!blob) return;
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const base64Data = e.target.result;
+                            appendMsg(`[CLIPBOARD IMAGE CAPTURED: Size ${Math.round(blob.size/1024)} KB]`, 'user', 'Commander');
+                            sendMessage(`I have pasted an image from my clipboard into telemetry buffer. Analyze this image data payload and assist with layout or diagnostics: ${base64Data.substring(0, 60)}...`);
+                        };
+                        reader.readAsDataURL(blob);
+                        showCyberNotification("Image captured from clipboard and loaded into telemetry.");
+                    }
+                }
+            } catch (err) {}
+        });
+    } catch (e) {}
 }
 
 function showCyberNotification(message, isError = false) {
