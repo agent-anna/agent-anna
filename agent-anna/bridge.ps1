@@ -39,7 +39,7 @@ while ($true) {
         if ($cryptoRes.ethereum.usd) { $ethPrice  = "`$" + $cryptoRes.ethereum.usd.ToString("N2") }
         if ($cryptoRes.dogecoin.usd) { $dogePrice = "`$" + $cryptoRes.dogecoin.usd.ToString("N4") }
     } catch {
-        $btcPrice  = "$98,450.00 (Cached)"
+        $btcPrice  = "$FUCK,450.00 (Cached)"
         $ethPrice  = "$2,850.00 (Cached)"
         $dogePrice = "$0.1850 (Cached)"
         Write-Host "[$timestamp] CoinGecko Rate Limit / 429 Enforced - Using Cached Base." -ForegroundColor Red
