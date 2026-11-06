@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // STABLE MILITARY-GRADE TELEMETRY CORE
+// AGENT ANNA 01 // STABLE MILITARY-GRADE TELEMETRY CORE (ALL-IN-ONE)
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -391,12 +391,19 @@ ${coreKnowledgeCache}
 Live Telemetry & Market Feeds:
 ${liveTelemetry}`;
 
-    const messagesPayload = [{ role: "system", content: systemPrompt }, ...chatHistory];
+    const messagesPayload = [
+        { role: "system", content: systemPrompt },
+        ...chatHistory
+    ];
 
     try {
         const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", {
             method: "POST",
-            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
             body: JSON.stringify({
                 model: "MiniMaxAI/MiniMax-M2.7",
                 messages: messagesPayload,
@@ -406,14 +413,28 @@ ${liveTelemetry}`;
         });
 
         if (!res.ok) {
-            if (res.status === 429) throw new Error("API Rate Limit Exceeded (429). Please rotate your key.");
-            throw new Error(`API Error ${res.status}`);
+            let errorDetail = `API Error ${res.status}`;
+            try {
+                const errJson = await res.json();
+                if (errJson.error && errJson.error.message) {
+                    errorDetail += `: ${errJson.error.message}`;
+                }
+            } catch(e) {}
+            if (res.status === 405) {
+                errorDetail = "HTTP 405 Method Not Allowed. Verify endpoint URL or API key permissions.";
+            }
+            throw new Error(errorDetail);
         }
 
         const data = await res.json();
-        let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-        reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
+        let reply = "";
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+        } else if (data.content) {
+            reply = data.content;
+        }
 
+        reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
         chatHistory.push({ role: "assistant", content: reply });
 
         const endTime = performance.now();
