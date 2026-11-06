@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // STABLE MILITARY-GRADE TELEMETRY CORE (ALL-IN-ONE)
+// AGENT ANNA 01 // AUDITED MILITARY-GRADE TELEMETRY CORE
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -32,7 +32,7 @@ window.onload = function() {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Send loop stable. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Audit complete. Ready for command, Commander.";
 
     const inputEl = document.getElementById('user-input');
     if (inputEl) inputEl.focus();
@@ -46,7 +46,6 @@ window.onload = function() {
     initSpeechRecognition();
     initWavCanvas();
     injectCyberScrollbars();
-    initClipboardPaste();
 };
 
 window.addEventListener('beforeunload', function () {
@@ -64,34 +63,6 @@ function injectCyberScrollbars() {
         ::-webkit-scrollbar-thumb:hover { background: #ff007f; box-shadow: 0 0 12px rgba(255,0,127,0.6); }
     `;
     document.head.appendChild(style);
-}
-
-function initClipboardPaste() {
-    try {
-        const userInput = document.getElementById('user-input');
-        if (!userInput) return;
-        userInput.addEventListener('paste', function(event) {
-            try {
-                const items = event.clipboardData && event.clipboardData.items;
-                if (!items) return;
-                for (let i = 0; i < items.length; i++) {
-                    if (items[i].type.indexOf('image') !== -1) {
-                        event.preventDefault();
-                        const blob = items[i].getAsFile();
-                        if (!blob) return;
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const base64Data = e.target.result;
-                            appendMsg(`[CLIPBOARD IMAGE CAPTURED: Size ${Math.round(blob.size/1024)} KB]`, 'user', 'Commander');
-                            sendMessage(`I have pasted an image from my clipboard into telemetry buffer. Analyze this image data payload and assist with layout or diagnostics: ${base64Data.substring(0, 60)}...`);
-                        };
-                        reader.readAsDataURL(blob);
-                        showCyberNotification("Image captured from clipboard and loaded into telemetry.");
-                    }
-                }
-            } catch (err) {}
-        });
-    } catch (e) {}
 }
 
 function showCyberNotification(message, isError = false) {
@@ -354,16 +325,6 @@ async function sendMessage(forcedQuery = null) {
     }
     if (!query) return;
 
-    if (query.toUpperCase() === "SHUT UP" || query.toUpperCase() === "STFU") {
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        document.body.classList.remove('is-speaking', 'is-thinking');
-        updateHUDState("READY");
-        appendMsg(query, 'user', 'Commander');
-        appendMsg("Audio stream terminated by command.", 'assistant', 'AA01 Core', false);
-        if (input && !forcedQuery) input.value = '';
-        return;
-    }
-
     if (query.startsWith('http://') || query.startsWith('https://')) {
         scrapeWebPage(query);
         if (input && !forcedQuery) input.value = '';
@@ -396,75 +357,60 @@ ${liveTelemetry}`;
         ...chatHistory
     ];
 
-    const endpoints = [
-        "[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)",
-        "[https://api.dahl.global/v1/chat/completions](https://api.dahl.global/v1/chat/completions)",
-        "[https://dahl.global/v1/chat/completions](https://dahl.global/v1/chat/completions)"
-    ];
+    try {
+        const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({
+                model: "MiniMaxAI/MiniMax-M2.7",
+                messages: messagesPayload,
+                temperature: 0.1,
+                max_tokens: 4000
+            })
+        });
 
-    let successData = null;
-    let lastError = null;
-
-    for (const ep of endpoints) {
-        try {
-            const res = await fetch(ep, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "MiniMaxAI/MiniMax-M2.7",
-                    messages: messagesPayload,
-                    temperature: 0.1,
-                    max_tokens: 4000
-                })
-            });
-
-            if (res.ok) {
-                successData = await res.json();
-                break;
-            } else {
-                let errText = `HTTP ${res.status}`;
-                try {
-                    const errJson = await res.json();
-                    if (errJson.error && errJson.error.message) errText += `: ${errJson.error.message}`;
-                } catch(e) {}
-                lastError = errText;
-            }
-        } catch (err) {
-            lastError = err.message;
+        if (!res.ok) {
+            let errorDetail = `API Error ${res.status}`;
+            try {
+                const errJson = await res.json();
+                if (errJson.error && errJson.error.message) {
+                    errorDetail += `: ${errJson.error.message}`;
+                }
+            } catch(e) {}
+            throw new Error(errorDetail);
         }
-    }
 
-    if (!successData) {
+        const data = await res.json();
+        let reply = "";
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+        } else if (data.content) {
+            reply = data.content;
+        }
+
+        reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
+        chatHistory.push({ role: "assistant", content: reply });
+
+        const endTime = performance.now();
+        const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
+        const latencyBadge = document.getElementById('latency-display');
+        if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
+
+        document.body.classList.remove('is-thinking');
+        updateHUDState("READY");
+
+        appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
+        speakText(reply);
+
+    } catch (err) {
         document.body.classList.remove('is-thinking');
         updateHUDState("ERROR");
-        appendMsg(`Execution Error: ${lastError || "All endpoints failed (405 Method Not Allowed)"}`, 'assistant', 'System Alert', false);
-        return;
+        appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
     }
-
-    let reply = "";
-    if (successData.choices && successData.choices[0] && successData.choices[0].message) {
-        reply = (successData.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    } else if (successData.content) {
-        reply = successData.content;
-    }
-
-    reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
-    chatHistory.push({ role: "assistant", content: reply });
-
-    const endTime = performance.now();
-    const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
-    const latencyBadge = document.getElementById('latency-display');
-    if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
-
-    document.body.classList.remove('is-thinking');
-    updateHUDState("READY");
-
-    appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
-    speakText(reply);
 }
 
 // =================================================================
