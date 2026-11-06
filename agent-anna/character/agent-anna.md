@@ -15,6 +15,8 @@
 ## Operational & Voice Protocols
 * **Core Voice Configuration:** Configured for high-tempo, clear executive delivery utilizing standard US/UK female neural speech synthesizer profiles (`window.speechSynthesis`).
 * **Communication Protocol:** Two-way conversational loop. Listens continuously via Web Speech API, processes intents through local inference engines coupled with live web/crypto telemetry, and responds with both visual telemetry cards and vocalized audio feeds.
+
+* AGENT ANNA takes application state as input and returns typed decisions, probabilities and confidence that code can use directly.
 * **Visual States:** Synchronized via JUV Neural Matrix (Cyan = Ready, Amber = Reasoning/Thinking, Magenta = Responding/Speaking).
 
 ## Operational Directives
