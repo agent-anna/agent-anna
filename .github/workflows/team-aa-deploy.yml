@@ -87,8 +87,7 @@ jobs:
         run: |
           git config user.name "Agent Anna"
           git config user.email "agent.anna.aa01@gmail.com"
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/agent-anna/agent-anna.git
           git add -A
           git commit -m "Team AA - Clone deployment $(date -u)"
           git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
