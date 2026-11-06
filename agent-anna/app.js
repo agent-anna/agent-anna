@@ -396,63 +396,75 @@ ${liveTelemetry}`;
         ...chatHistory
     ];
 
-    try {
-        const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify({
-                model: "MiniMaxAI/MiniMax-M2.7",
-                messages: messagesPayload,
-                temperature: 0.1,
-                max_tokens: 4000
-            })
-        });
+    const endpoints = [
+        "[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)",
+        "[https://api.dahl.global/v1/chat/completions](https://api.dahl.global/v1/chat/completions)",
+        "[https://dahl.global/v1/chat/completions](https://dahl.global/v1/chat/completions)"
+    ];
 
-        if (!res.ok) {
-            let errorDetail = `API Error ${res.status}`;
-            try {
-                const errJson = await res.json();
-                if (errJson.error && errJson.error.message) {
-                    errorDetail += `: ${errJson.error.message}`;
-                }
-            } catch(e) {}
-            if (res.status === 405) {
-                errorDetail = "HTTP 405 Method Not Allowed. Verify endpoint URL or API key permissions.";
+    let successData = null;
+    let lastError = null;
+
+    for (const ep of endpoints) {
+        try {
+            const res = await fetch(ep, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    model: "MiniMaxAI/MiniMax-M2.7",
+                    messages: messagesPayload,
+                    temperature: 0.1,
+                    max_tokens: 4000
+                })
+            });
+
+            if (res.ok) {
+                successData = await res.json();
+                break;
+            } else {
+                let errText = `HTTP ${res.status}`;
+                try {
+                    const errJson = await res.json();
+                    if (errJson.error && errJson.error.message) errText += `: ${errJson.error.message}`;
+                } catch(e) {}
+                lastError = errText;
             }
-            throw new Error(errorDetail);
+        } catch (err) {
+            lastError = err.message;
         }
+    }
 
-        const data = await res.json();
-        let reply = "";
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-        } else if (data.content) {
-            reply = data.content;
-        }
-
-        reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
-        chatHistory.push({ role: "assistant", content: reply });
-
-        const endTime = performance.now();
-        const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
-        const latencyBadge = document.getElementById('latency-display');
-        if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
-
-        document.body.classList.remove('is-thinking');
-        updateHUDState("READY");
-
-        appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
-        speakText(reply);
-
-    } catch (err) {
+    if (!successData) {
         document.body.classList.remove('is-thinking');
         updateHUDState("ERROR");
-        appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
+        appendMsg(`Execution Error: ${lastError || "All endpoints failed (405 Method Not Allowed)"}`, 'assistant', 'System Alert', false);
+        return;
     }
+
+    let reply = "";
+    if (successData.choices && successData.choices[0] && successData.choices[0].message) {
+        reply = (successData.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    } else if (successData.content) {
+        reply = successData.content;
+    }
+
+    reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
+    chatHistory.push({ role: "assistant", content: reply });
+
+    const endTime = performance.now();
+    const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
+    const latencyBadge = document.getElementById('latency-display');
+    if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
+
+    document.body.classList.remove('is-thinking');
+    updateHUDState("READY");
+
+    appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
+    speakText(reply);
 }
 
 // =================================================================
