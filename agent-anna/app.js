@@ -276,7 +276,7 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & PREMIUM NATURAL VOICE PROFILE
+// 3. VOICE SYNTHESIS & BRITISH LADY VOICE LOCK + KILLSWITCH
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -295,33 +295,29 @@ function speakText(text) {
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    // Premium natural voice profile selection list
-    const premiumVoices = [
-        "Google UK English Female", 
-        "en-GB-Neural2-F", 
-        "Sonia", 
-        "Hazel", 
-        "Samantha", 
-        "Google US English", 
-        "Victoria", 
-        "Karen", 
-        "Zira",
-        "Microsoft Zira"
+    // Guaranteed British English Female / Premium English Lady Profile
+    const englishLadyVoices = [
+        "Google UK English Female",
+        "en-GB-Neural2-F",
+        "Sonia",
+        "Hazel",
+        "Samantha",
+        "Victoria",
+        "Google US English"
     ];
     
-    let selectedVoice = voices.find(v => premiumVoices.some(p => v.name.includes(p)));
+    let selectedVoice = voices.find(v => englishLadyVoices.some(p => v.name.includes(p)));
     
     if (!selectedVoice) {
-        selectedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Natural') || v.name.includes('Neural')));
+        selectedVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
     }
-    
+
     if (!selectedVoice) {
         selectedVoice = voices.find(v => v.lang.startsWith('en'));
     }
 
     if (selectedVoice) utterance.voice = selectedVoice;
     
-    // Tuned for natural cadence
     utterance.pitch = 1.02;
     utterance.rate = 0.98;
 
@@ -353,6 +349,17 @@ async function sendMessage(forcedQuery = null) {
         return;
     }
     if (!query) return;
+
+    // Emergency Mute Intercept for Long Texts or "SHUT UP" commands
+    if (query.toUpperCase() === "SHUT UP" || query.toUpperCase() === "STFU") {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        document.body.classList.remove('is-speaking', 'is-thinking');
+        updateHUDState("READY");
+        appendMsg(query, 'user', 'Commander');
+        appendMsg("Audio stream terminated by command.", 'assistant', 'AA01 Core', false);
+        if (input && !forcedQuery) input.value = '';
+        return;
+    }
 
     if (query.startsWith('http://') || query.startsWith('https://')) {
         scrapeWebPage(query);
@@ -648,11 +655,18 @@ function updateHUDState(stateLabel) {
 function toggleVoice() {
     isVoiceEnabled = !isVoiceEnabled;
     const btn = document.getElementById('voice-btn');
+    
+    // Immediate Speech Killswitch when toggled OFF
+    if (!isVoiceEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        document.body.classList.remove('is-speaking');
+        updateHUDState("READY");
+    }
+
     if (btn) {
         btn.className = isVoiceEnabled ? "ctrl-btn active" : "ctrl-btn";
         btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
     }
-    if (!isVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
 function toggleSettings() {
