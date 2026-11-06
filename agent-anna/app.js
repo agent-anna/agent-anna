@@ -482,7 +482,6 @@ async function handleAction(actionType, messageId) {
     }
 }
 
-// DELETE SINGLE MESSAGE & PURGE FROM MEMORY
 function deleteMessage(messageId) {
     const msgElement = document.getElementById(messageId);
     if (msgElement) {
@@ -656,11 +655,11 @@ function clearLogs() {
     if (chatContainer) {
         chatContainer.innerHTML = `
             <div class="message assistant" id="msg_cleared">
-                <div class="msg-header">
-                    <span>AA01 Core</span>
-                    <button class="action-chip del-btn" onclick="deleteMessage('msg_cleared')" title="Delete Message">🗑️ DEL</button>
-                </div>
+                <div class="msg-header">AA01 Core</div>
                 <div class="msg-body">Console history and memory state cleared. Standby mode.</div>
+                <div class="action-row">
+                    <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_cleared')">🗑️ DEL</button>
+                </div>
             </div>
         `;
     }
@@ -685,15 +684,20 @@ function appendMsg(text, sender, label, includeActions = false) {
                 <button class="action-chip" onclick="handleAction('save', '${messageId}')">2. SAVE AS .MD</button>
                 <button class="action-chip" onclick="handleAction('ingest', '${messageId}')">3. INGEST TO CORE</button>
                 <button class="action-chip" onclick="copyToClipboard('${messageId}', this)">COPY</button>
+                <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
+            </div>
+        `;
+    } else {
+        // Even user messages get a delete option so they can be cleaned up
+        actionsHTML = `
+            <div class="action-row">
+                <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
             </div>
         `;
     }
 
     div.innerHTML = `
-        <div class="msg-header">
-            <span>${label}</span>
-            <button class="action-chip del-btn" onclick="deleteMessage('${messageId}')" title="Delete Message">🗑️ DEL</button>
-        </div>
+        <div class="msg-header"><span>${label}</span></div>
         <div style="white-space:pre-wrap; margin-top: 6px;">${text}</div>
         ${actionsHTML}
     `;
