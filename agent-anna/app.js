@@ -33,7 +33,7 @@ window.onload = function() {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Zero-bloat markdown sync active. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade prompt caching & telemetry core online. Zero-latency matrix active. Ready for command, Commander.";
 
     const inputEl = document.getElementById('user-input');
     if (inputEl) inputEl.focus();
@@ -307,7 +307,6 @@ async function fetchLiveTelemetry() {
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
     
-    // SILENT CODE RULE: Keep voice silent if outputting code or heavy technical payloads
     const hasCodeBlock = text.includes('```') || text.includes('function ') || text.includes('const ') || text.length > 400;
     if (hasCodeBlock) {
         speakShortAnnouncement("Executing code synthesis silently, Commander.");
@@ -326,6 +325,10 @@ function speakText(text) {
 
         let voices = window.speechSynthesis.getVoices();
         if (!voices || voices.length === 0) voices = cachedVoices;
+        if (!voices || voices.length === 0) {
+            loadVoices();
+            voices = cachedVoices;
+        }
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
 
@@ -434,13 +437,23 @@ ${coreKnowledgeCache}
 Live Telemetry & Market Feeds:
 ${liveTelemetry}`;
 
+    // MILITARY-GRADE PROMPT CACHING & CONTEXT SPOOLING PAYLOAD STRUCTURE
     const messagesPayload = [
-        { role: "system", content: systemPrompt },
+        { 
+            role: "system", 
+            content: [
+                {
+                    type: "text",
+                    text: systemPrompt,
+                    cache_control: { type: "ephemeral" } // Forces gateway prompt caching
+                }
+            ]
+        },
         ...chatHistory
     ];
 
     try {
-      const res = await fetch("https://inference.dahl.global/v1/chat/completions", {
+        const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
@@ -450,7 +463,7 @@ ${liveTelemetry}`;
                 model: "MiniMaxAI/MiniMax-M2.7",
                 messages: messagesPayload,
                 temperature: 0.1,
-                max_tokens: 4000 // <--- Expanded headroom prevents text truncation
+                max_tokens: 4000
             })
         });
 
