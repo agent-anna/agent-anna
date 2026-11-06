@@ -12,7 +12,6 @@ let cachedVoices = [];
 let coreKnowledgeCache = null;
 let messagePayloadStore = {};
 
-// MULTI-TURN CONVERSATION MEMORY BUFFER
 let chatHistory = [];
 
 let audioCtx = null;
@@ -50,6 +49,69 @@ window.onload = function() {
 window.addEventListener('beforeunload', function (e) {
     autoLogSessionEnd();
 });
+
+// =================================================================
+// FUTURISTIC CYBER HUD NOTIFICATION SYSTEM (REPLACES ALERTS)
+// =================================================================
+function showCyberNotification(message, isError = false) {
+    let banner = document.getElementById('cyber-notification-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'cyber-notification-banner';
+        banner.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+            padding: 14px 20px;
+            background: rgba(11, 15, 25, 0.95);
+            border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
+            color: ${isError ? '#ff0055' : '#00ffcc'};
+            font-family: monospace;
+            font-size: 12px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
+            border-radius: 4px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            opacity: 0;
+            transform: translateY(-10px);
+        `;
+        document.body.appendChild(banner);
+    }
+
+    banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
+    banner.style.color = isError ? '#ff0055' : '#00ffcc';
+    banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
+    banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
+
+    // Fade in
+    setTimeout(() => {
+        banner.style.opacity = '1';
+        banner.style.transform = 'translateY(0)';
+    }, 10);
+
+    // Auto fade out after 4 seconds
+    setTimeout(() => {
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+    }, 4000);
+}
+
+// HUD Strobe Effect for Success / Completion Feedback
+function triggerHudStrobe() {
+    const hudPane = document.querySelector('.agent-hud-pane');
+    if (!hudPane) return;
+
+    let flashes = 0;
+    const interval = setInterval(() => {
+        hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 30px #00ffcc' : 'none';
+        flashes++;
+        if (flashes > 5) {
+            clearInterval(interval);
+            hudPane.style.boxShadow = 'none';
+        }
+    }, 150);
+}
 
 // =================================================================
 // 1. SPEECH RECOGNITION & VISUALIZER ENGINE
@@ -124,7 +186,7 @@ function stopAudioVisualizer() {
 
 function toggleMic() {
     if (!recognition) initSpeechRecognition();
-    if (!recognition) return alert("Speech recognition unavailable.");
+    if (!recognition) return showCyberNotification("Speech recognition unavailable.", true);
 
     if (!isListening) {
         try { recognition.start(); } catch (e) { stopListeningUI(); }
@@ -257,7 +319,7 @@ async function sendMessage(forcedQuery = null) {
     const query = forcedQuery || (input ? input.value.trim() : "");
 
     if (!apiKey) {
-        alert('Please tap ⚙️ KEYS and paste your Dahl API Key.');
+        showCyberNotification('Please tap ⚙️ KEYS and paste your Dahl API Key.', true);
         toggleSettings();
         return;
     }
@@ -347,7 +409,7 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || "");
 
     if (!ghToken) {
-        alert("Please tap ⚙️ KEYS and paste your GitHub PAT token.");
+        showCyberNotification("Please tap ⚙️ KEYS and paste your GitHub PAT token.", true);
         toggleSettings();
         return false;
     }
@@ -393,7 +455,7 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
 async function handleAction(actionType, messageId) {
     const textContent = messagePayloadStore[messageId] || "";
     if (!textContent) {
-        alert("Payload reference not found.");
+        showCyberNotification("Payload reference not found.", true);
         return;
     }
 
@@ -418,9 +480,10 @@ async function handleAction(actionType, messageId) {
         updateHUDState("READY");
 
         if (planSuccess && logSuccess) {
-            alert("SUCCESS: Payload autonomously ingested into active plans and session log!");
+            triggerHudStrobe(); // Strobes HUD green when complete!
+            showCyberNotification("SUCCESS: Payload autonomously ingested into active plans & session log!");
         } else {
-            alert("Ingestion Warning: Check your GitHub PAT in settings or network connectivity.");
+            showCyberNotification("Ingestion Warning: Check your GitHub PAT in settings or network connectivity.", true);
         }
     }
 }
@@ -447,7 +510,7 @@ async function scrapeWebPage(forcedUrl = null) {
     const targetQuery = forcedUrl || (input ? input.value.trim() : "");
     
     if (!targetQuery) {
-        alert("Enter a search term or target URL in the input box first.");
+        showCyberNotification("Enter a search term or target URL in the input box first.", true);
         if (input) input.focus();
         return;
     }
