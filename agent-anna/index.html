@@ -4,59 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Anna 01 - Core Sub-App</title>
-    
-    <link rel="icon" type="image/png" href="./favicon.png">
-
-    <!-- MILITARY-GRADE DYNAMIC CSS RESOLVER -->
-    <script>
-        (function resolveStyles() {
-            const cssPaths = [
-                './styles.css',
-                '../styles.css',
-                '/agent-anna/styles.css',
-                '/agent-anna/agent-anna/styles.css',
-                'styles.css'
-            ];
-            
-            let loaded = false;
-            cssPaths.forEach(path => {
-                if (loaded) return;
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.type = 'text/css';
-                link.href = path;
-                document.head.appendChild(link);
-            });
-        })();
-    </script>
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
-    <!-- LEFT HUD PANE -->
+    <!-- Left HUD Pane with Glowing Border Frame -->
     <div class="agent-hud-pane">
         <div class="agent-header-meta">
-            <span class="agent-id-badge" id="agent-id-display">ID: AGENT-ANNA-01</span>
+            <div class="agent-id-badge">AA01 TACTICAL COMMAND</div>
             <div class="status-bar-indicator" id="status-bar">
-                <div class="status-dot"></div>
+                <span class="status-dot"></span>
                 <span id="state-text">READY</span>
             </div>
         </div>
 
         <div class="agent-visual-container">
             <canvas id="wav-canvas"></canvas>
-
             <div class="agent-portrait-frame">
-                <img id="agent-avatar-img" 
-                     src="./character/agent-anna.png" 
-                     onerror="this.onerror=null; this.src='https://images.squarespace-cdn.com/content/v1/55db4cd3e4b0300a610091bb/e3cf3515-cbfc-44d5-9418-045b7ff396ca/How-to-look-a-decade-younger-without-surgery-by-siti-med-spa-san-diego.jpg';" 
-                     alt="Agent Anna Portrait">
+                <img src="./character/agent-anna.png" alt="Agent Anna">
             </div>
-            
             <div class="agent-nameplate">
-                <h2 id="agent-title">AA01 // SUB-APP CORE</h2>
-                <p>Autonomous Telemetry & Voice Unit</p>
+                <h2>AGENT ANNA 01</h2>
+                <p>AUTONOMOUS JUV TELEMETRY CORE</p>
             </div>
-
             <div class="eq-container">
                 <div class="eq-bar"></div>
                 <div class="eq-bar"></div>
@@ -67,78 +37,61 @@
         </div>
     </div>
 
-    <!-- RIGHT CHAT CONSOLE PANE -->
+    <!-- Right Chat Console Pane -->
     <div class="chat-console-pane">
         <div class="chat-header">
             <span>CONSOLE [JUV NEURAL]</span>
-            <span id="latency-display" class="latency-badge">TRIP LATENCY: 0.00s</span>
-            <div style="display: flex; gap: 6px;">
-                <button class="ctrl-btn" onclick="clearLogs()" title="Clear Logs">🧹</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="latency-badge" id="latency-display">TRIP LATENCY: 0.00s</span>
+                <button class="ctrl-btn" onclick="clearLogs()" title="Clear Console">🧹</button>
                 <button class="ctrl-btn active" id="voice-btn" onclick="toggleVoice()">🔊 ON</button>
                 <button class="ctrl-btn" onclick="toggleSettings()">⚙️ KEYS</button>
             </div>
         </div>
 
-        <!-- QUICK LAUNCH & TACTICAL TASK BAR -->
         <div class="quick-launch-bar">
             <span class="quick-launch-label">TACTICAL:</span>
-            <button class="ctrl-btn" onclick="launchLocalServer()" title="Launch Python HTTP Server">🚀 START SERVER</button>
-            <button class="ctrl-btn" onclick="triggerManualTelemetry()" title="Fetch Live Market Tickers">📊 CRYPTO MARKET</button>
-            <button class="ctrl-btn" onclick="scrapeWebPage()" title="Scrape First 100 Lines from URL">🌐 SCRAPE WEB</button>
-            <button class="ctrl-btn military-btn" onclick="triggerMilitaryProtocol()" title="Advanced Military Trigger">⚡ PROTOCOL</button>
-        </div>
-
-        <!-- SECURE KEYS & PAT TOKEN STORAGE PANEL -->
-        <div id="settings-panel" style="display:none; padding: 8px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border-color);">
-            <div style="font-size: 10px; color: #888; margin-bottom: 4px; font-family: monospace;">DAHL INFERENCE API KEY:</div>
-            <input type="password" id="api-key" placeholder="Enter Dahl API Key (sk-...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px; margin-bottom: 8px;" oninput="saveKey()">
-            
-            <div style="font-size: 10px; color: #888; margin-bottom: 4px; font-family: monospace;">GITHUB PERSONAL ACCESS TOKEN (PAT):</div>
-            <input type="password" id="gh-token" placeholder="Enter GitHub PAT Token (ghp_...)" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); font-family: monospace; font-size: 12px; border-radius: 4px;" oninput="saveKey()">
+            <button class="ctrl-btn military-btn" onclick="launchLocalServer()">🚀 START SERVER</button>
+            <button class="ctrl-btn" onclick="triggerManualTelemetry()">📊 CRYPTO MARKET</button>
+            <button class="ctrl-btn" onclick="scrapeWebPage()">🌐 SCRAPE WEB</button>
+            <button class="ctrl-btn military-btn" onclick="triggerMilitaryProtocol()">⚡ PROTOCOL</button>
         </div>
 
         <div class="thinking-banner" id="thinking-banner">
-            [AA01 NEURAL MATRIX ACTIVE — STREAMING...]
+            [AA01 NEURAL ENGINE REASONING...]
         </div>
 
+        <!-- Settings Panel -->
+        <div id="settings-panel" style="display: none; padding: 15px; background: rgba(11, 15, 25, 0.98); border-bottom: 1px solid #1e293b;">
+            <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px;">SECURITY & CREDENTIAL MATRIX</div>
+            <input type="password" id="api-key" placeholder="Paste Dahl API Key..." style="width: 100%; padding: 8px; background: #0b0f19; border: 1px solid #1e293b; color: #e2e8f0; font-family: monospace; font-size: 11px; margin-bottom: 8px; border-radius: 4px;" />
+            <input type="password" id="gh-token" placeholder="Paste GitHub PAT Token..." style="width: 100%; padding: 8px; background: #0b0f19; border: 1px solid #1e293b; color: #e2e8f0; font-family: monospace; font-size: 11px; margin-bottom: 8px; border-radius: 4px;" />
+            <button class="ctrl-btn military-btn" onclick="saveKey()">SAVE CREDENTIALS</button>
+        </div>
+
+        <!-- Chat Container -->
         <div id="chat-container">
-            <div class="message assistant" id="msg_init">
+            <div class="message assistant" id="msg_welcome">
                 <div class="msg-header">AA01 Core</div>
-                <div class="msg-body">Sub-app isolated core online. Tactical layout locked. Direct PAT sync ready. Zero lag active.</div>
+                <div class="msg-body">Military-grade telemetry core online. Zero-bloat markdown sync active. Ready for command, Commander.</div>
+                <div class="action-row">
+                    <button class="action-chip" onclick="handleAction('summarize', 'msg_welcome')">1. SUMMARIZE</button>
+                    <button class="action-chip" onclick="handleAction('save', 'msg_welcome')">2. SAVE AS .MD</button>
+                    <button class="action-chip" onclick="handleAction('ingest', 'msg_welcome')">3. INGEST TO CORE</button>
+                    <button class="action-chip" onclick="copyToClipboard('msg_welcome', this)">COPY</button>
+                    <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_welcome')">🗑️ DEL</button>
+                </div>
             </div>
         </div>
 
+        <!-- Input Control Bar -->
         <div class="input-control-bar">
-            <button class="ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Toggle Microphone">🎤</button>
-            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry..." onkeydown="handleKey(event)">
-            <button class="ctrl-btn" onclick="sendMessage()">SEND</button>
+            <button class="ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Toggle Voice Input">🎤</button>
+            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry..." onkeypress="handleKey(event)" />
+            <button class="ctrl-btn military-btn" onclick="sendMessage()">SEND</button>
         </div>
     </div>
 
-    <!-- MILITARY-GRADE DYNAMIC SCRIPT LOAD FALLBACK -->
-    <script>
-        (function loadScriptWithFallback() {
-            const scriptPaths = [
-                './app.js',
-                '../app.js',
-                '/agent-anna/app.js',
-                '/agent-anna/agent-anna/app.js',
-                'app.js'
-            ];
-
-            let index = 0;
-            function tryNextScript() {
-                if (index >= scriptPaths.length) return;
-                const script = document.createElement('script');
-                script.src = scriptPaths[index];
-                script.onerror = function() {
-                    index++;
-                    tryNextScript();
-                };
-                document.body.appendChild(script);
-            }
-            tryNextScript();
-        })();
-    </script>
+    <script src="./app.js"></script>
 </body>
 </html>
