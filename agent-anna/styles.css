@@ -248,7 +248,7 @@ body.is-thinking .thinking-banner {
     display: block;
 }
 
-/* Chat Messages Container with Restored Background Watermark */
+/* Chat Messages Container with Background Watermark */
 #chat-container {
     flex: 1;
     overflow-y: auto;
