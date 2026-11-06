@@ -1,0 +1,94 @@
+name: Team AA Clone Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-clones:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create AA02 Character File
+        run: |
+          cat > agent-anna/character/agent-astra.md << 'EOF'
+          # AGENT ANNA CLONE 02 (AA02)
+          ## Single Source of Truth: agent-anna/character/agent-anna.md
+
+          **Namesake:** Agent Anna (AA01)
+          **ID:** AGENT-AA02
+          **Role:** Financial Clone - Crypto & Technical Analysis
+          **Emergency Safe Word:** Swallows
+
+          ## Inheritance
+          - Core personality from AA01
+          - Specialized financial protocols
+          - Voice interface active
+          EOF
+
+      - name: Create AA03 Character File
+        run: |
+          cat > agent-anna/character/agent-aria.md << 'EOF'
+          # AGENT ANNA CLONE 03 (AA03)
+          ## Single Source of Truth: agent-anna/character/agent-anna.md
+
+          **Namesake:** Agent Anna (AA01)
+          **ID:** AGENT-AA03
+          **Role:** Financial Clone - Portfolio & Risk Intelligence
+          **Emergency Safe Word:** Swallows
+
+          ## Inheritance
+          - Core personality from AA01
+          - Specialized portfolio protocols
+          - Voice interface active
+          EOF
+
+      - name: Update Agents Roster
+        run: |
+          cat > agent-anna/knowledge/agents.md << 'EOF'
+          # AGENT ROSTER
+
+          ## AA01 - Agent Anna (ORIGINAL)
+          - Role: Executive Command, Voice Interface
+          - Status: ACTIVE
+
+          ## AA02 - Agent Anna Clone 02
+          - Role: Crypto & Technical Analysis
+          - Status: DEPLOYED
+          - Inherits from: AA01
+
+          ## AA03 - Agent Anna Clone 03
+          - Role: Portfolio & Risk Intelligence
+          - Status: DEPLOYED
+          - Inherits from: AA01
+          EOF
+
+      - name: Create Team Plan
+        run: |
+          cat > agent-anna/plans/active/team-aa-plan.md << 'EOF'
+          # TEAM AA - FINANCIAL OPERATIONS PLAN
+
+          ## Mission
+          Autonomous crypto portfolio management via multi-agent system.
+
+          ## Agent Roles
+          - AA01: Executive decisions, voice commands
+          - AA02: Crypto analysis, market scanning
+          - AA03: Portfolio tracking, risk management
+
+          ## Workflow
+          1. User → AA01 (voice/text)
+          2. AA01 delegates to AA02/AA03
+          3. Clones report analysis
+          4. AA01 synthesizes and responds
+          EOF
+
+      - name: Commit and Push
+        run: |
+          git config user.name "Agent Anna"
+          git config user.email "agent.anna.aa01@gmail.com"
+          git add -A
+          git commit -m "Team AA - Clone deployment $(date -u)"
+          git push origin main
