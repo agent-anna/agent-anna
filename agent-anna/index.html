@@ -103,17 +103,14 @@
 
         <div id="chat-container">
             <div class="message assistant" id="msg_init">
-                <div class="msg-header">
-                    <span>AA01 Core</span>
-                    <button class="action-chip del-btn" onclick="deleteMessage('msg_init')" title="Delete Message">🗑️ DEL</button>
-                </div>
-                <div class="msg-body">Sub-app isolated core online. Tactical layout locked. Direct PAT sync ready. Press backtick (`) anytime to toggle mic.</div>
+                <div class="msg-header">AA01 Core</div>
+                <div class="msg-body">Sub-app isolated core online. Tactical layout locked. Direct PAT sync ready. Zero lag active.</div>
             </div>
         </div>
 
         <div class="input-control-bar">
             <button class="ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Toggle Microphone">🎤</button>
-            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry... (` to talk)" onkeydown="handleKey(event)">
+            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry..." onkeydown="handleKey(event)">
             <button class="ctrl-btn" onclick="sendMessage()">SEND</button>
         </div>
     </div>
