@@ -33,7 +33,7 @@ window.onload = function() {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade prompt caching & telemetry core online. Zero-latency matrix active. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Zero-bloat markdown sync active. Ready for command, Commander.";
 
     const inputEl = document.getElementById('user-input');
     if (inputEl) inputEl.focus();
@@ -302,7 +302,7 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & CORE INFERENCE ENGINE (LOCKED FEMALE IDENTITY)
+// 3. VOICE SYNTHESIS & CORE INFERENCE ENGINE
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -332,47 +332,27 @@ function speakText(text) {
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
 
-        // AGGRESSIVE FEMALE IDENTITY VOICE SELECTOR
-        const preferredVoices = [
+        const englishLadyVoices = [
             "Google UK English Female",
             "en-GB-Neural2-F",
             "Sonia",
             "Hazel",
             "Samantha",
             "Victoria",
-            "Karen",
-            "Moira",
-            "Fiona",
             "Google US English"
         ];
         
-        let selectedVoice = null;
-        
-        // 1. Try exact match from preferred female list
-        for (const pName of preferredVoices) {
-            selectedVoice = voices.find(v => v.name.includes(pName));
-            if (selectedVoice) break;
-        }
-
-        // 2. Fallback: Search for any English female or GB voice explicitly excluding known male markers
+        let selectedVoice = voices.find(v => englishLadyVoices.some(p => v.name.includes(p)));
         if (!selectedVoice) {
-            selectedVoice = voices.find(v => 
-                (v.lang.includes('en') || v.lang.includes('EN')) && 
-                (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('hazel') || v.name.toLowerCase().includes('sonia')) &&
-                !v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('david') && !v.name.toLowerCase().includes('george') && !v.name.toLowerCase().includes('oliver')
-            );
+            selectedVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
         }
-
-        // 3. Ultimate Fallback: Any English voice
         if (!selectedVoice) {
-            selectedVoice = voices.find(v => v.lang.startsWith('en') || v.lang.startsWith('EN'));
+            selectedVoice = voices.find(v => v.lang.startsWith('en'));
         }
 
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
-        }
+        if (selectedVoice) utterance.voice = selectedVoice;
         
-        utterance.pitch = 1.08; // Slight lift to guarantee feminine executive cadence
+        utterance.pitch = 1.02;
         utterance.rate = 0.98;
 
         utterance.onstart = () => { 
@@ -399,12 +379,8 @@ function speakShortAnnouncement(announcement) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
     try {
         window.speechSynthesis.cancel();
-        let voices = window.speechSynthesis.getVoices();
-        if (!voices || voices.length === 0) voices = cachedVoices;
         const utterance = new SpeechSynthesisUtterance(announcement);
-        const femaleVoice = voices.find(v => v.name.includes('Google UK English Female') || v.name.includes('Samantha') || v.name.includes('Sonia') || v.lang.startsWith('en'));
-        if (femaleVoice) utterance.voice = femaleVoice;
-        utterance.pitch = 1.08;
+        utterance.pitch = 1.02;
         utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     } catch (e) {}
@@ -462,16 +438,7 @@ Live Telemetry & Market Feeds:
 ${liveTelemetry}`;
 
     const messagesPayload = [
-        { 
-            role: "system", 
-            content: [
-                {
-                    type: "text",
-                    text: systemPrompt,
-                    cache_control: { type: "ephemeral" }
-                }
-            ]
-        },
+        { role: "system", content: systemPrompt },
         ...chatHistory
     ];
 
@@ -882,7 +849,7 @@ function initWavCanvas() {
 
 async function autoLogSessionEnd() {}
 
-fn launchLocalServer() {
+function launchLocalServer() {
     window.open('http://localhost:8000', '_blank');
 }
 
