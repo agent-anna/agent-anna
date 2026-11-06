@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // MILITARY-GRADE CORE & SILENT CODE MATRIX
+// AGENT ANNA 01 // MILITARY-GRADE CORE & STABLE TELEMETRY MATRIX
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -32,7 +32,7 @@ window.onload = function() {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Silent code synthesis active. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Send loop active. Ready for command, Commander.";
 
     const inputEl = document.getElementById('user-input');
     if (inputEl) inputEl.focus();
@@ -273,6 +273,7 @@ async function fetchLiveTelemetry() {
 - Solana Equity: ${sol}
 - Bitcoin (BTC): ${btc}
 - Ethereum (ETH): ${eth}
+- Binance Coin (BNB): ${bnb}
 - Dogecoin (DOGE): ${doge}
 - DRC-20 Token (SHI*): ${shi}
 - Latest Signal: ${signal}`;
@@ -284,10 +285,8 @@ async function fetchLiveTelemetry() {
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
     
-    // SILENT CODE RULE: If text contains code blocks or markdown code syntax, DO NOT read it aloud.
     const hasCodeBlock = text.includes('```') || text.includes('function ') || text.includes('const ') || text.includes('<!DOCTYPE') || text.includes('class=') || text.length > 500;
     if (hasCodeBlock) {
-        // Speak short silent notification instead of reading code
         speakShortAnnouncement("Executing code synthesis silently, Commander.");
         return;
     }
@@ -384,7 +383,14 @@ Persistent System Directives & Memory Matrix:
 ${coreKnowledgeCache}
 
 Live Telemetry & Market Feeds:
-${liveTelemetry}`;  const messagesPayload = [{ role: "system", content: systemPrompt }, ...chatHistory];  try { const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", { method: "POST", headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+${liveTelemetry}`;
+
+    const messagesPayload = [{ role: "system", content: systemPrompt }, ...chatHistory];
+
+    try {
+        const res = await fetch("[https://inference.dahl.global/v1/chat/completions](https://inference.dahl.global/v1/chat/completions)", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
                 model: "MiniMaxAI/MiniMax-M2.7",
                 messages: messagesPayload,
@@ -540,14 +546,20 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
         toggleSettings();
         return false;
     }
-    const apiUrl = `[https://api.github.com/repos/$](https://api.github.com/repos/$){REPO_OWNER}/${REPO_NAME}/contents/${filePath}`; try { const getRes = await fetch(apiUrl, { headers: { "Authorization": `token ${ghToken}`, "Accept": "vnd.github.v3+json" } });
+    const apiUrl = `[https://api.github.com/repos/$](https://api.github.com/repos/$){REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
+    try {
+        const getRes = await fetch(apiUrl, { headers: { "Authorization": `token ${ghToken}`, "Accept": "vnd.github.v3+json" } });
         let fileSha = "", existingContent = "";
         if (getRes.ok) {
             const fileData = await getRes.json();
             fileSha = fileData.sha;
             existingContent = decodeURIComponent(escape(atob(fileData.content)));
         }
-        const updatedContent = existingContent + `\n\n${contentToAppend}`; const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent))); const putRes = await fetch(apiUrl, { method: "PUT", headers: { "Authorization": `token ${ghToken}`, "Content-Type": "application/json", "Accept": "vnd.github.v3+json" },
+        const updatedContent = existingContent + `\n\n${contentToAppend}`;
+        const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
+        const putRes = await fetch(apiUrl, {
+            method: "PUT",
+            headers: { "Authorization": `token ${ghToken}`, "Content-Type": "application/json", "Accept": "vnd.github.v3+json" },
             body: JSON.stringify({ message: commitMessage, content: base64Encoded, sha: fileSha })
         });
         return putRes.ok;
@@ -558,7 +570,13 @@ async function handleAction(actionType, messageId) {
     const textContent = messagePayloadStore[messageId] || "";
     if (!textContent) return showCyberNotification("Payload reference not found.", true);
     if (actionType === 'summarize') {
-        sendMessage(`Summarize harvested data into precise executive intelligence:\n\n${textContent}`); } else if (actionType === 'save') { const blob = new Blob([textContent], { type: 'text/markdown' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `agent-anna-report-${Date.now()}.md`;
+        sendMessage(`Summarize harvested data into precise executive intelligence:\n\n${textContent}`);
+    } else if (actionType === 'save') {
+        const blob = new Blob([textContent], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `agent-anna-report-${Date.now()}.md`;
         a.click();
         URL.revokeObjectURL(url);
         showCyberNotification("Report successfully downloaded as .md file.");
@@ -567,7 +585,41 @@ async function handleAction(actionType, messageId) {
         const timestamp = new Date().toISOString();
         const payload = `### CONSOLIDATED INTELLIGENCE ENTRY [${timestamp}]\n${textContent}`;
         const planSuccess = await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest Plan [${timestamp}]`);
-        const logSuccess = await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log Entry [${timestamp}]`); updateHUDState("READY"); if (planSuccess && logSuccess) { triggerHudStrobe(); showCyberNotification("SUCCESS: Payload autonomously ingested into active plans & session log!"); } else { showCyberNotification("Ingestion Warning: Check GitHub PAT or network connectivity.", true); } } }  function copyToClipboard(messageId, btnElement) { const textContent = messagePayloadStore[messageId] \vert{}\vert{} ""; navigator.clipboard.writeText(textContent).then(() => { if (btnElement) { const originalText = btnElement.innerText; btnElement.innerText = "COPIED!"; setTimeout(() => { btnElement.innerText = originalText; }, 1500); } showCyberNotification("Message copied to clipboard."); }).catch(err => { showCyberNotification("Failed to copy.", true); }); }  function deleteMessage(messageId) { const msgElement = document.getElementById(messageId); if (msgElement) { delete messagePayloadStore[messageId]; msgElement.remove(); showCyberNotification("Message purged."); } }  function appendMsg(text, sender, label, includeActions = true) { const container = document.getElementById('chat-container'); if (!container) return; const messageId = 'msg_' + Math.random().toString(36).substring(2, 9); messagePayloadStore[messageId] = text; const div = document.createElement('div'); div.className = `message ${sender}`;
+        const logSuccess = await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log Entry [${timestamp}]`);
+        updateHUDState("READY");
+        if (planSuccess && logSuccess) {
+            triggerHudStrobe();
+            showCyberNotification("SUCCESS: Payload autonomously ingested into active plans & session log!");
+        } else {
+            showCyberNotification("Ingestion Warning: Check GitHub PAT or network connectivity.", true);
+        }
+    }
+}
+
+function copyToClipboard(messageId, btnElement) {
+    const textContent = messagePayloadStore[messageId] || "";
+    navigator.clipboard.writeText(textContent).then(() => {
+        if (btnElement) {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "COPIED!";
+            setTimeout(() => { btnElement.innerText = originalText; }, 1500);
+        }
+        showCyberNotification("Message copied to clipboard.");
+    }).catch(err => { showCyberNotification("Failed to copy.", true); });
+}
+
+function deleteMessage(messageId) {
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) { delete messagePayloadStore[messageId]; msgElement.remove(); showCyberNotification("Message purged."); }
+}
+
+function appendMsg(text, sender, label, includeActions = true) {
+    const container = document.getElementById('chat-container');
+    if (!container) return;
+    const messageId = 'msg_' + Math.random().toString(36).substring(2, 9);
+    messagePayloadStore[messageId] = text;
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
     div.id = messageId;
     let actionsHTML = includeActions ? `
         <div class="action-row">
