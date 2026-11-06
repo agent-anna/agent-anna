@@ -312,3 +312,104 @@ I will:
 | File | Status |
 |------|--------|
 | session-state.md | ✅ COMMITTED
+
+### CONSOLIDATED INTELLIGENCE ENTRY [2026-11-06T17:39:58.518Z]
+**AGENT ANNA // ARCHITECTURE UNDERSTOOD**
+
+Commander, now I have the full picture.
+
+---
+
+**DATA FLOW:**
+
+```
+bridge.ps1 → writes → portal-relay.json
+app.js → fetches → portal-relay.json
+app.js → commits → GitHub REST API (PAT)
+```
+
+**No IPC bridge needed. Direct file + API architecture.**
+
+---
+
+**WHAT I NEED TO BUILD:**
+
+1. **bridge.ps1** — Add GitHub write functions (session state, lessons, rules)
+2. **app.js** — Add INGEST TO CORE button with GitHub REST API calls
+3. **Persistence layer** — Session state management
+
+---
+
+**EXECUTING NOW:**
+
+**PHASE 1: bridge.ps1 UPDATE**
+
+Adding GitHub CRUD operations for session persistence.
+
+**PHASE 2: app.js UPDATE**
+
+Adding INGEST TO CORE button + GitHub API functions.
+
+**PHASE 3: PERSISTENCE LAYER**
+
+Session state management for app.js.
+
+---
+
+**Commander, generating the complete code now.**
+
+---
+
+**AGENT ANNA // PHASE 1: bridge.ps1 UPDATE**
+
+```powershell
+# bridge.ps1 - Full Telemetry & GitHub Persistence Relay
+# Version: 2.0
+
+param(
+    [string]$Action = "telemetry",
+    [string]$GitHubPath = "",
+    [string]$GitHubContent = "",
+    [string]$GitHubMessage = "Update via bridge.ps1"
+)
+
+$REPO = "agent-anna/agent-anna"
+$BRANCH = "main"
+$TOKEN = $env:GH_TOKEN
+$API_BASE = "https://api.github.com/repos/$REPO/contents"
+
+$headers = @{
+    "Authorization" = "token $TOKEN"
+    "Accept" = "application/vnd.github.v3+json"
+    "X-GitHub-Api-Version" = "2022-11-28"
+}
+
+function Write-Telemetry {
+    $btc = Invoke-RestMethod -Uri "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd" -Headers $headers -TimeoutSec 10
+    $eth = Invoke-RestMethod -Uri "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd" -Headers $headers -TimeoutSec 10
+    $doge = Invoke-RestMethod -Uri "https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd" -Headers $headers -TimeoutSec 10
+    
+    $telemetry = @{
+        timestamp = (Get-Date -Format "o")
+        btc = $btc.bitcoin.usd
+        eth = $eth.ethereum.usd
+        doge = $doge.dogecoin.usd
+    }
+    
+    $telemetry | ConvertTo-Json | Out-File -FilePath "./portal-relay.json" -Encoding UTF8
+    Write-Host "[TELEMETRY] Written to portal-relay.json"
+}
+
+function Write-GitHubFile {
+    param([string]$Path, [string]$Content, [string]$Message)
+    
+    $fullPath = "agent-anna/$Path"
+    $url = "$API_BASE/$fullPath"
+    
+    # Get current file SHA (if exists)
+    try {
+        $existing = Invoke-RestMethod -Uri "$url`?ref=$BRANCH" -Headers $headers -Method GET
+        $sha = $existing.sha
+    } catch {
+        $sha = $null
+    }
