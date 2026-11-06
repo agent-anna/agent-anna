@@ -98,11 +98,11 @@ function triggerHudStrobe() {
 
     let flashes = 0;
     const interval = setInterval(() => {
-        hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 30px #00ffcc' : 'none';
+        hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 35px #00ffcc' : 'none';
         flashes++;
         if (flashes > 5) {
             clearInterval(interval);
-            hudPane.style.boxShadow = 'none';
+            hudPane.style.boxShadow = 'inset 0 0 35px rgba(0, 255, 204, 0.2), 0 0 30px rgba(0, 255, 204, 0.25)';
         }
     }, 150);
 }
@@ -200,7 +200,7 @@ function stopListeningUI() {
 }
 
 // =================================================================
-// 2. DYNAMIC KNOWLEDGE HARVESTER
+// 2. DYNAMIC KNOWLEDGE HARVESTER & FEMALE VOICE LOCK
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -290,12 +290,19 @@ function speakText(text) {
     const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
     if (!cleanText) return;
 
-    if (cachedVoices.length === 0) loadVoices();
+    // Force load voices if list was empty
+    let voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) voices = cachedVoices;
+
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    const preferredVoices = ["Google UK English Female", "en-GB-Neural2-F", "Sonia", "Hazel", "Samantha", "Google US English"];
-    let selectedVoice = cachedVoices.find(v => preferredVoices.some(p => v.name.includes(p)));
-    if (!selectedVoice) selectedVoice = cachedVoices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male'));
+    // Guaranteed female voice selection matrix
+    const preferredFemaleNames = ["Google UK English Female", "en-GB-Neural2-F", "Sonia", "Hazel", "Samantha", "Google US English", "Victoria", "Karen", "Zira"];
+    let selectedVoice = voices.find(v => preferredFemaleNames.some(p => v.name.includes(p)));
+    
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male'));
+    }
 
     if (selectedVoice) utterance.voice = selectedVoice;
     utterance.pitch = 1.05;
@@ -729,11 +736,11 @@ function initWavCanvas() {
         const primaryColor = isThinking ? '#ffaa00' : (isSpeaking ? '#ff007f' : '#00ffcc');
         const secondaryColor = isThinking ? 'rgba(255, 170, 0, 0.4)' : (isSpeaking ? 'rgba(255, 0, 127, 0.4)' : 'rgba(0, 255, 204, 0.3)');
 
-        const amplitude = (isThinking || isSpeaking) ? 32 : 12;
+        const amplitude = (isThinking || isSpeaking) ? 35 : 12;
         const frequency = (isThinking || isSpeaking) ? 0.045 : 0.02;
 
         ctx.beginPath();
-        ctx.lineWidth = 2.0;
+        ctx.lineWidth = 2.2;
         ctx.strokeStyle = primaryColor;
 
         for (let x = 0; x < canvas.width; x++) {
@@ -744,7 +751,7 @@ function initWavCanvas() {
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.lineWidth = 1.2;
+        ctx.lineWidth = 1.4;
         ctx.strokeStyle = secondaryColor;
 
         for (let x = 0; x < canvas.width; x++) {
