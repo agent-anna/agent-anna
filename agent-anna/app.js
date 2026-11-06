@@ -22,12 +22,12 @@ let animFrameId = null;
 
 window.onload = function() {
     try {
-        const savedKey = localStorage.getItem('dahl_key');
+        const savedKey = localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key');
         if (savedKey) {
             const keyInput = document.getElementById('api-key');
             if (keyInput) keyInput.value = savedKey;
         }
-        const savedGhToken = localStorage.getItem('gh_pat_token');
+        const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token');
         if (savedGhToken) {
             const ghInput = document.getElementById('gh-token');
             if (ghInput) ghInput.value = savedGhToken;
@@ -253,7 +253,7 @@ function speakText(text) {
 async function sendMessage(forcedQuery = null) {
     const keyEl = document.getElementById('api-key');
     const input = document.getElementById('user-input');
-    const apiKey = keyEl ? keyEl.value.trim() : "";
+    const apiKey = keyEl ? keyEl.value.trim() : (localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key') || "");
     const query = forcedQuery || (input ? input.value.trim() : "");
 
     if (!apiKey) {
@@ -272,7 +272,6 @@ async function sendMessage(forcedQuery = null) {
     appendMsg(query, 'user', 'Commander');
     if (input && !forcedQuery) input.value = '';
 
-    // RECORD USER QUERY IN CONVERSATION HISTORY
     chatHistory.push({ role: "user", content: query });
 
     const startTime = performance.now();
@@ -295,7 +294,6 @@ ${coreKnowledgeCache}
 Telemetry & Live Market Data:
 ${liveTelemetry}`;
 
-    // CONSTRUCT FULL PAYLOAD WITH SYSTEM PROMPT & ENTIRE CONVERSATION HISTORY
     const messagesPayload = [
         { role: "system", content: systemPrompt },
         ...chatHistory
@@ -321,7 +319,6 @@ ${liveTelemetry}`;
         const data = await res.json();
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
-        // RECORD ANNA'S RESPONSE IN CONVERSATION HISTORY
         chatHistory.push({ role: "assistant", content: reply });
 
         const endTime = performance.now();
@@ -347,7 +344,7 @@ ${liveTelemetry}`;
 // =================================================================
 async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     const ghInput = document.getElementById('gh-token');
-    let ghToken = ghInput ? ghInput.value.trim() : localStorage.getItem('gh_pat_token');
+    let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || "");
 
     if (!ghToken) {
         alert("Please tap ⚙️ KEYS and paste your GitHub PAT token.");
@@ -560,9 +557,18 @@ function toggleSettings() {
 
 function saveKey() {
     const el = document.getElementById('api-key');
-    if (el) localStorage.setItem('dahl_key', el.value.trim());
     const ghEl = document.getElementById('gh-token');
-    if (ghEl) localStorage.setItem('gh_pat_token', ghEl.value.trim());
+    
+    if (el) {
+        const val = el.value.trim();
+        localStorage.setItem('dahl_key', val);
+        sessionStorage.setItem('dahl_key', val);
+    }
+    if (ghEl) {
+        const val = ghEl.value.trim();
+        localStorage.setItem('gh_pat_token', val);
+        sessionStorage.setItem('gh_pat_token', val);
+    }
 }
 
 function handleKey(event) {
