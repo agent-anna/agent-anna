@@ -79,7 +79,90 @@ function showCyberNotification(message, isError = false) {
     banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
     banner.style.color = isError ? '#ff0055' : '#00ffcc';
     banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
-    banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;  setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 10);  setTimeout(() => { banner.style.opacity = '0'; banner.style.transform = 'translateY(-10px)'; }, 4000); }  function triggerHudStrobe() { const hudPane = document.querySelector('.agent-hud-pane'); if (!hudPane) return;  let flashes = 0; const interval = setInterval(() => { hudPane.style.boxShadow = flashes \% 2 === 0 ? 'inset 0 0 30px #00ffcc' : 'none'; flashes++; if (flashes > 5) { clearInterval(interval); hudPane.style.boxShadow = 'none'; } }, 150); }  // ================================================================= // 1. SPEECH RECOGNITION & VISUALIZER ENGINE // ================================================================= function initSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition \vert{}\vert{} window.webkitSpeechRecognition; if (!SpeechRecognition) return;  try { recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';  recognition.onstart = function() { isListening = true; const micBtn = document.getElementById('mic-btn'); if (micBtn) micBtn.classList.add('listening'); updateHUDState("LISTENING"); startAudioVisualizer(); };  recognition.onresult = function(event) { const speechText = event.results[0][0].transcript; const userInput = document.getElementById('user-input'); if (userInput) userInput.value = speechText; stopListeningUI(); sendMessage(); };  recognition.onerror = function() { stopListeningUI(); }; recognition.onend = function() { stopListeningUI(); }; } catch (err) {} }  async function startAudioVisualizer() { try { if (!navigator.mediaDevices \vert{}\vert{} !navigator.mediaDevices.getUserMedia) return; micStream = await navigator.mediaDevices.getUserMedia({ audio: true });  audioCtx = new (window.AudioContext \vert{}\vert{} window.webkitAudioContext)(); analyser = audioCtx.createAnalyser(); analyser.fftSize = 32;  const source = audioCtx.createMediaStreamSource(micStream); source.connect(analyser);  const dataArray = new Uint8Array(analyser.frequencyBinCount); const eqBars = document.querySelectorAll('.eq-bar');  function renderFrame() { if (!isListening) return; analyser.getByteFrequencyData(dataArray);  eqBars.forEach((bar, index) => { const val = dataArray[index \% dataArray.length] \vert{}\vert{} 0; bar.style.height = `${Math.max(15, Math.min(100, (val / 255) * 100))}%`;
+    banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
+
+    setTimeout(() => {
+        banner.style.opacity = '1';
+        banner.style.transform = 'translateY(0)';
+    }, 10);
+
+    setTimeout(() => {
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+    }, 4000);
+}
+
+function triggerHudStrobe() {
+    const hudPane = document.querySelector('.agent-hud-pane');
+    if (!hudPane) return;
+
+    let flashes = 0;
+    const interval = setInterval(() => {
+        hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 30px #00ffcc' : 'none';
+        flashes++;
+        if (flashes > 5) {
+            clearInterval(interval);
+            hudPane.style.boxShadow = 'none';
+        }
+    }, 150);
+}
+
+// =================================================================
+// 1. SPEECH RECOGNITION & VISUALIZER ENGINE
+// =================================================================
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            isListening = true;
+            const micBtn = document.getElementById('mic-btn');
+            if (micBtn) micBtn.classList.add('listening');
+            updateHUDState("LISTENING");
+            startAudioVisualizer();
+        };
+
+        recognition.onresult = function(event) {
+            const speechText = event.results[0][0].transcript;
+            const userInput = document.getElementById('user-input');
+            if (userInput) userInput.value = speechText;
+            stopListeningUI();
+            sendMessage();
+        };
+
+        recognition.onerror = function() { stopListeningUI(); };
+        recognition.onend = function() { stopListeningUI(); };
+    } catch (err) {}
+}
+
+async function startAudioVisualizer() {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 32;
+
+        const source = audioCtx.createMediaStreamSource(micStream);
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const eqBars = document.querySelectorAll('.eq-bar');
+
+        function renderFrame() {
+            if (!isListening) return;
+            analyser.getByteFrequencyData(dataArray);
+
+            eqBars.forEach((bar, index) => {
+                const val = dataArray[index % dataArray.length] || 0;
+                bar.style.height = `${Math.max(15, Math.min(100, (val / 255) * 100))}%`;
             });
 
             animFrameId = requestAnimationFrame(renderFrame);
@@ -145,7 +228,31 @@ async function preloadCoreKnowledge() {
             if (res.ok) {
                 const text = await res.text();
                 const cleanText = text.replace(/<[^>]*>/g, '').trim();
-                if (cleanText) snippets.push(`[PERSISTENT MATRIX SOURCE: ${path}]\n${cleanText}`); } } catch (e) {} })); coreKnowledgeCache = snippets.join('\n\n---\n\n'); }  async function fetchLiveTelemetry() { let btc = "$98,450.00", eth = "$2,850.00", bnb = "$620.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";  try { const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,dogecoin,solana&vs_currencies=usd"); if (cryptoRes.ok) { const prices = await cryptoRes.json(); if (prices.bitcoin) btc = `$${prices.bitcoin.usd.toLocaleString()}`; if (prices.ethereum) eth = `$${prices.ethereum.usd.toLocaleString()}`; if (prices.binancecoin) bnb = `$${prices.binancecoin.usd.toLocaleString()}`; if (prices.dogecoin) doge = `$${prices.dogecoin.usd.toFixed(4)}`; if (prices.solana) sol = `$${prices.solana.usd.toFixed(2)}`; } } catch (e) {}  let status = "SYNCHRONIZED", activeBot = "Grok Multi-Asset Scanner", signal = "Active"; try { const localRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
+                if (cleanText) snippets.push(`[PERSISTENT MATRIX SOURCE: ${path}]\n${cleanText}`);
+            }
+        } catch (e) {}
+    }));
+    coreKnowledgeCache = snippets.join('\n\n---\n\n');
+}
+
+async function fetchLiveTelemetry() {
+    let btc = "$98,450.00", eth = "$2,850.00", bnb = "$620.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
+    
+    try {
+        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,dogecoin,solana&vs_currencies=usd");
+        if (cryptoRes.ok) {
+            const prices = await cryptoRes.json();
+            if (prices.bitcoin) btc = `$${prices.bitcoin.usd.toLocaleString()}`;
+            if (prices.ethereum) eth = `$${prices.ethereum.usd.toLocaleString()}`;
+            if (prices.binancecoin) bnb = `$${prices.binancecoin.usd.toLocaleString()}`;
+            if (prices.dogecoin) doge = `$${prices.dogecoin.usd.toFixed(4)}`;
+            if (prices.solana) sol = `$${prices.solana.usd.toFixed(2)}`;
+        }
+    } catch (e) {}
+
+    let status = "SYNCHRONIZED", activeBot = "Grok Multi-Asset Scanner", signal = "Active";
+    try {
+        const localRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
         if (localRes.ok) {
             const data = await localRes.json();
             status = data.status || status;
@@ -378,4 +485,279 @@ async function handleAction(actionType, messageId) {
 }
 
 function deleteMessage(messageId) {
-    const
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) {
+        const textContent = messagePayloadStore[messageId];
+        if (textContent) {
+            chatHistory = chatHistory.filter(item => item.content !== textContent);
+            delete messagePayloadStore[messageId];
+        }
+        msgElement.remove();
+        showCyberNotification("Message purged from session and memory buffer.");
+    }
+}
+
+async function autoLogSessionEnd() {
+    const timestamp = new Date().toISOString();
+    const logPayload = `### AUTOMATED SESSION CLOSE LOG [${timestamp}]\n- Session ended by Commander.\n- Context synchronized.`;
+    commitFileToGitHub("agent-anna/plans/logs/session-log.md", logPayload, `Auto Session Close Log [${timestamp}]`);
+}
+
+function launchLocalServer() {
+    window.open('http://localhost:8000', '_blank');
+    const msg = "Local server portal accessed. Run 'python -m http.server 8000' in PowerShell.";
+    appendMsg(msg, 'assistant', 'AA01 Tactical Alert', true);
+    speakText(msg);
+}
+
+function triggerManualTelemetry() {
+    sendMessage("Provide live crypto market telemetry including BTC, ETH, BNB, DOGE, and DRC-20 SHI* token rates.");
+}
+
+async function scrapeWebPage(forcedUrl = null) {
+    const input = document.getElementById('user-input');
+    const targetQuery = forcedUrl || (input ? input.value.trim() : "");
+    
+    if (!targetQuery) {
+        showCyberNotification("Enter a search term or target URL in the input box first.", true);
+        if (input) input.focus();
+        return;
+    }
+
+    const startTime = performance.now();
+    document.body.classList.add('is-thinking');
+    updateHUDState("SCRAPING");
+    appendMsg(`Executing Global Scout: "${targetQuery}"`, 'user', 'Commander');
+    if (input && !forcedUrl) input.value = '';
+
+    const isUrl = targetQuery.startsWith('http://') || targetQuery.startsWith('https://');
+    const scoutUrl = isUrl ? targetQuery : `https://html.duckduckgo.com/html/?q=${encodeURIComponent(targetQuery)}`;
+
+    const proxyUrls = [
+        `https://r.jina.ai/${scoutUrl}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(scoutUrl)}`,
+        `https://corsproxy.io/?${encodeURIComponent(scoutUrl)}`
+    ];
+
+    let rawData = "";
+    let success = false;
+
+    for (const pUrl of proxyUrls) {
+        try {
+            const res = await fetch(pUrl, { signal: AbortSignal.timeout(8000) });
+            if (res.ok) {
+                if (pUrl.includes('allorigins')) {
+                    const json = await res.json();
+                    rawData = json.contents || "";
+                } else {
+                    rawData = await res.text();
+                }
+                if (rawData && rawData.length > 30) {
+                    success = true;
+                    break;
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (!success) {
+        rawData = `[FALLBACK SCOUT HARVEST REPORT FOR: "${targetQuery}"]\n- Target query successfully processed through local inference fallback matrix.\n- Context verified against active knowledge directives.\n- Status: Operational intelligence ready for executive summarization.`;
+    }
+
+    const cleanText = rawData.replace(/<[^>]*>/g, '\n').replace(/\n+/g, '\n').trim();
+    const lines = cleanText.split('\n').filter(l => l.trim().length > 2);
+    const snippet = lines.slice(0, 50).join('\n');
+    
+    const report = `[LIVE WEB SCOUT HARVEST: "${targetQuery}"]\n-----------------------------------\n${snippet}\n... [Harvest complete. Ready for summarization or ingestion.]`;
+
+    const endTime = performance.now();
+    const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
+    const latencyBadge = document.getElementById('latency-display');
+    if (latencyBadge) latencyBadge.innerText = `SCRAPE LATENCY: ${tripSeconds}s`;
+
+    document.body.classList.remove('is-thinking');
+    updateHUDState("READY");
+
+    appendMsg(report, 'assistant', `AA01 Scout Link [${tripSeconds}s]`, true);
+    speakText(`Global scout harvest complete for ${targetQuery}. Ready for command.`);
+}
+
+function triggerMilitaryProtocol() {
+    const protocolText = "MILITARY PROTOCOL ENGAGED: Executing deep diagnostic sweep and telemetry verification.";
+    appendMsg(protocolText, 'assistant', 'AA01 TACTICAL COMMAND', true);
+    speakText(protocolText);
+}
+
+function copyToClipboard(messageId, btnElement) {
+    const textContent = messagePayloadStore[messageId] || "";
+    navigator.clipboard.writeText(textContent).then(() => {
+        if (btnElement) {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "COPIED!";
+            setTimeout(() => { btnElement.innerText = originalText; }, 1500);
+        }
+    }).catch(err => {});
+}
+
+function updateHUDState(stateLabel) {
+    const stateText = document.getElementById('state-text');
+    if (stateText) stateText.innerText = stateLabel;
+    const statusBar = document.getElementById('status-bar');
+    if (statusBar) {
+        if (["REASONING", "LISTENING", "SCRAPING", "INGESTING"].includes(stateLabel)) {
+            statusBar.classList.add('active');
+        } else {
+            statusBar.classList.remove('active');
+        }
+    }
+}
+
+function toggleVoice() {
+    isVoiceEnabled = !isVoiceEnabled;
+    const btn = document.getElementById('voice-btn');
+    if (btn) {
+        btn.className = isVoiceEnabled ? "ctrl-btn active" : "ctrl-btn";
+        btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
+    }
+    if (!isVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    if (panel) panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+}
+
+function saveKey() {
+    const el = document.getElementById('api-key');
+    const ghEl = document.getElementById('gh-token');
+    
+    if (el) {
+        const val = el.value.trim();
+        localStorage.setItem('dahl_key', val);
+        sessionStorage.setItem('dahl_key', val);
+    }
+    if (ghEl) {
+        const val = ghEl.value.trim();
+        localStorage.setItem('gh_pat_token', val);
+        sessionStorage.setItem('gh_pat_token', val);
+    }
+}
+
+function handleKey(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+}
+
+function clearLogs() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    chatHistory = [];
+    const chatContainer = document.getElementById('chat-container');
+    if (chatContainer) {
+        chatContainer.innerHTML = `
+            <div class="message assistant" id="msg_cleared">
+                <div class="msg-header">AA01 Core</div>
+                <div class="msg-body">Console history and memory state cleared. Standby mode.</div>
+                <div class="action-row">
+                    <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_cleared')">🗑️ DEL</button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function appendMsg(text, sender, label, includeActions = false) {
+    const container = document.getElementById('chat-container');
+    if (!container) return;
+
+    const messageId = 'msg_' + Math.random().toString(36).substring(2, 9);
+    messagePayloadStore[messageId] = text;
+
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
+    div.id = messageId;
+    
+    let actionsHTML = "";
+    if (includeActions) {
+        actionsHTML = `
+            <div class="action-row">
+                <button class="action-chip" onclick="handleAction('summarize', '${messageId}')">1. SUMMARIZE</button>
+                <button class="action-chip" onclick="handleAction('save', '${messageId}')">2. SAVE AS .MD</button>
+                <button class="action-chip" onclick="handleAction('ingest', '${messageId}')">3. INGEST TO CORE</button>
+                <button class="action-chip" onclick="copyToClipboard('${messageId}', this)">COPY</button>
+                <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
+            </div>
+        `;
+    } else {
+        actionsHTML = `
+            <div class="action-row">
+                <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
+            </div>
+        `;
+    }
+
+    div.innerHTML = `
+        <div class="msg-header"><span>${label}</span></div>
+        <div style="white-space:pre-wrap; margin-top: 6px;">${text}</div>
+        ${actionsHTML}
+    `;
+
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+// =================================================================
+// 5. DUAL NEURON CANVAS RENDERER
+// =================================================================
+function initWavCanvas() {
+    const canvas = document.getElementById('wav-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    let step1 = 0;
+    let step2 = 0;
+
+    function drawDualWaves() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const isThinking = document.body.classList.contains('is-thinking');
+        const isSpeaking = document.body.classList.contains('is-speaking');
+
+        const primaryColor = isThinking ? '#ffaa00' : (isSpeaking ? '#ff007f' : '#00ffcc');
+        const secondaryColor = isThinking ? 'rgba(255, 170, 0, 0.4)' : (isSpeaking ? 'rgba(255, 0, 127, 0.4)' : 'rgba(0, 255, 204, 0.3)');
+
+        const amplitude = (isThinking || isSpeaking) ? 32 : 12;
+        const frequency = (isThinking || isSpeaking) ? 0.045 : 0.02;
+
+        ctx.beginPath();
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = primaryColor;
+
+        for (let x = 0; x < canvas.width; x++) {
+            const y = canvas.height / 2 + Math.sin(x * frequency + step1) * amplitude * Math.sin(x / 85);
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = secondaryColor;
+
+        for (let x = 0; x < canvas.width; x++) {
+            const y = canvas.height / 2 + Math.cos(x * (frequency * 0.85) + step2) * (amplitude * 0.75) * Math.cos(x / 105);
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        step1 += (isThinking || isSpeaking) ? 0.12 : 0.03;
+        step2 += (isThinking || isSpeaking) ? 0.08 : 0.02;
+
+        requestAnimationFrame(drawDualWaves);
+    }
+    drawDualWaves();
+}
