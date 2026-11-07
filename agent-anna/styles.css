@@ -1,5 +1,5 @@
 /* ================================================================= */
-/* AGENT ANNA 01 // EXACT MILITARY CONSOLE & ENCAPSULATED BADGE      */
+/* AGENT ANNA 01 // HIGH-INTENSITY GLOWING MILITARY CONSOLE STYLING  */
 /* ================================================================= */
 
 :root {
@@ -41,7 +41,7 @@ body.is-thinking *::-webkit-scrollbar-thumb { background: rgba(0, 179, 255, 0.5)
 body.is-speaking *::-webkit-scrollbar-thumb { background: rgba(255, 0, 127, 0.5); box-shadow: 0 0 8px rgba(255, 0, 127, 0.4); }
 
 /* ================================================================= */
-/* 1. LEFT HUD PANE & ENCAPSULATED BORDER FRAMING                     */
+/* 1. LEFT HUD PANE & DYNAMIC GLOWING STATES                        */
 /* ================================================================= */
 .agent-hud-pane {
     width: 60%;
@@ -51,24 +51,36 @@ body.is-speaking *::-webkit-scrollbar-thumb { background: rgba(255, 0, 127, 0.5)
     display: flex;
     flex-direction: column;
     padding: 24px;
-    box-shadow: inset 0 0 35px rgba(0, 255, 204, 0.15), 5px 0 35px rgba(0, 255, 204, 0.2);
+    box-shadow: inset 0 0 35px rgba(0, 255, 204, 0.2), 5px 0 35px rgba(0, 255, 204, 0.25);
     position: relative;
     z-index: 2;
     transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-/* STATE COLOR SHIFTS FOR MAIN PANE */
+/* STATE-REACTIVE GLOWS & PULSES */
 body.is-thinking .agent-hud-pane {
     border-right-color: var(--border-blue);
-    box-shadow: inset 0 0 45px rgba(0, 179, 255, 0.25), 5px 0 40px rgba(0, 179, 255, 0.3);
+    box-shadow: inset 0 0 55px rgba(0, 179, 255, 0.35), 5px 0 45px rgba(0, 179, 255, 0.4);
+    animation: thinkingPulse 1.5s infinite ease-in-out alternate;
 }
 
 body.is-speaking .agent-hud-pane {
     border-right-color: var(--border-pink);
-    box-shadow: inset 0 0 55px rgba(255, 0, 127, 0.3), 5px 0 50px rgba(255, 0, 127, 0.4);
+    box-shadow: inset 0 0 65px rgba(255, 0, 127, 0.4), 5px 0 55px rgba(255, 0, 127, 0.5);
+    animation: speakingPulse 0.8s infinite ease-in-out alternate;
 }
 
-/* ENCAPSULATED TACTICAL BADGE (Matching Image 2 Frame Style) */
+@keyframes thinkingPulse {
+    0% { box-shadow: inset 0 0 40px rgba(0, 179, 255, 0.25), 5px 0 30px rgba(0, 179, 255, 0.3); }
+    100% { box-shadow: inset 0 0 70px rgba(0, 179, 255, 0.5), 5px 0 60px rgba(0, 179, 255, 0.6); }
+}
+
+@keyframes speakingPulse {
+    0% { box-shadow: inset 0 0 50px rgba(255, 0, 127, 0.3), 5px 0 40px rgba(255, 0, 127, 0.4); }
+    100% { box-shadow: inset 0 0 85px rgba(255, 0, 127, 0.7), 5px 0 70px rgba(255, 0, 127, 0.8); }
+}
+
+/* ENCAPSULATED TACTICAL BADGE */
 .agent-header-meta {
     display: flex;
     justify-content: space-between;
@@ -89,8 +101,8 @@ body.is-speaking .agent-hud-pane {
     box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
     transition: all 0.4s ease;
 }
-body.is-thinking .agent-id-badge { color: var(--border-blue); border-color: var(--border-blue); background: rgba(0, 179, 255, 0.05); box-shadow: 0 0 12px rgba(0, 179, 255, 0.2); }
-body.is-speaking .agent-id-badge { color: var(--border-pink); border-color: var(--border-pink); background: rgba(255, 0, 127, 0.05); box-shadow: 0 0 12px rgba(255, 0, 127, 0.2); }
+body.is-thinking .agent-id-badge { color: var(--border-blue); border-color: var(--border-blue); background: rgba(0, 179, 255, 0.05); box-shadow: 0 0 15px rgba(0, 179, 255, 0.4); }
+body.is-speaking .agent-id-badge { color: var(--border-pink); border-color: var(--border-pink); background: rgba(255, 0, 127, 0.05); box-shadow: 0 0 15px rgba(255, 0, 127, 0.4); }
 
 .status-bar-indicator {
     display: flex;
@@ -111,12 +123,12 @@ body.is-speaking .status-bar-indicator { color: var(--border-pink); }
     box-shadow: 0 0 12px var(--border-cyan);
     animation: statusPulse 2s infinite ease-in-out;
 }
-body.is-thinking .status-dot { background: var(--border-blue); box-shadow: 0 0 12px var(--border-blue); }
-body.is-speaking .status-dot { background: var(--border-pink); box-shadow: 0 0 12px var(--border-pink); }
+body.is-thinking .status-dot { background: var(--border-blue); box-shadow: 0 0 15px var(--border-blue); animation: statusPulse 1s infinite ease-in-out; }
+body.is-speaking .status-dot { background: var(--border-pink); box-shadow: 0 0 15px var(--border-pink); animation: statusPulse 0.5s infinite ease-in-out; }
 
 @keyframes statusPulse {
     0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.3); opacity: 0.5; }
+    50% { transform: scale(1.4); opacity: 0.6; }
 }
 
 .agent-visual-container {
@@ -127,15 +139,15 @@ body.is-speaking .status-dot { background: var(--border-pink); box-shadow: 0 0 1
     justify-content: center;
     position: relative;
     z-index: 2;
-    border: 1px solid rgba(0, 255, 204, 0.3);
+    border: 1px solid rgba(0, 255, 204, 0.4);
     border-radius: 6px;
     padding: 20px;
-    background: rgba(5, 7, 12, 0.4);
-    box-shadow: inset 0 0 20px rgba(0, 255, 204, 0.05);
+    background: rgba(5, 7, 12, 0.5);
+    box-shadow: inset 0 0 25px rgba(0, 255, 204, 0.1);
     transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
-body.is-thinking .agent-visual-container { border-color: rgba(0, 179, 255, 0.5); box-shadow: inset 0 0 20px rgba(0, 179, 255, 0.1); }
-body.is-speaking .agent-visual-container { border-color: rgba(255, 0, 127, 0.5); box-shadow: inset 0 0 20px rgba(255, 0, 127, 0.1); }
+body.is-thinking .agent-visual-container { border-color: rgba(0, 179, 255, 0.6); box-shadow: inset 0 0 30px rgba(0, 179, 255, 0.2); }
+body.is-speaking .agent-visual-container { border-color: rgba(255, 0, 127, 0.6); box-shadow: inset 0 0 35px rgba(255, 0, 127, 0.25); }
 
 #wav-canvas {
     position: absolute;
@@ -153,28 +165,28 @@ body.is-speaking .agent-visual-container { border-color: rgba(255, 0, 127, 0.5);
     border-radius: 4px;
     border: 2px solid var(--border-cyan);
     overflow: hidden;
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.4), inset 0 0 15px rgba(0, 255, 204, 0.2);
+    box-shadow: 0 0 35px rgba(0, 255, 204, 0.5), inset 0 0 15px rgba(0, 255, 204, 0.2);
     z-index: 2;
     margin-bottom: 20px;
     position: relative;
     transition: all 0.4s ease;
 }
-body.is-thinking .agent-portrait-frame { border-color: var(--border-blue); box-shadow: 0 0 40px rgba(0, 179, 255, 0.6), inset 0 0 20px rgba(0, 179, 255, 0.4); }
-body.is-speaking .agent-portrait-frame { border-color: var(--border-pink); box-shadow: 0 0 50px rgba(255, 0, 127, 0.8), inset 0 0 25px rgba(255, 0, 127, 0.5); }
+body.is-thinking .agent-portrait-frame { border-color: var(--border-blue); box-shadow: 0 0 45px rgba(0, 179, 255, 0.7), inset 0 0 20px rgba(0, 179, 255, 0.4); }
+body.is-speaking .agent-portrait-frame { border-color: var(--border-pink); box-shadow: 0 0 55px rgba(255, 0, 127, 0.9), inset 0 0 25px rgba(255, 0, 127, 0.6); }
 
 .agent-portrait-frame img { width: 100%; height: 100%; object-fit: cover; }
 
 .agent-nameplate { text-align: center; z-index: 2; }
-.agent-nameplate h2 { font-size: 20px; color: var(--border-cyan); letter-spacing: 3px; text-shadow: 0 0 10px rgba(0, 255, 204, 0.6); transition: color 0.4s ease; }
-body.is-thinking .agent-nameplate h2 { color: var(--border-blue); text-shadow: 0 0 10px rgba(0, 179, 255, 0.6); }
-body.is-speaking .agent-nameplate h2 { color: var(--border-pink); text-shadow: 0 0 10px rgba(255, 0, 127, 0.6); }
+.agent-nameplate h2 { font-size: 20px; color: var(--border-cyan); letter-spacing: 3px; text-shadow: 0 0 12px rgba(0, 255, 204, 0.8); transition: color 0.4s ease; }
+body.is-thinking .agent-nameplate h2 { color: var(--border-blue); text-shadow: 0 0 12px rgba(0, 179, 255, 0.8); }
+body.is-speaking .agent-nameplate h2 { color: var(--border-pink); text-shadow: 0 0 12px rgba(255, 0, 127, 0.8); }
 
 .agent-nameplate p { font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; margin-top: 6px; }
 
 .eq-container { display: flex; gap: 6px; height: 35px; align-items: flex-end; margin-top: 25px; z-index: 2; }
-.eq-bar { width: 10px; height: 20%; background: var(--border-cyan); box-shadow: 0 0 10px var(--border-cyan); border-radius: 2px; transition: background 0.4s ease, height 0.08s ease; }
-body.is-thinking .eq-bar { background: var(--border-blue); box-shadow: 0 0 10px var(--border-blue); }
-body.is-speaking .eq-bar { background: var(--border-pink); box-shadow: 0 0 10px var(--border-pink); }
+.eq-bar { width: 10px; height: 20%; background: var(--border-cyan); box-shadow: 0 0 12px var(--border-cyan); border-radius: 2px; transition: background 0.4s ease, height 0.08s ease; }
+body.is-thinking .eq-bar { background: var(--border-blue); box-shadow: 0 0 12px var(--border-blue); }
+body.is-speaking .eq-bar { background: var(--border-pink); box-shadow: 0 0 12px var(--border-pink); }
 
 /* ================================================================= */
 /* 2. RIGHT CHAT CONSOLE PANE (40% WIDTH)                             */
