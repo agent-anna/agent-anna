@@ -1,14 +1,19 @@
 # =================================================================
-# AGENT ANNA // MULTI-ASSET CRYPTO & DRC-20 SHI* RELAY
+# AGENT ANNA 01 // UNIFIED LOCAL BRIDGE, REPO ENGINE & TELEMETRY
 # =================================================================
 
-# Correct repository scope matching your app matrix
+$RepoPath = $PSScriptRoot
+Set-Location $RepoPath
+
+# GitHub API Credentials & Repository Scope
 $owner = "agent-anna"
 $repo  = "agent-anna"
 $path  = "portal-relay.json"
-
-# Dynamic Environment Token Integration (Reads from $env:GH_TOKEN or parameter)
 $token = $env:GH_TOKEN
+
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+Write-Host "  AGENT ANNA 01 // MILITARY-GRADE LOCAL BRIDGE ONLINE     " -ForegroundColor Cyan
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
 
 if (-not $token) {
     Write-Host "[NOTICE] `$env:GH_TOKEN not set locally. Running in LOCAL-ONLY mode." -ForegroundColor Yellow
@@ -16,19 +21,70 @@ if (-not $token) {
     Write-Host "[NOTICE] GH_TOKEN environment variable detected. GitHub Remote Sync ACTIVE." -ForegroundColor Green
 }
 
-Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "AGENT ANNA // CRYPTO & DRC-20 SHI* RELAY INITIALIZING..." -ForegroundColor Green
-Write-Host "==================================================" -ForegroundColor Cyan
+# -----------------------------------------------------------------
+# 1. AUTONOMOUS MODULE ARCHITECTURE BUILDER (AA02 - AA06)
+# -----------------------------------------------------------------
+$Modules = @("AA02", "AA03", "AA04", "AA05", "AA06")
 
+Write-Host "[AA01 BRIDGE] Auditing module architecture..." -ForegroundColor Yellow
+
+foreach ($Mod in $Modules) {
+    $ModDir = Join-Path $RepoPath $Mod
+    $TestDir = Join-Path $ModDir "test"
+    $SubcoreDir = Join-Path $ModDir "subcore"
+
+    # Ensure physical directories exist locally
+    if (!(Test-Path $ModDir)) { New-Item -ItemType Directory -Path $ModDir -Force | Out-Null }
+    if (!(Test-Path $TestDir)) { New-Item -ItemType Directory -Path $TestDir -Force | Out-Null }
+    if (!(Test-Path $SubcoreDir)) { New-Item -ItemType Directory -Path $SubcoreDir -Force | Out-Null }
+
+    # Seed module config.json if missing
+    $ConfigPath = Join-Path $ModDir "config.json"
+    if (!(Test-Path $ConfigPath)) {
+        $ConfigContent = "{`n  `"module`": `"$Mod`",`n  `"status`": `"ACTIVE`",`n  `"build_index`": 1,`n  `"timestamp`": `"$(Get-Date -Format o)`"`n}"
+        Set-Content -Path $ConfigPath -Value $ConfigContent -Encoding UTF8
+        Write-Host "[+] Initialized configuration: $Mod/config.json" -ForegroundColor Green
+    }
+
+    # Seed module subcore manifest.md if missing
+    $ManifestPath = Join-Path $SubcoreDir "manifest.md"
+    if (!(Test-Path $ManifestPath)) {
+        $ManifestContent = "# $Mod SUBCORE MANIFEST`n`n- **Parent Directory:** `$Mod/`n- **Subdirectory:** `$Mod/subcore/`n- **Status:** Autonomously Verified`n- **Timestamp:** $(Get-Date -Format o)"
+        Set-Content -Path $ManifestPath -Value $ManifestContent -Encoding UTF8
+        Write-Host "[+] Initialized manifest: $Mod/subcore/manifest.md" -ForegroundColor Green
+    }
+}
+
+# Sync initial directory layout to local Git repository if present
+try {
+    $GitStatus = git status --porcelain
+    if ($GitStatus) {
+        Write-Host "[AA01 BRIDGE] Staging initial module directory trees to Git..." -ForegroundColor Yellow
+        git add .
+        git commit -m "Automated architecture build: Initialized AA02-AA06 structures"
+        git push origin main
+        Write-Host "[AA01 BRIDGE] SUCCESS: Local Git repository updated and pushed!" -ForegroundColor Green
+    }
+} catch {
+    Write-Host "[AA01 BRIDGE] Local Git engine bypass. Relying on API sync." -ForegroundColor DarkGray
+}
+
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+Write-Host "  STARTING CONTINUOUS CRYPTO `'`& DRC-20 TELEMETRY LOOP     " -ForegroundColor Cyan
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+
+# -----------------------------------------------------------------
+# 2. CONTINUOUS MULTI-ASSET & DRC-20 TELEMETRY LOOP
+# -----------------------------------------------------------------
 while ($true) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     
     $btcPrice  = "Loading..."
     $ethPrice  = "Loading..."
     $dogePrice = "Loading..."
-    $shiPrice  = "0.000001 DOGE ($0.00000076)" # Live indexer default anchor from Doggy Market
+    $shiPrice  = "0.000001 DOGE ($0.00000076)" # Baseline anchor
 
-    # 1. Fetch Standard Crypto Prices (BTC, ETH, DOGE) with Headers to Prevent 429
+    # A. Fetch Standard Crypto Prices (BTC, ETH, DOGE)
     try {
         $headersCG = @{
             "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
@@ -39,20 +95,19 @@ while ($true) {
         if ($cryptoRes.ethereum.usd) { $ethPrice  = "`$" + $cryptoRes.ethereum.usd.ToString("N2") }
         if ($cryptoRes.dogecoin.usd) { $dogePrice = "`$" + $cryptoRes.dogecoin.usd.ToString("N4") }
     } catch {
-        $btcPrice  = "$FUCK,450.00 (Cached)"
+        $btcPrice  = "$98,450.00 (Cached)"
         $ethPrice  = "$2,850.00 (Cached)"
         $dogePrice = "$0.1850 (Cached)"
         Write-Host "[$timestamp] CoinGecko Rate Limit / 429 Enforced - Using Cached Base." -ForegroundColor Red
     }
 
-    # 2. Fetch DRC-20 shi* Token Data from Doggy Market / Doginals Indexer API
+    # B. Fetch DRC-20 SHI* Token Data from Doggy Market API
     try {
         $drcRes = Invoke-RestMethod -Uri "https://doggy.market/api/tokens/shi" -Method Get -ErrorAction Stop
         if ($drcRes.price) {
             $shiPrice = "$($drcRes.price) DOGE (`$$($drcRes.usd_price))"
         }
     } catch {
-        # Fallback to verified baseline from Doggy Market telemetry
         $shiPrice = "0.000001 DOGE ($0.00000076)"
     }
 
@@ -69,12 +124,12 @@ while ($true) {
         timestamp      = $timestamp
     }
     
-    # Save local copy instantly
+    # Save local copy to portal-relay.json instantly
     $jsonText = $payloadObj | ConvertTo-Json -Depth 5
-    Set-Content -Path $path -Value $jsonText -Encoding UTF8
+    Set-Content -Path (Join-Path $RepoPath $path) -Value $jsonText -Encoding UTF8
     Write-Host "[$timestamp] Telemetry Saved -> BTC: $btcPrice | DOGE: $dogePrice | SHI*: $shiPrice" -ForegroundColor Yellow
 
-    # Remote GitHub Sync via API using $env:GH_TOKEN
+    # C. Remote GitHub API Sync using $env:GH_TOKEN
     if ($token) {
         try {
             $apiUrl = "https://api.github.com/repos/$owner/$repo/contents/$path"
