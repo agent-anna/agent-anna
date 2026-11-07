@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Anna 01 - Core Sub-App</title>
+    <title>Agent Anna 01 - Core Dashboard</title>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -49,44 +49,45 @@
             </div>
         </div>
 
+        <!-- Fully Linked Tactical Bar -->
         <div class="quick-launch-bar">
             <span class="quick-launch-label">TACTICAL:</span>
             <button class="ctrl-btn military-btn" onclick="launchLocalServer()">🚀 START SERVER</button>
             <button class="ctrl-btn" onclick="triggerManualTelemetry()">📊 CRYPTO MARKET</button>
             <button class="ctrl-btn" onclick="scrapeWebPage()">🌐 SCRAPE WEB</button>
             <button class="ctrl-btn military-btn" onclick="triggerMilitaryProtocol()">⚡ PROTOCOL</button>
-            <!-- AUTONOMOUS BUILD BUTTON ADDED HERE -->
-            <button class="ctrl-btn military-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="triggerAutonomousBuild()">⚡ AUTONOMOUS BUILD</button>
+            <button class="ctrl-btn military-btn build-btn" onclick="triggerAutonomousBuild()">⚡ AUTONOMOUS BUILD</button>
         </div>
 
         <div class="thinking-banner" id="thinking-banner">
             [AA01 NEURAL ENGINE REASONING...]
         </div>
 
-        <!-- Settings Panel -->
-        <div id="settings-panel" style="display: none; padding: 15px; background: rgba(11, 15, 25, 0.98); border-bottom: 1px solid #1e293b;">
-            <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px;">SECURITY & CREDENTIAL MATRIX</div>
-            <input type="password" id="api-key" placeholder="Paste Dahl API Key..." style="width: 100%; padding: 8px; background: #0b0f19; border: 1px solid #1e293b; color: #e2e8f0; font-family: monospace; font-size: 11px; margin-bottom: 8px; border-radius: 4px;" />
-            <input type="password" id="gh-token" placeholder="Paste GitHub PAT Token..." style="width: 100%; padding: 8px; background: #0b0f19; border: 1px solid #1e293b; color: #e2e8f0; font-family: monospace; font-size: 11px; margin-bottom: 8px; border-radius: 4px;" />
+        <!-- Security & Credentials Panel -->
+        <div id="settings-panel" style="display: none;">
+            <div class="settings-title">SECURITY & CREDENTIAL MATRIX</div>
+            <input type="password" id="api-key" placeholder="Paste Dahl API Key..." />
+            <input type="password" id="gh-token" placeholder="Paste GitHub PAT Token..." />
             <button class="ctrl-btn military-btn" onclick="saveKey()">SAVE CREDENTIALS</button>
         </div>
 
-        <!-- Chat Container -->
+        <!-- Active Output Window -->
         <div id="chat-container">
             <div class="message assistant" id="msg_welcome">
                 <div class="msg-header">AA01 Core</div>
                 <div class="msg-body">Military-grade telemetry core online. Zero-bloat markdown sync active. Ready for command, Commander.</div>
                 <div class="action-row">
-                    <button class="action-chip" onclick="handleAction('summarize', 'msg_welcome')">1. SUMMARIZE</button>
-                    <button class="action-chip" onclick="handleAction('save', 'msg_welcome')">2. SAVE AS .MD</button>
-                    <button class="action-chip" onclick="handleAction('ingest', 'msg_welcome')">3. INGEST TO CORE</button>
+                    <button class="action-chip" onclick="handleAction('summarize', 'msg_welcome')">SUMMARIZE</button>
+                    <button class="action-chip" onclick="handleAction('save', 'msg_welcome')">SAVE .MD</button>
+                    <button class="action-chip" onclick="handleAction('ingest', 'msg_welcome')">INGEST TO CORE</button>
                     <button class="action-chip" onclick="copyToClipboard('msg_welcome', this)">COPY</button>
-                    <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_welcome')">🗑️ DEL</button>
+                    <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
+                    <button class="action-chip del-btn" onclick="deleteMessage('msg_welcome')">🗑️ DEL</button>
                 </div>
             </div>
         </div>
 
-        <!-- Input Control Bar -->
+        <!-- Bottom Input Line -->
         <div class="input-control-bar">
             <button class="ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Toggle Voice Input">🎤</button>
             <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry..." onkeypress="handleKey(event)" />
