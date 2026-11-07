@@ -424,10 +424,11 @@ ${liveTelemetry}`;
     ];
 
     try {
-        const targetUrl = "https://inference.dahl.global/v1/chat/completions";
+  const targetUrl = "https://inference.dahl.global/v1/chat/completions";
         const proxyOptions = [
-            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
+            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
         ];
 
         let res = null;
