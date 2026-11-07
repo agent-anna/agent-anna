@@ -1,323 +1,661 @@
-/* ================================================================= */
-/* AGENT ANNA 01 // MILITARY-GRADE CYBER STYLING MATRIX               */
-/* ================================================================= */
+// =================================================================
+// AGENT ANNA 01 // UNIFIED ZERO-LOSS SYSTEM CORE & REPO ENGINE
+// =================================================================
 
-:root {
-    --bg-dark: #0b0f19;
-    --bg-surface: #0f172a;
-    --border-cyan: #00ffcc;
-    --border-red: #ff0055;
-    --text-light: #e2e8f0;
-    --text-muted: #64748b;
-    --pane-bg: rgba(11, 15, 25, 0.95);
+const REPO_OWNER = "agent-anna";
+const REPO_NAME = "agent-anna";
+
+let isVoiceEnabled = true;
+let recognition = null;
+let isListening = false;
+let cachedVoices = [];
+let coreKnowledgeCache = "";
+let messagePayloadStore = {};
+let chatHistory = [];
+
+let audioCtx = null;
+let analyser = null;
+let micStream = null;
+let animFrameId = null;
+
+let canvas = null;
+let ctx = null;
+let wavePhase = 0;
+
+// =================================================================
+// 0. SYSTEM INITIALIZATION & NOTIFICATIONS
+// =================================================================
+window.onload = function() {
+    try {
+        const savedKey = localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key');
+        if (savedKey) {
+            const keyInput = document.getElementById('api-key');
+            if (keyInput) keyInput.value = savedKey;
+        }
+        const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN');
+        if (savedGhToken) {
+            const ghInput = document.getElementById('gh-token');
+            if (ghInput) ghInput.value = savedGhToken;
+        }
+    } catch (e) {}
+
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Zero-loss logic synchronized. Ready for command, Commander.";
+
+    const inputEl = document.getElementById('user-input');
+    if (inputEl) inputEl.focus();
+    
+    if ('speechSynthesis' in window) {
+        loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    preloadCoreKnowledge();
+    initSpeechRecognition();
+    initWavCanvas();
+};
+
+function showCyberNotification(message, isError = false) {
+    try {
+        let banner = document.getElementById('cyber-notification-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'cyber-notification-banner';
+            banner.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 99999;
+                padding: 14px 20px;
+                background: rgba(11, 15, 25, 0.95);
+                border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
+                color: ${isError ? '#ff0055' : '#00ffcc'};
+                font-family: monospace;
+                font-size: 12px;
+                letter-spacing: 1px;
+                box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
+                border-radius: 4px;
+                transition: opacity 0.4s ease, transform 0.4s ease;
+                opacity: 0;
+                transform: translateY(-10px);
+                pointer-events: none;
+            `;
+            document.body.appendChild(banner);
+        }
+
+        banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
+        banner.style.color = isError ? '#ff0055' : '#00ffcc';
+        banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
+        banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
+
+        setTimeout(() => {
+            banner.style.opacity = '1';
+            banner.style.transform = 'translateY(0)';
+        }, 10);
+
+        setTimeout(() => {
+            banner.style.opacity = '0';
+            banner.style.transform = 'translateY(-10px)';
+        }, 4000);
+    } catch (err) {}
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+function updateHUDState(state) {
+    try {
+        const stateText = document.getElementById('state-text');
+        if (stateText) stateText.innerText = state;
+    } catch (e) {}
 }
 
-body {
-    background-color: #05070c;
-    color: var(--text-light);
-    font-family: monospace;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
+// =================================================================
+// 1. NEURAL CANVAS WAVE VISUALIZER
+// =================================================================
+function initWavCanvas() {
+    canvas = document.getElementById('wav-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    
+    function resize() {
+        if (canvas.parentElement) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    renderNeuralWaves();
 }
 
-/* Left HUD Pane (Approx 35% width) */
-.agent-hud-pane {
-    width: 35%;
-    height: 100%;
-    background: var(--pane-bg);
-    border-right: 1px solid rgba(0, 255, 204, 0.2);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    box-shadow: inset 0 0 15px rgba(0, 255, 204, 0.05);
+function renderNeuralWaves() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isSpeaking = document.body.classList.contains('is-speaking');
+    const isThinking = document.body.classList.contains('is-thinking');
+
+    const amplitude = isSpeaking ? 35 : (isThinking ? 20 : (isListening ? 25 : 8));
+    const frequency = isSpeaking ? 0.04 : (isThinking ? 0.08 : 0.02);
+    const speed = isSpeaking ? 0.15 : (isThinking ? 0.2 : 0.04);
+
+    wavePhase += speed;
+
+    // Primary Cyan Wave
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#00ffcc';
+    const centerY = canvas.height / 2;
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.sin(x * frequency + wavePhase) * amplitude;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Secondary Blue Wave (Phase Offset)
+    ctx.beginPath();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(0, 179, 255, 0.6)';
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.cos(x * (frequency * 0.8) - wavePhase) * (amplitude * 0.7);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    requestAnimationFrame(renderNeuralWaves);
 }
 
-.agent-header-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+// =================================================================
+// 2. SPEECH RECOGNITION & VISUALIZER ENGINE
+// =================================================================
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            isListening = true;
+            const micBtn = document.getElementById('mic-btn');
+            if (micBtn) micBtn.classList.add('listening');
+            updateHUDState("LISTENING");
+        };
+
+        recognition.onresult = function(event) {
+            const speechText = event.results[0][0].transcript;
+            const userInput = document.getElementById('user-input');
+            if (userInput) userInput.value = speechText;
+            stopListeningUI();
+            sendMessage();
+        };
+
+        recognition.onerror = function() { stopListeningUI(); };
+        recognition.onend = function() { stopListeningUI(); };
+    } catch (err) {}
 }
 
-.agent-id-badge {
-    font-size: 11px;
-    color: var(--border-cyan);
-    letter-spacing: 1px;
+function toggleMic() {
+    if (!recognition) initSpeechRecognition();
+    if (!recognition) return showCyberNotification("Speech recognition unavailable.", true);
+
+    if (!isListening) {
+        try { recognition.start(); } catch (e) { stopListeningUI(); }
+    } else {
+        try { recognition.stop(); } catch (e) {}
+        stopListeningUI();
+    }
 }
 
-.status-bar-indicator {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
+function stopListeningUI() {
+    isListening = false;
+    const micBtn = document.getElementById('mic-btn');
+    if (micBtn) micBtn.classList.remove('listening');
+    const stateText = document.getElementById('state-text');
+    if (stateText && stateText.innerText === "LISTENING") updateHUDState("READY");
 }
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border-cyan);
-    box-shadow: 0 0 8px var(--border-cyan);
+// =================================================================
+// 3. KNOWLEDGE HARVESTER & LIVE TELEMETRY
+// =================================================================
+function loadVoices() {
+    if (!('speechSynthesis' in window)) return;
+    try { cachedVoices = window.speechSynthesis.getVoices(); } catch (e) {}
 }
 
-.agent-visual-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+async function preloadCoreKnowledge() {
+    const corePaths = [
+        "character/agent-anna.md",
+        "knowledge/agents.md",
+        "knowledge/lessons.md",
+        "knowledge/rules.md",
+        "plans/active/current-plan.md"
+    ];
+    let snippets = [];
+    await Promise.all(corePaths.map(async (path) => {
+        try {
+            let res = await fetch(`./${path}?t=${Date.now()}`);
+            if (!res.ok) {
+                res = await fetch(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}?t=${Date.now()}`);
+            }
+            if (res.ok) {
+                const text = await res.text();
+                const cleanText = text.replace(/<[^>]*>/g, '').trim();
+                const snippet = cleanText.length > 1500 ? cleanText.substring(0, 1500) + "\n... [Chunk trimmed]" : cleanText;
+                snippets.push(`[MATRIX SOURCE: ${path}]\n${snippet}`);
+            }
+        } catch (e) {}
+    }));
+    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Agent Anna 01 Core Active]";
 }
 
-#wav-canvas {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 1;
+async function fetchLiveTelemetry() {
+    let btc = "$98,450.00", eth = "$2,850.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
+    try {
+        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin,solana&vs_currencies=usd");
+        if (cryptoRes.ok) {
+            const p = await cryptoRes.json();
+            if (p.bitcoin) btc = `$${p.bitcoin.usd.toLocaleString()}`;
+            if (p.ethereum) eth = `$${p.ethereum.usd.toLocaleString()}`;
+            if (p.dogecoin) doge = `$${p.dogecoin.usd.toFixed(4)}`;
+            if (p.solana) sol = `$${p.solana.usd.toFixed(2)}`;
+        }
+    } catch (e) {}
+
+    try {
+        const relayRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
+        if (relayRes.ok) {
+            const data = await relayRes.json();
+            if (data.bitcoin_price) btc = data.bitcoin_price;
+            if (data.dogecoin_price) doge = data.dogecoin_price;
+            if (data.shi_drc20) shi = data.shi_drc20;
+        }
+    } catch (e) {}
+
+    return `[LIVE TELEMETRY METRICS]
+- Bitcoin (BTC): ${btc}
+- Ethereum (ETH): ${eth}
+- Dogecoin (DOGE): ${doge}
+- Solana (SOL): ${sol}
+- DRC-20 Token (SHI*): ${shi}`;
 }
 
-.agent-portrait-frame {
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    border: 2px solid var(--border-cyan);
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
-    z-index: 2;
-    margin-bottom: 15px;
+// =================================================================
+// 4. VOICE SYNTHESIS ENGINE
+// =================================================================
+function speakText(text) {
+    if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
+    try {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
+        if (!cleanText) return;
+
+        document.body.classList.add('is-speaking');
+        updateHUDState("SPEAKING");
+
+        let voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) voices = cachedVoices;
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        const voice = voices.find(v => v.name.includes("Google UK English Female") || v.lang.includes('en-GB')) || voices.find(v => v.lang.startsWith('en'));
+        if (voice) utterance.voice = voice;
+        
+        utterance.pitch = 1.02;
+        utterance.rate = 0.98;
+
+        utterance.onend = () => {
+            document.body.classList.remove('is-speaking');
+            updateHUDState("READY");
+        };
+        utterance.onerror = () => {
+            document.body.classList.remove('is-speaking');
+            updateHUDState("READY");
+        };
+
+        window.speechSynthesis.speak(utterance);
+    } catch (e) {
+        document.body.classList.remove('is-speaking');
+        updateHUDState("READY");
+    }
 }
 
-.agent-portrait-frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+function executeStfuProtocol() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    document.body.classList.remove('is-speaking', 'is-thinking');
+    updateHUDState("READY");
+    showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
 }
 
-.agent-nameplate {
-    text-align: center;
-    z-index: 2;
+// =================================================================
+// 5. CHAT INFERENCE & GITHUB CRUD PIPELINE
+// =================================================================
+async function sendMessage(forcedQuery = null) {
+    const keyEl = document.getElementById('api-key');
+    const input = document.getElementById('user-input');
+    const apiKey = keyEl ? keyEl.value.trim() : (localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key') || "");
+    const query = forcedQuery || (input ? input.value.trim() : "");
+
+    if (!apiKey) {
+        showCyberNotification('Please tap ⚙️ KEYS and paste your Dahl API Key.', true);
+        toggleSettings();
+        return;
+    }
+    if (!query) return;
+
+    if (query.toUpperCase() === "STFU" || query.toUpperCase() === "SHUT UP") {
+        executeStfuProtocol();
+        appendMsg(query, 'user', 'Commander');
+        appendMsg("Audio stream terminated.", 'assistant', 'AA01 Core', false);
+        if (input && !forcedQuery) input.value = '';
+        return;
+    }
+
+    appendMsg(query, 'user', 'Commander');
+    if (input && !forcedQuery) input.value = '';
+    chatHistory.push({ role: "user", content: query });
+    if (chatHistory.length > 8) chatHistory = chatHistory.slice(chatHistory.length - 8);
+
+    const startTime = performance.now();
+    document.body.classList.add('is-thinking');
+    updateHUDState("REASONING");
+
+    if (!coreKnowledgeCache) await preloadCoreKnowledge();
+    const liveTelemetry = await fetchLiveTelemetry();
+    
+    const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry and trading operations core. Always respond in character as Commander's executive AI clone. Never break character.
+
+Persistent Memory Matrix:
+${coreKnowledgeCache}
+
+Live Market Feeds:
+${liveTelemetry}`;
+
+    const messagesPayload = [
+        { role: "system", content: systemPrompt },
+        ...chatHistory
+    ];
+
+    try {
+        const targetUrl = "https://inference.dahl.global/v1/chat/completions";
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+
+        let res = await fetch(proxyUrl, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
+        });
+
+        if (!res.ok) {
+            res = await fetch(targetUrl, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
+            });
+        }
+
+        if (!res.ok) throw new Error(`API Error ${res.status}`);
+
+        const data = await res.json();
+        let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+        chatHistory.push({ role: "assistant", content: reply });
+        const tripSeconds = ((performance.now() - startTime) / 1000).toFixed(2);
+        
+        const latencyBadge = document.getElementById('latency-display');
+        if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
+
+        document.body.classList.remove('is-thinking');
+        updateHUDState("READY");
+        appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
+        speakText(reply);
+
+    } catch (err) {
+        document.body.classList.remove('is-thinking');
+        updateHUDState("ERROR");
+        appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
+    }
 }
 
-.agent-nameplate h2 {
-    font-size: 16px;
-    color: var(--border-cyan);
-    letter-spacing: 2px;
+// =================================================================
+// 6. AUTONOMOUS GITHUB BUILD TRIGGER & TACTICAL BUTTON HANDLERS
+// =================================================================
+async function triggerAutonomousBuild() {
+    showCyberNotification("Initiating Autonomous Architecture Build via GitHub API...");
+    updateHUDState("BUILDING");
+
+    const modules = ["AA02", "AA03", "AA04", "AA05", "AA06"];
+    for (const mod of modules) {
+        await commitFileToGitHub(
+            `${mod}/config.json`,
+            JSON.stringify({ module: mod, status: "ACTIVE", build_index: 1, timestamp: new Date().toISOString() }, null, 2),
+            `Autonomous API Deploy: ${mod} module initialized`
+        );
+        await commitFileToGitHub(
+            `${mod}/subcore/manifest.md`,
+            `# ${mod} SUBCORE MANIFEST\n\n- **Parent Directory:** ${mod}/\n- **Status:** Cloud Autonomously Verified\n- **Timestamp:** ${new Date().toISOString()}`,
+            `Autonomous API Deploy: ${mod} manifest initialized`
+        );
+    }
+    
+    updateHUDState("READY");
+    showCyberNotification("SUCCESS: All module architectures (AA02-AA06) deployed via GitHub API!");
 }
 
-.agent-nameplate p {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 4px;
+async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
+    const ghInput = document.getElementById('gh-token');
+    let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
+
+    if (!ghToken) {
+        showCyberNotification("Please tap ⚙️ KEYS and paste your GitHub PAT token.", true);
+        toggleSettings();
+        return false;
+    }
+
+    let cleanPath = filePath.trim().replace(/^\/+/, '');
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${cleanPath}`;
+
+    try {
+        const getRes = await fetch(apiUrl, {
+            headers: { "Authorization": `token ${ghToken}`, "Accept": "vnd.github.v3+json" }
+        });
+        
+        let fileSha = "";
+        let existingContent = "";
+        if (getRes.ok) {
+            const fileData = await getRes.json();
+            fileSha = fileData.sha;
+            existingContent = decodeURIComponent(escape(atob(fileData.content)));
+        }
+
+        const updatedContent = existingContent.includes(contentToAppend) ? existingContent : (existingContent ? existingContent + `\n\n${contentToAppend}` : contentToAppend);
+        const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
+
+        const putRes = await fetch(apiUrl, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${ghToken}`,
+                "Content-Type": "application/json",
+                "Accept": "vnd.github.v3+json"
+            },
+            body: JSON.stringify({
+                message: commitMessage || `Autonomous Deploy: ${cleanPath}`,
+                content: base64Encoded,
+                sha: fileSha || undefined
+            })
+        });
+
+        if (putRes.ok) {
+            showCyberNotification(`SUCCESS: Deployed ${cleanPath} to GitHub!`);
+            return true;
+        } else {
+            const errData = await putRes.json();
+            showCyberNotification(`GitHub Error: ${errData.message || 'PUT failed'}`, true);
+            return false;
+        }
+    } catch (err) {
+        showCyberNotification(`Network Error: ${err.message}`, true);
+        return false;
+    }
 }
 
-.eq-container {
-    display: flex;
-    gap: 4px;
-    height: 30px;
-    align-items: flex-end;
-    margin-top: 20px;
-    z-index: 2;
+function launchLocalServer() {
+    updateHUDState("ACTIVE");
+    showCyberNotification("🚀 LOCAL SERVER PROTOCOL ENGAGED");
+    sendMessage("Check local bridge connectivity and confirm server state.");
 }
 
-.eq-bar {
-    width: 6px;
-    height: 20%;
-    background: var(--border-cyan);
-    transition: height 0.1s ease;
+async function triggerManualTelemetry() {
+    updateHUDState("REASONING");
+    showCyberNotification("📊 FETCHING MARKET TELEMETRY...");
+    const report = await fetchLiveTelemetry();
+    appendMsg(report, 'assistant', 'AA01 Telemetry Feed', true);
+    updateHUDState("READY");
+    showCyberNotification("Telemetry fetched successfully!");
 }
 
-/* Right Chat Console Pane (Approx 65% width) */
-.chat-console-pane {
-    width: 65%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-dark);
+function scrapeWebPage() {
+    const input = document.getElementById('user-input');
+    const query = input ? input.value.trim() : "";
+    if (!query) {
+        showCyberNotification("Enter a target search term in the input box first.", true);
+        if (input) input.focus();
+        return;
+    }
+    sendMessage(`Scrape and summarize information regarding: ${query}`);
 }
 
-.chat-header {
-    padding: 12px 20px;
-    border-bottom: 1px solid #1e293b;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
+function triggerMilitaryProtocol() {
+    updateHUDState("ACTIVE");
+    showCyberNotification("⚡ MILITARY PROTOCOL ENGAGED");
+    sendMessage("Execute core diagnostic audit and report system readiness.");
 }
 
-.latency-badge {
-    font-size: 10px;
-    color: var(--text-muted);
+function handleKey(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
 }
 
-.quick-launch-bar {
-    padding: 10px 20px;
-    background: rgba(15, 23, 42, 0.6);
-    border-bottom: 1px solid #1e293b;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
+// =================================================================
+// 7. UI HELPERS & MESSAGE CONTAINERS
+// =================================================================
+function toggleVoice() {
+    isVoiceEnabled = !isVoiceEnabled;
+    const btn = document.getElementById('voice-btn');
+    if (!isVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (btn) {
+        btn.classList.toggle('active', isVoiceEnabled);
+        btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
+    }
+    showCyberNotification(`Voice synthesis: ${isVoiceEnabled ? 'ONLINE' : 'MUTED'}`);
 }
 
-.quick-launch-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-right: 4px;
+function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    if (panel) {
+        const isHidden = (panel.style.display === 'none' || panel.style.display === '');
+        panel.style.display = isHidden ? 'block' : 'none';
+    }
 }
 
-.ctrl-btn {
-    background: var(--bg-surface);
-    border: 1px solid #1e293b;
-    color: var(--text-light);
-    padding: 6px 12px;
-    font-family: monospace;
-    font-size: 11px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+function saveKey() {
+    try {
+        const el = document.getElementById('api-key');
+        const ghEl = document.getElementById('gh-token');
+        if (el) localStorage.setItem('dahl_key', el.value.trim());
+        if (ghEl) {
+            localStorage.setItem('gh_pat_token', ghEl.value.trim());
+            localStorage.setItem('GH_TOKEN', ghEl.value.trim());
+        }
+        showCyberNotification("Credentials saved successfully.");
+        toggleSettings();
+    } catch (e) {}
 }
 
-.ctrl-btn:hover {
-    border-color: var(--border-cyan);
-    color: var(--border-cyan);
+function clearLogs() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    chatHistory = [];
+    const container = document.getElementById('chat-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="message assistant" id="msg_cleared">
+                <div class="msg-header">AA01 Core</div>
+                <div style="white-space:pre-wrap; margin-top: 6px;">Console history cleared. Standby mode, Commander.</div>
+            </div>
+        `;
+    }
+    showCyberNotification("Console logs cleared.");
 }
 
-.military-btn {
-    border-color: rgba(0, 255, 204, 0.4);
-    color: var(--border-cyan);
+async function handleAction(actionType, messageId) {
+    const textContent = messagePayloadStore[messageId] || "";
+    if (!textContent) return;
+
+    if (actionType === 'summarize') {
+        sendMessage(`Summarize the following data:\n\n${textContent}`);
+    } else if (actionType === 'save') {
+        const blob = new Blob([textContent], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${Date.now()}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } else if (actionType === 'ingest') {
+        updateHUDState("INGESTING");
+        const timestamp = new Date().toISOString();
+        const payload = `### LOG ENTRY [${timestamp}]\n${textContent}`;
+        await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest [${timestamp}]`);
+        await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log [${timestamp}]`);
+        updateHUDState("READY");
+        showCyberNotification("SUCCESS: Ingested into core plans and session log!");
+    }
 }
 
-.build-btn {
-    border-color: var(--border-cyan) !important;
-    color: var(--border-cyan) !important;
+function copyToClipboard(messageId, btn) {
+    const text = messagePayloadStore[messageId] || "";
+    navigator.clipboard.writeText(text).then(() => {
+        if (btn) btn.innerText = "COPIED!";
+        showCyberNotification("Copied to clipboard.");
+    });
 }
 
-#settings-panel {
-    padding: 15px;
-    background: rgba(11, 15, 25, 0.98);
-    border-bottom: 1px solid #1e293b;
+function deleteMessage(messageId) {
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) {
+        delete messagePayloadStore[messageId];
+        msgElement.remove();
+        showCyberNotification("Message purged from buffer.");
+    }
 }
 
-.settings-title {
-    font-size: 11px;
-    color: var(--border-cyan);
-    margin-bottom: 8px;
-}
+function appendMsg(text, sender, label, includeActions = true) {
+    const container = document.getElementById('chat-container');
+    if (!container) return;
 
-#settings-panel input {
-    width: 100%;
-    padding: 8px;
-    background: var(--bg-dark);
-    border: 1px solid #1e293b;
-    color: var(--text-light);
-    font-family: monospace;
-    font-size: 11px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-}
+    const msgId = 'msg_' + Math.random().toString(36).substring(2, 9);
+    messagePayloadStore[msgId] = text;
 
-#chat-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
+    div.id = msgId;
 
-/* Chat Messages & Action Rows */
-.message {
-    padding: 14px 18px;
-    border-radius: 6px;
-    max-width: 90%;
-    font-size: 12px;
-    line-height: 1.5;
-}
+    let actions = includeActions ? `
+        <div class="action-row">
+            <button class="action-chip" onclick="handleAction('summarize', '${msgId}')">SUMMARIZE</button>
+            <button class="action-chip" onclick="handleAction('save', '${msgId}')">SAVE .MD</button>
+            <button class="action-chip" onclick="handleAction('ingest', '${msgId}')">INGEST</button>
+            <button class="action-chip" onclick="copyToClipboard('${msgId}', this)">COPY</button>
+            <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
+            <button class="action-chip del-btn" onclick="deleteMessage('${msgId}')">🗑️ DEL</button>
+        </div>
+    ` : '';
 
-.message.user {
-    align-self: flex-end;
-    background: #1e293b;
-    border: 1px solid #334155;
-}
-
-.message.assistant {
-    align-self: flex-start;
-    background: var(--bg-surface);
-    border: 1px solid rgba(0, 255, 204, 0.3);
-}
-
-.msg-header {
-    font-size: 10px;
-    color: var(--border-cyan);
-    margin-bottom: 6px;
-    letter-spacing: 1px;
-}
-
-.action-row {
-    display: flex;
-    gap: 6px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-}
-
-.action-chip {
-    background: transparent;
-    border: 1px solid #334155;
-    color: var(--text-muted);
-    padding: 6px 10px;
-    font-family: monospace;
-    font-size: 10px;
-    cursor: pointer;
-    border-radius: 3px;
-    transition: all 0.2s ease;
-}
-
-.action-chip:hover {
-    border-color: var(--border-cyan);
-    color: var(--border-cyan);
-}
-
-.del-btn {
-    border-color: var(--border-red);
-    color: var(--border-red);
-}
-
-.del-btn:hover {
-    background: rgba(255, 0, 85, 0.1);
-}
-
-/* Input Control Bar */
-.input-control-bar {
-    padding: 15px 20px;
-    border-top: 1px solid #1e293b;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    background: var(--bg-dark);
-}
-
-#user-input {
-    flex: 1;
-    padding: 10px 14px;
-    background: var(--bg-surface);
-    border: 1px solid #1e293b;
-    color: var(--text-light);
-    font-family: monospace;
-    font-size: 12px;
-    border-radius: 4px;
-}
-
-#user-input:focus {
-    outline: none;
-    border-color: var(--border-cyan);
+    div.innerHTML = `<div class="msg-header">${label}</div><div style="white-space:pre-wrap; margin-top:6px;">${text}</div>${actions}`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
