@@ -1,0 +1,8 @@
+Context:', window.AudioContext ? '✅ AVAILABLE' : '❌ NOT FOUND');
+  
+  // 4. List Audio Devices
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const mics = devices.filter(d => d.kind === 'audioinput');
+  console.log('Microphones Found:', mics.length);
+  mics.forEach(m => console.log('  -', m.label || '(unlabeled)'));
+})();
