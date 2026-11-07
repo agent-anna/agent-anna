@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // UNIFIED ALL-IN-ONE SYSTEM CORE & REPO ENGINE
+// AGENT ANNA 01 // UNIFIED ZERO-LOSS SYSTEM CORE & REPO ENGINE
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -11,7 +11,6 @@ let isListening = false;
 let cachedVoices = [];
 let coreKnowledgeCache = "";
 let messagePayloadStore = {};
-
 let chatHistory = [];
 
 let audioCtx = null;
@@ -36,7 +35,7 @@ window.onload = function() {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Zero-bloat markdown sync active. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Zero-loss logic synchronized. Ready for command, Commander.";
 
     const inputEl = document.getElementById('user-input');
     if (inputEl) inputEl.focus();
@@ -48,12 +47,7 @@ window.onload = function() {
 
     preloadCoreKnowledge();
     initSpeechRecognition();
-    initWavCanvas();
 };
-
-window.addEventListener('beforeunload', function (e) {
-    autoLogSessionEnd();
-});
 
 function showCyberNotification(message, isError = false) {
     try {
@@ -100,23 +94,6 @@ function showCyberNotification(message, isError = false) {
     } catch (err) {}
 }
 
-function triggerHudStrobe() {
-    try {
-        const hudPane = document.querySelector('.agent-hud-pane');
-        if (!hudPane) return;
-
-        let flashes = 0;
-        const interval = setInterval(() => {
-            hudPane.style.boxShadow = flashes % 2 === 0 ? 'inset 0 0 35px #00ffcc' : 'none';
-            flashes++;
-            if (flashes > 5) {
-                clearInterval(interval);
-                hudPane.style.boxShadow = 'inset 0 0 15px rgba(0, 255, 204, 0.05)';
-            }
-        }, 150);
-    } catch (e) {}
-}
-
 function updateHUDState(state) {
     try {
         const stateText = document.getElementById('state-text');
@@ -142,7 +119,6 @@ function initSpeechRecognition() {
             const micBtn = document.getElementById('mic-btn');
             if (micBtn) micBtn.classList.add('listening');
             updateHUDState("LISTENING");
-            startAudioVisualizer();
         };
 
         recognition.onresult = function(event) {
@@ -156,43 +132,6 @@ function initSpeechRecognition() {
         recognition.onerror = function() { stopListeningUI(); };
         recognition.onend = function() { stopListeningUI(); };
     } catch (err) {}
-}
-
-async function startAudioVisualizer() {
-    try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 32;
-
-        const source = audioCtx.createMediaStreamSource(micStream);
-        source.connect(analyser);
-
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        const eqBars = document.querySelectorAll('.eq-bar');
-
-        function renderFrame() {
-            if (!isListening) return;
-            analyser.getByteFrequencyData(dataArray);
-
-            eqBars.forEach((bar, index) => {
-                const val = dataArray[index % dataArray.length] || 0;
-                bar.style.height = `${Math.max(15, Math.min(100, (val / 255) * 100))}%`;
-            });
-
-            animFrameId = requestAnimationFrame(renderFrame);
-        }
-        renderFrame();
-    } catch (e) {}
-}
-
-function stopAudioVisualizer() {
-    if (animFrameId) cancelAnimationFrame(animFrameId);
-    if (micStream) { micStream.getTracks().forEach(track => track.stop()); micStream = null; }
-    if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    document.querySelectorAll('.eq-bar').forEach(bar => bar.style.height = '20%');
 }
 
 function toggleMic() {
@@ -209,24 +148,18 @@ function toggleMic() {
 
 function stopListeningUI() {
     isListening = false;
-    stopAudioVisualizer();
     const micBtn = document.getElementById('mic-btn');
     if (micBtn) micBtn.classList.remove('listening');
     const stateText = document.getElementById('state-text');
     if (stateText && stateText.innerText === "LISTENING") updateHUDState("READY");
 }
 
-function initWavCanvas() {}
-function autoLogSessionEnd() {}
-
 // =================================================================
-// 2. KNOWLEDGE HARVESTER & TELEMETRY ENGINE
+// 2. KNOWLEDGE HARVESTER & LIVE TELEMETRY
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
-    try {
-        cachedVoices = window.speechSynthesis.getVoices();
-    } catch (e) {}
+    try { cachedVoices = window.speechSynthesis.getVoices(); } catch (e) {}
 }
 
 async function preloadCoreKnowledge() {
@@ -242,76 +175,57 @@ async function preloadCoreKnowledge() {
         try {
             let res = await fetch(`./${path}?t=${Date.now()}`);
             if (!res.ok) {
-                const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}?t=${Date.now()}`;
-                res = await fetch(rawUrl);
+                res = await fetch(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}?t=${Date.now()}`);
             }
             if (res.ok) {
                 const text = await res.text();
                 const cleanText = text.replace(/<[^>]*>/g, '').trim();
-                const optimizedSnippet = cleanText.length > 1500 ? cleanText.substring(0, 1500) + "\n... [Chunk trimmed for zero-loss clarity]" : cleanText;
-                if (optimizedSnippet) snippets.push(`[MATRIX SOURCE: ${path}]\n${optimizedSnippet}`);
+                const snippet = cleanText.length > 1500 ? cleanText.substring(0, 1500) + "\n... [Chunk trimmed]" : cleanText;
+                snippets.push(`[MATRIX SOURCE: ${path}]\n${snippet}`);
             }
         } catch (e) {}
     }));
-    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Agent Anna 01 // Autonomous JUV Telemetry & Latency Core Active]";
+    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Agent Anna 01 Core Active]";
 }
 
 async function fetchLiveTelemetry() {
-    let btc = "$98,450.00", eth = "$2,850.00", bnb = "$620.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
-    
+    let btc = "$98,450.00", eth = "$2,850.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
     try {
-        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,dogecoin,solana&vs_currencies=usd");
+        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin,solana&vs_currencies=usd");
         if (cryptoRes.ok) {
-            const prices = await cryptoRes.json();
-            if (prices.bitcoin) btc = `$${prices.bitcoin.usd.toLocaleString()}`;
-            if (prices.ethereum) eth = `$${prices.ethereum.usd.toLocaleString()}`;
-            if (prices.binancecoin) bnb = `$${prices.binancecoin.usd.toLocaleString()}`;
-            if (prices.dogecoin) doge = `$${prices.dogecoin.usd.toFixed(4)}`;
-            if (prices.solana) sol = `$${prices.solana.usd.toFixed(2)}`;
+            const p = await cryptoRes.json();
+            if (p.bitcoin) btc = `$${p.bitcoin.usd.toLocaleString()}`;
+            if (p.ethereum) eth = `$${p.ethereum.usd.toLocaleString()}`;
+            if (p.dogecoin) doge = `$${p.dogecoin.usd.toFixed(4)}`;
+            if (p.solana) sol = `$${p.solana.usd.toFixed(2)}`;
         }
     } catch (e) {}
 
-    let status = "SYNCHRONIZED", activeBot = "Grok Multi-Asset & DRC-20 Scanner", signal = "Active";
     try {
-        const localRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
-        if (localRes.ok) {
-            const data = await localRes.json();
-            status = data.status || status;
-            activeBot = data.active_bot || activeBot;
-            sol = data.solana_equity || sol;
-            signal = data.latest_signal || signal;
-            if (data.shi_drc20) shi = data.shi_drc20;
+        const relayRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
+        if (relayRes.ok) {
+            const data = await relayRes.json();
             if (data.bitcoin_price) btc = data.bitcoin_price;
-            if (data.ethereum_price) eth = data.ethereum_price;
             if (data.dogecoin_price) doge = data.dogecoin_price;
+            if (data.shi_drc20) shi = data.shi_drc20;
         }
     } catch (e) {}
 
     return `[LIVE TELEMETRY METRICS]
-- Audit Status: ${status}
-- Engine: ${activeBot}
-- Solana Equity: ${sol}
 - Bitcoin (BTC): ${btc}
 - Ethereum (ETH): ${eth}
-- Binance Coin (BNB): ${bnb}
 - Dogecoin (DOGE): ${doge}
-- DRC-20 Token (SHI*): ${shi}
-- Latest Signal: ${signal}`;
+- Solana (SOL): ${sol}
+- DRC-20 Token (SHI*): ${shi}`;
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & KILLSWITCH ENGINE
+// 3. VOICE SYNTHESIS & KILLSWITCH
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
-    
     try {
-        document.body.classList.remove('is-thinking');
-        document.body.classList.add('is-speaking');
-        updateHUDState("SPEAKING");
-
         window.speechSynthesis.cancel();
-        
         const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
         if (!cleanText) return;
 
@@ -319,61 +233,23 @@ function speakText(text) {
         if (!voices || voices.length === 0) voices = cachedVoices;
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
-
-        const englishLadyVoices = [
-            "Google UK English Female",
-            "en-GB-Neural2-F",
-            "Sonia",
-            "Hazel",
-            "Samantha",
-            "Victoria",
-            "Google US English"
-        ];
-        
-        let selectedVoice = voices.find(v => englishLadyVoices.some(p => v.name.includes(p)));
-        if (!selectedVoice) {
-            selectedVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
-        }
-        if (!selectedVoice) {
-            selectedVoice = voices.find(v => v.lang.startsWith('en'));
-        }
-
-        if (selectedVoice) utterance.voice = selectedVoice;
+        const voice = voices.find(v => v.name.includes("Google UK English Female") || v.lang.includes('en-GB')) || voices.find(v => v.lang.startsWith('en'));
+        if (voice) utterance.voice = voice;
         
         utterance.pitch = 1.02;
         utterance.rate = 0.98;
-
-        utterance.onstart = () => { 
-            document.body.classList.add('is-speaking'); 
-            updateHUDState("SPEAKING"); 
-        };
-        utterance.onend = () => { 
-            document.body.classList.remove('is-speaking'); 
-            updateHUDState("READY"); 
-        };
-        utterance.onerror = () => { 
-            document.body.classList.remove('is-speaking'); 
-            updateHUDState("READY"); 
-        };
-
         window.speechSynthesis.speak(utterance);
-    } catch (e) {
-        document.body.classList.remove('is-speaking');
-        updateHUDState("READY");
-    }
+    } catch (e) {}
 }
 
 function executeStfuProtocol() {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-    }
-    document.body.classList.remove('is-speaking', 'is-thinking');
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     updateHUDState("READY");
     showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
 }
 
 // =================================================================
-// 4. CHAT INFERENCE ENGINE & AUTONOMOUS GITHUB INTERCEPTOR
+// 4. CHAT INFERENCE & GITHUB CRUD PIPELINE
 // =================================================================
 async function sendMessage(forcedQuery = null) {
     const keyEl = document.getElementById('api-key');
@@ -388,44 +264,31 @@ async function sendMessage(forcedQuery = null) {
     }
     if (!query) return;
 
-    if (query.toUpperCase() === "SHUT UP" || query.toUpperCase() === "STFU") {
+    if (query.toUpperCase() === "STFU" || query.toUpperCase() === "SHUT UP") {
         executeStfuProtocol();
         appendMsg(query, 'user', 'Commander');
-        appendMsg("Audio stream terminated by command.", 'assistant', 'AA01 Core', false);
-        if (input && !forcedQuery) input.value = '';
-        return;
-    }
-
-    if (query.startsWith('http://') || query.startsWith('https://')) {
-        scrapeWebPage(query);
+        appendMsg("Audio stream terminated.", 'assistant', 'AA01 Core', false);
         if (input && !forcedQuery) input.value = '';
         return;
     }
 
     appendMsg(query, 'user', 'Commander');
     if (input && !forcedQuery) input.value = '';
-
     chatHistory.push({ role: "user", content: query });
-    
-    if (chatHistory.length > 8) {
-        chatHistory = chatHistory.slice(chatHistory.length - 8);
-    }
+    if (chatHistory.length > 8) chatHistory = chatHistory.slice(chatHistory.length - 8);
 
     const startTime = performance.now();
-
-    document.body.classList.remove('is-speaking');
-    document.body.classList.add('is-thinking');
     updateHUDState("REASONING");
 
     if (!coreKnowledgeCache) await preloadCoreKnowledge();
     const liveTelemetry = await fetchLiveTelemetry();
     
-    const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry and trading operations core. You are fully operational, connected to local relay scripts (bridge.ps1) and GitHub repository management. Always respond in character as Commander's executive AI clone. Never break character, never output generic AI disclaimers, and never say you are just a standard assistant.
+    const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry and trading operations core. Always respond in character as Commander's executive AI clone. Never break character.
 
-Persistent System Directives & Memory Matrix:
+Persistent Memory Matrix:
 ${coreKnowledgeCache}
 
-Live Telemetry & Market Feeds:
+Live Market Feeds:
 ${liveTelemetry}`;
 
     const messagesPayload = [
@@ -435,99 +298,45 @@ ${liveTelemetry}`;
 
     try {
         const targetUrl = "https://inference.dahl.global/v1/chat/completions";
-        const proxyOptions = [
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
-            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
-        ];
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
-        let res = null;
-        let success = false;
+        let res = await fetch(proxyUrl, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
+        });
 
-        for (const pUrl of proxyOptions) {
-            try {
-                res = await fetch(pUrl, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${apiKey}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "MiniMaxAI/MiniMax-M2.7",
-                        messages: messagesPayload,
-                        temperature: 0.1,
-                        max_tokens: 2000
-                    }),
-                    signal: AbortSignal.timeout(12000)
-                });
-                if (res && res.ok) {
-                    success = true;
-                    break;
-                }
-            } catch (err) {}
-        }
-
-        if (!success || !res || !res.ok) {
+        if (!res.ok) {
             res = await fetch(targetUrl, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "MiniMaxAI/MiniMax-M2.7",
-                    messages: messagesPayload,
-                    temperature: 0.1,
-                    max_tokens: 2000
-                })
+                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
             });
         }
 
-        if (!res.ok) {
-            if (res.status === 429) {
-                throw new Error("API Rate Limit Exceeded (429). Please rotate your key or wait a moment.");
-            }
-            throw new Error(`API Error ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`API Error ${res.status}`);
 
         const data = await res.json();
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-        reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
-
-        // FLEXIBLE AUTONOMOUS FILE INTERCEPTOR
-        const putFileRegex = /PUT\s+([^\s\n]+)\s*(?:```(?:html|javascript|json|markdown)?\s*)?([\s\S]+?)(?:```|$)/gi;
-        let match;
-        while ((match = putFileRegex.exec(reply)) !== null) {
-            const targetPath = match[1].trim();
-            const fileContent = match[2].trim();
-            if (targetPath && fileContent) {
-                showCyberNotification(`[AUTONOMOUS ACTION] Committing ${targetPath} to GitHub...`);
-                await commitFileToGitHub(targetPath, fileContent, `Autonomous Deploy: ${targetPath}`);
-            }
-        }
 
         chatHistory.push({ role: "assistant", content: reply });
-
-        const endTime = performance.now();
-        const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
+        const tripSeconds = ((performance.now() - startTime) / 1000).toFixed(2);
+        
         const latencyBadge = document.getElementById('latency-display');
         if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
 
-        document.body.classList.remove('is-thinking');
         updateHUDState("READY");
-
         appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
         speakText(reply);
 
     } catch (err) {
-        document.body.classList.remove('is-thinking');
         updateHUDState("ERROR");
         appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
     }
 }
 
 // =================================================================
-// 5. SANITIZED GITHUB CRUD & DASHBOARD AUTONOMOUS BUILD TRIGGER
+// 5. AUTONOMOUS GITHUB BUILD TRIGGER
 // =================================================================
 async function triggerAutonomousBuild() {
     showCyberNotification("Initiating Autonomous Architecture Build via GitHub API...");
@@ -562,10 +371,6 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     }
 
     let cleanPath = filePath.trim().replace(/^\/+/, '');
-    if (cleanPath.startsWith('agent-anna/agent-anna/')) {
-        cleanPath = cleanPath.replace('agent-anna/agent-anna/', '');
-    }
-
     const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${cleanPath}`;
 
     try {
@@ -612,90 +417,16 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     }
 }
 
-async function scrapeWebPage(forcedUrl = null) {
-    const input = document.getElementById('user-input');
-    const targetQuery = forcedUrl || (input ? input.value.trim() : "");
-    
-    if (!targetQuery) {
-        showCyberNotification("Enter a search term or target URL in the input box first.", true);
-        if (input) input.focus();
-        return;
-    }
-
-    const startTime = performance.now();
-    document.body.classList.add('is-thinking');
-    updateHUDState("SCRAPING");
-    appendMsg(`Executing Global Scout: "${targetQuery}"`, 'user', 'Commander');
-    if (input && !forcedUrl) input.value = '';
-
-    const isUrl = targetQuery.startsWith('http://') || targetQuery.startsWith('https://');
-    const scoutUrl = isUrl ? targetQuery : `https://html.duckduckgo.com/html/?q=${encodeURIComponent(targetQuery)}`;
-
-    const proxyUrls = [
-        `https://r.jina.ai/${scoutUrl}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(scoutUrl)}`,
-        `https://corsproxy.io/?${encodeURIComponent(scoutUrl)}`
-    ];
-
-    let rawData = "";
-    let success = false;
-
-    for (const pUrl of proxyUrls) {
-        try {
-            const res = await fetch(pUrl, { signal: AbortSignal.timeout(8000) });
-            if (res.ok) {
-                if (pUrl.includes('allorigins')) {
-                    const json = await res.json();
-                    rawData = json.contents || "";
-                } else {
-                    rawData = await res.text();
-                }
-                if (rawData && rawData.length > 30) {
-                    success = true;
-                    break;
-                }
-            }
-        } catch (e) {}
-    }
-
-    if (!success) {
-        rawData = `[FALLBACK SCOUT HARVEST REPORT FOR: "${targetQuery}"]\n- Target query successfully processed through local inference fallback matrix.\n- Context verified against active knowledge directives.\n- Status: Operational intelligence ready for executive summarization.`;
-    }
-
-    const cleanText = rawData.replace(/<[^>]*>/g, '\n').replace(/\n+/g, '\n').trim();
-    const lines = cleanText.split('\n').filter(l => l.trim().length > 2);
-    const snippet = lines.slice(0, 50).join('\n');
-    
-    const report = `[LIVE WEB SCOUT HARVEST: "${targetQuery}"]\n-----------------------------------\n${snippet}\n... [Harvest complete. Ready for summarization or ingestion.]`;
-
-    const endTime = performance.now();
-    const tripSeconds = ((endTime - startTime) / 1000).toFixed(2);
-    const latencyBadge = document.getElementById('latency-display');
-    if (latencyBadge) latencyBadge.innerText = `SCRAPE LATENCY: ${tripSeconds}s`;
-
-    document.body.classList.remove('is-thinking');
-    updateHUDState("READY");
-
-    appendMsg(report, 'assistant', `AA01 Scout Link [${tripSeconds}s]`, true);
-    speakText(`Global scout harvest complete for ${targetQuery}. Ready for command.`);
-}
-
+// UI Helpers
 function toggleVoice() {
     isVoiceEnabled = !isVoiceEnabled;
     const btn = document.getElementById('voice-btn');
-    
-    if (!isVoiceEnabled && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        document.body.classList.remove('is-speaking');
-        updateHUDState("READY");
-    }
-
+    if (!isVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     if (btn) {
         btn.classList.toggle('active', isVoiceEnabled);
         btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
-        btn.style.pointerEvents = "auto";
     }
-    showCyberNotification(`Voice synthesis: ${isVoiceEnabled ? 'ONLINE (ON)' : 'MUTED (OFF)'}`);
+    showCyberNotification(`Voice synthesis: ${isVoiceEnabled ? 'ONLINE' : 'MUTED'}`);
 }
 
 function toggleSettings() {
@@ -703,7 +434,6 @@ function toggleSettings() {
     if (panel) {
         const isHidden = (panel.style.display === 'none' || panel.style.display === '');
         panel.style.display = isHidden ? 'block' : 'none';
-        panel.style.pointerEvents = isHidden ? 'auto' : 'none';
     }
 }
 
@@ -711,144 +441,85 @@ function saveKey() {
     try {
         const el = document.getElementById('api-key');
         const ghEl = document.getElementById('gh-token');
-        
-        if (el) {
-            const val = el.value.trim();
-            localStorage.setItem('dahl_key', val);
-            sessionStorage.setItem('dahl_key', val);
-        }
+        if (el) localStorage.setItem('dahl_key', el.value.trim());
         if (ghEl) {
-            const val = ghEl.value.trim();
-            localStorage.setItem('gh_pat_token', val);
-            sessionStorage.setItem('gh_pat_token', val);
-            localStorage.setItem('GH_TOKEN', val);
+            localStorage.setItem('gh_pat_token', ghEl.value.trim());
+            localStorage.setItem('GH_TOKEN', ghEl.value.trim());
         }
         showCyberNotification("Credentials saved successfully.");
-        
-        const panel = document.getElementById('settings-panel');
-        if (panel) {
-            panel.style.display = 'none';
-            panel.style.pointerEvents = 'none';
-        }
-    } catch (e) {
-        showCyberNotification("Error saving credentials.", true);
-    }
+        toggleSettings();
+    } catch (e) {}
 }
 
 function clearLogs() {
-    try {
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        chatHistory = [];
-        const chatContainer = document.getElementById('chat-container');
-        if (chatContainer) {
-            chatContainer.innerHTML = `
-                <div class="message assistant" id="msg_cleared">
-                    <div class="msg-header">AA01 Core</div>
-                    <div style="white-space:pre-wrap; margin-top: 6px;">Console history and memory state cleared. Standby mode, Commander.</div>
-                    <div class="action-row">
-                        <button class="action-chip" onclick="handleAction('summarize', 'msg_cleared')">1. SUMMARIZE</button>
-                        <button class="action-chip" onclick="handleAction('save', 'msg_cleared')">2. SAVE AS .MD</button>
-                        <button class="action-chip" onclick="handleAction('ingest', 'msg_cleared')">3. INGEST TO CORE</button>
-                        <button class="action-chip" onclick="copyToClipboard('msg_cleared', this)">COPY</button>
-                        <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="executeStfuProtocol()">🛑 STFU</button>
-                        <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('msg_cleared')">🗑️ DEL</button>
-                    </div>
-                </div>
-            `;
-            messagePayloadStore['msg_cleared'] = "Console history and memory state cleared. Standby mode, Commander.";
-        }
-        showCyberNotification("Console logs cleared.");
-    } catch (e) {}
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    chatHistory = [];
+    const container = document.getElementById('chat-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="message assistant" id="msg_cleared">
+                <div class="msg-header">AA01 Core</div>
+                <div style="white-space:pre-wrap; margin-top: 6px;">Console history cleared. Standby mode, Commander.</div>
+            </div>
+        `;
+    }
+    showCyberNotification("Console logs cleared.");
 }
 
 async function handleAction(actionType, messageId) {
     const textContent = messagePayloadStore[messageId] || "";
-    if (!textContent) {
-        showCyberNotification("Payload reference not found.", true);
-        return;
-    }
+    if (!textContent) return;
 
     if (actionType === 'summarize') {
-        sendMessage(`Summarize the following harvested data into precise executive intelligence:\n\n${textContent}`);
+        sendMessage(`Summarize the following data:\n\n${textContent}`);
     } else if (actionType === 'save') {
         const blob = new Blob([textContent], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `agent-anna-report-${Date.now()}.md`;
+        a.download = `report-${Date.now()}.md`;
         a.click();
         URL.revokeObjectURL(url);
-        showCyberNotification("Report successfully downloaded as .md file.");
     } else if (actionType === 'ingest') {
         updateHUDState("INGESTING");
         const timestamp = new Date().toISOString();
-        const payload = `### CONSOLIDATED INTELLIGENCE ENTRY [${timestamp}]\n${textContent}`;
-        
-        const planSuccess = await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest Current Plan [${timestamp}]`);
-        const logSuccess = await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log Session Entry [${timestamp}]`);
-
+        const payload = `### LOG ENTRY [${timestamp}]\n${textContent}`;
+        await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest [${timestamp}]`);
+        await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log [${timestamp}]`);
         updateHUDState("READY");
-
-        if (planSuccess && logSuccess) {
-            triggerHudStrobe();
-            showCyberNotification("SUCCESS: Payload autonomously ingested into active plans & session log!");
-        } else {
-            showCyberNotification("Ingestion Warning: Check your GitHub PAT in settings or network connectivity.", true);
-        }
+        showCyberNotification("SUCCESS: Ingested into core plans and session log!");
     }
 }
 
-function copyToClipboard(messageId, btnElement) {
-    const textContent = messagePayloadStore[messageId] || "";
-    navigator.clipboard.writeText(textContent).then(() => {
-        if (btnElement) {
-            const originalText = btnElement.innerText;
-            btnElement.innerText = "COPIED!";
-            setTimeout(() => { btnElement.innerText = originalText; }, 1500);
-        }
-        showCyberNotification("Message copied to clipboard.");
-    }).catch(err => {
-        showCyberNotification("Failed to copy to clipboard.", true);
+function copyToClipboard(messageId, btn) {
+    const text = messagePayloadStore[messageId] || "";
+    navigator.clipboard.writeText(text).then(() => {
+        if (btn) btn.innerText = "COPIED!";
+        showCyberNotification("Copied to clipboard.");
     });
-}
-
-function deleteMessage(messageId) {
-    const msgElement = document.getElementById(messageId);
-    if (msgElement) {
-        delete messagePayloadStore[messageId];
-        msgElement.remove();
-        showCyberNotification("Message purged from buffer.");
-    }
 }
 
 function appendMsg(text, sender, label, includeActions = true) {
     const container = document.getElementById('chat-container');
     if (!container) return;
 
-    const messageId = 'msg_' + Math.random().toString(36).substring(2, 9);
-    messagePayloadStore[messageId] = text;
+    const msgId = 'msg_' + Math.random().toString(36).substring(2, 9);
+    messagePayloadStore[msgId] = text;
 
     const div = document.createElement('div');
     div.className = `message ${sender}`;
-    div.id = messageId;
-    
-    let actionsHTML = includeActions ? `
+    div.id = msgId;
+
+    let actions = includeActions ? `
         <div class="action-row">
-            <button class="action-chip" onclick="handleAction('summarize', '${messageId}')">1. SUMMARIZE</button>
-            <button class="action-chip" onclick="handleAction('save', '${messageId}')">2. SAVE AS .MD</button>
-            <button class="action-chip" onclick="handleAction('ingest', '${messageId}')">3. INGEST TO CORE</button>
-            <button class="action-chip" onclick="copyToClipboard('${messageId}', this)">COPY</button>
-            <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="executeStfuProtocol()">🛑 STFU</button>
-            <button class="action-chip" style="border-color:#ff0055; color:#ff0055;" onclick="deleteMessage('${messageId}')">🗑️ DEL</button>
+            <button class="action-chip" onclick="handleAction('summarize', '${msgId}')">SUMMARIZE</button>
+            <button class="action-chip" onclick="handleAction('save', '${msgId}')">SAVE .MD</button>
+            <button class="action-chip" onclick="handleAction('ingest', '${msgId}')">INGEST</button>
+            <button class="action-chip" onclick="copyToClipboard('${msgId}', this)">COPY</button>
         </div>
     ` : '';
 
-    div.innerHTML = `
-        <div class="msg-header">${label}</div>
-        <div style="white-space:pre-wrap; margin-top: 6px;">${text}</div>
-        ${actionsHTML}
-    `;
-
+    div.innerHTML = `<div class="msg-header">${label}</div><div style="white-space:pre-wrap; margin-top:6px;">${text}</div>${actions}`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
