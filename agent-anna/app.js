@@ -538,6 +538,15 @@ function copyToClipboard(messageId, btn) {
     });
 }
 
+function deleteMessage(messageId) {
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) {
+        delete messagePayloadStore[messageId];
+        msgElement.remove();
+        showCyberNotification("Message purged from buffer.");
+    }
+}
+
 function appendMsg(text, sender, label, includeActions = true) {
     const container = document.getElementById('chat-container');
     if (!container) return;
@@ -555,6 +564,8 @@ function appendMsg(text, sender, label, includeActions = true) {
             <button class="action-chip" onclick="handleAction('save', '${msgId}')">SAVE .MD</button>
             <button class="action-chip" onclick="handleAction('ingest', '${msgId}')">INGEST</button>
             <button class="action-chip" onclick="copyToClipboard('${msgId}', this)">COPY</button>
+            <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
+            <button class="action-chip del-btn" onclick="deleteMessage('${msgId}')">🗑️ DEL</button>
         </div>
     ` : '';
 
