@@ -416,7 +416,6 @@ ${liveTelemetry}`;
     ];
 
     try {
-        // Robust CORS proxy fallback array to bypass GitHub Pages browser blocking permanently
         const targetUrl = "https://inference.dahl.global/v1/chat/completions";
         const proxyOptions = [
             `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
@@ -450,7 +449,6 @@ ${liveTelemetry}`;
         }
 
         if (!success || !res || !res.ok) {
-            // Fallback direct request if proxies fail
             res = await fetch(targetUrl, {
                 method: "POST",
                 headers: {
@@ -477,6 +475,18 @@ ${liveTelemetry}`;
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
         reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
+
+        // AUTONOMOUS FILE INTERCEPTOR: Automatically commit PUT file blocks to GitHub
+        const putFileRegex = /PUT\s+([^\s]+)\s*```(?:html|javascript|json|markdown)?\s*([\s\S]*?)```/g;
+        let match;
+        while ((match = putFileRegex.exec(reply)) !== null) {
+            const targetPath = match[1].trim();
+            const fileContent = match[2].trim();
+            if (targetPath && fileContent) {
+                showCyberNotification(`[AUTONOMOUS ACTION] Committing ${targetPath} to GitHub...`);
+                await commitFileToGitHub(targetPath, fileContent, `Autonomous Deploy: ${targetPath}`);
+            }
+        }
 
         chatHistory.push({ role: "assistant", content: reply });
 
@@ -675,7 +685,7 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
             existingContent = decodeURIComponent(escape(atob(fileData.content)));
         }
 
-        const updatedContent = existingContent + `\n\n${contentToAppend}`;
+        const updatedContent = existingContent.includes(contentToAppend) ? existingContent : (existingContent ? existingContent + `\n\n${contentToAppend}` : contentToAppend);
         const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
 
         const putRes = await fetch(apiUrl, {
@@ -688,7 +698,7 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
             body: JSON.stringify({
                 message: commitMessage,
                 content: base64Encoded,
-                sha: fileSha
+                sha: fileSha || undefined
             })
         });
 
