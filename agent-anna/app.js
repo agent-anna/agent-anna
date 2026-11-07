@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // AUTONOMOUS ENGINE & PERSISTENT MEMORY MATRIX
+// AGENT ANNA 01 // UNIFIED ALL-IN-ONE SYSTEM CORE (app.js)
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -19,6 +19,9 @@ let analyser = null;
 let micStream = null;
 let animFrameId = null;
 
+// =================================================================
+// 0. SYSTEM INITIALIZATION & NOTIFICATIONS
+// =================================================================
 window.onload = function() {
     try {
         const savedKey = localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key');
@@ -222,9 +225,7 @@ async function preloadCoreKnowledge() {
         "knowledge/agents.md",
         "knowledge/lessons.md",
         "knowledge/rules.md",
-        "plans/active/current-plan.md",
-        "plans/active/roadmap.md",
-        "plans/logs/session-log.md"
+        "plans/active/current-plan.md"
     ];
     let snippets = [];
     await Promise.all(corePaths.map(async (path) => {
@@ -237,7 +238,8 @@ async function preloadCoreKnowledge() {
             if (res.ok) {
                 const text = await res.text();
                 const cleanText = text.replace(/<[^>]*>/g, '').trim();
-                if (cleanText) snippets.push(`[MATRIX SOURCE: ${path}]\n${cleanText}`);
+                const optimizedSnippet = cleanText.length > 1500 ? cleanText.substring(0, 1500) + "\n... [Chunk trimmed for zero-loss clarity]" : cleanText;
+                if (optimizedSnippet) snippets.push(`[MATRIX SOURCE: ${path}]\n${optimizedSnippet}`);
             }
         } catch (e) {}
     }));
@@ -288,7 +290,7 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & CORE INFERENCE ENGINE
+// 3. VOICE SYNTHESIS & KILLSWITCH ENGINE
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -351,7 +353,6 @@ function speakText(text) {
     }
 }
 
-// HARD KILLSWITCH FUNCTION FOR THE STFU BUTTON
 function executeStfuProtocol() {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -361,6 +362,9 @@ function executeStfuProtocol() {
     showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
 }
 
+// =================================================================
+// 4. CHAT INFERENCE ENGINE & AUTONOMOUS FILE INTERCEPTOR
+// =================================================================
 async function sendMessage(forcedQuery = null) {
     const keyEl = document.getElementById('api-key');
     const input = document.getElementById('user-input');
@@ -392,6 +396,10 @@ async function sendMessage(forcedQuery = null) {
     if (input && !forcedQuery) input.value = '';
 
     chatHistory.push({ role: "user", content: query });
+    
+    if (chatHistory.length > 8) {
+        chatHistory = chatHistory.slice(chatHistory.length - 8);
+    }
 
     const startTime = performance.now();
 
@@ -437,7 +445,7 @@ ${liveTelemetry}`;
                         model: "MiniMaxAI/MiniMax-M2.7",
                         messages: messagesPayload,
                         temperature: 0.1,
-                        max_tokens: 1000
+                        max_tokens: 2000
                     }),
                     signal: AbortSignal.timeout(12000)
                 });
@@ -459,7 +467,7 @@ ${liveTelemetry}`;
                     model: "MiniMaxAI/MiniMax-M2.7",
                     messages: messagesPayload,
                     temperature: 0.1,
-                    max_tokens: 1000
+                    max_tokens: 2000
                 })
             });
         }
@@ -473,10 +481,8 @@ ${liveTelemetry}`;
 
         const data = await res.json();
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
         reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
 
-        // AUTONOMOUS FILE INTERCEPTOR: Automatically commit PUT file blocks to GitHub
         const putFileRegex = /PUT\s+([^\s]+)\s*```(?:html|javascript|json|markdown)?\s*([\s\S]*?)```/g;
         let match;
         while ((match = putFileRegex.exec(reply)) !== null) {
@@ -509,7 +515,7 @@ ${liveTelemetry}`;
 }
 
 // =================================================================
-// 4. WEB SCRAPER & UI INTERACTION HANDLERS
+// 5. WEB SCRAPER & GITHUB ACTIONS HANDLERS
 // =================================================================
 async function scrapeWebPage(forcedUrl = null) {
     const input = document.getElementById('user-input');
@@ -814,7 +820,7 @@ function updateHUDState(stateLabel) {
 }
 
 // =================================================================
-// 5. DUAL NEURON CANVAS RENDERER
+// 6. DUAL NEURON CANVAS RENDERER & UTILITIES
 // =================================================================
 function initWavCanvas() {
     const canvas = document.getElementById('wav-canvas');
