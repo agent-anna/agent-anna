@@ -1,0 +1,321 @@
+// =================================================================
+// AGENT ANNA 01 // APP-UI.JS (Visuals, Messages, Buttons, HUD Layout)
+// =================================================================
+
+let canvas = null;
+let ctx = null;
+let wavePhase = 0;
+
+window.addEventListener('DOMContentLoaded', () => {
+    initWavCanvas();
+});
+
+function triggerMilitaryVisualPulse() {
+    try {
+        const hud = document.querySelector('.agent-hud-pane');
+        if (hud) {
+            hud.classList.add('military-action-active');
+            setTimeout(() => hud.classList.remove('military-action-active'), 500);
+        }
+        showCyberNotification("⚡ ACTION SYNCHRONIZED ACROSS REAL WORLD.");
+    } catch (e) {}
+}
+
+function showCyberNotification(message, isError = false) {
+    try {
+        let banner = document.getElementById('cyber-notification-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'cyber-notification-banner';
+            banner.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 99999;
+                padding: 14px 20px; background: rgba(11, 15, 25, 0.95);
+                border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
+                color: ${isError ? '#ff0055' : '#00ffcc'};
+                font-family: monospace; font-size: 12px; letter-spacing: 1px;
+                box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
+                border-radius: 4px; transition: opacity 0.4s ease, transform 0.4s ease;
+                opacity: 0; transform: translateY(-10px); pointer-events: none;
+            `;
+            document.body.appendChild(banner);
+        }
+        banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
+        banner.style.color = isError ? '#ff0055' : '#00ffcc';
+        banner.innerHTML = `<strong>[AA01 MILITARY NOTICE]</strong><br>${message}`;
+        setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 10);
+        setTimeout(() => { banner.style.opacity = '0'; banner.style.transform = 'translateY(-10px)'; }, 4000);
+    } catch (err) {}
+}
+
+function updateHUDState(state) {
+    try {
+        const stateText = document.getElementById('state-text');
+        if (stateText) stateText.innerText = state;
+    } catch (e) {}
+}
+
+// Canvas Wave Visualizer
+function initWavCanvas() {
+    canvas = document.getElementById('wav-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    
+    function resize() {
+        if (canvas.parentElement) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    renderNeuralWaves();
+}
+
+function renderNeuralWaves() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isSpeaking = document.body.classList.contains('is-speaking');
+    const isThinking = document.body.classList.contains('is-thinking');
+
+    const amplitude = isSpeaking ? 35 : (isThinking ? 22 : (isListening ? 25 : 10));
+    const frequency = isSpeaking ? 0.04 : (isThinking ? 0.08 : 0.025);
+    const speed = isSpeaking ? 0.15 : (isThinking ? 0.22 : 0.05);
+
+    wavePhase += speed;
+
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#00ffcc';
+    const centerY = canvas.height / 2;
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.sin(x * frequency + wavePhase) * amplitude;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(0, 179, 255, 0.7)';
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.cos(x * (frequency * 0.8) - wavePhase) * (amplitude * 0.75);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    requestAnimationFrame(renderNeuralWaves);
+}
+
+// Speech Recognition UI Handlers
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            isListening = true;
+            const micBtn = document.getElementById('mic-btn');
+            if (micBtn) micBtn.classList.add('listening');
+            updateHUDState("LISTENING");
+        };
+
+        recognition.onresult = function(event) {
+            const speechText = event.results[0][0].transcript;
+            const userInput = document.getElementById('user-input');
+            if (userInput) userInput.value = speechText;
+            stopListeningUI();
+            sendMessage();
+        };
+
+        recognition.onerror = function() { stopListeningUI(); };
+        recognition.onend = function() { stopListeningUI(); };
+    } catch (err) {}
+}
+
+function toggleMic() {
+    if (!recognition) initSpeechRecognition();
+    if (!recognition) return showCyberNotification("Speech recognition unavailable.", true);
+
+    if (!isListening) {
+        try { recognition.start(); } catch (e) { stopListeningUI(); }
+    } else {
+        try { recognition.stop(); } catch (e) {}
+        stopListeningUI();
+    }
+}
+
+function stopListeningUI() {
+    isListening = false;
+    const micBtn = document.getElementById('mic-btn');
+    if (micBtn) micBtn.classList.remove('listening');
+    const stateText = document.getElementById('state-text');
+    if (stateText && stateText.innerText === "LISTENING") updateHUDState("READY");
+}
+
+// Tactical Button Handlers
+function launchLocalServer() {
+    triggerMilitaryVisualPulse();
+    updateHUDState("ACTIVE");
+    showCyberNotification("🚀 LOCAL SERVER PROTOCOL ENGAGED");
+    sendMessage("Check local bridge connectivity and confirm server state.");
+}
+
+async function triggerManualTelemetry() {
+    triggerMilitaryVisualPulse();
+    updateHUDState("REASONING");
+    showCyberNotification("📊 FETCHING MARKET TELEMETRY...");
+    const report = await fetchLiveTelemetry();
+    appendMsg(report, 'assistant', 'AA01 Telemetry Feed', true);
+    updateHUDState("READY");
+    showCyberNotification("Telemetry fetched successfully!");
+}
+
+function scrapeWebPage() {
+    triggerMilitaryVisualPulse();
+    const input = document.getElementById('user-input');
+    const query = input ? input.value.trim() : "";
+    if (!query) {
+        showCyberNotification("Enter a target search term in the input box first.", true);
+        if (input) input.focus();
+        return;
+    }
+    sendMessage(`Scrape and summarize information regarding: ${query}`);
+}
+
+function triggerMilitaryProtocol() {
+    triggerMilitaryVisualPulse();
+    updateHUDState("ACTIVE");
+    showCyberNotification("⚡ MILITARY PROTOCOL ENGAGED");
+    sendMessage("Execute core diagnostic audit and report system readiness.");
+}
+
+function handleKey(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+// UI Helpers & Actions
+function toggleVoice() {
+    isVoiceEnabled = !isVoiceEnabled;
+    const btn = document.getElementById('voice-btn');
+    if (!isVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (btn) {
+        btn.classList.toggle('active', isVoiceEnabled);
+        btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
+    }
+    showCyberNotification(`Voice synthesis: ${isVoiceEnabled ? 'ONLINE' : 'MUTED'}`);
+}
+
+function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    if (panel) {
+        const isHidden = (panel.style.display === 'none' || panel.style.display === '');
+        panel.style.display = isHidden ? 'block' : 'none';
+    }
+}
+
+function saveKey() {
+    try {
+        const el = document.getElementById('api-key');
+        const ghEl = document.getElementById('gh-token');
+        if (el) localStorage.setItem('dahl_key', el.value.trim());
+        if (ghEl) {
+            localStorage.setItem('gh_pat_token', ghEl.value.trim());
+            localStorage.setItem('GH_TOKEN', ghEl.value.trim());
+        }
+        showCyberNotification("Credentials saved successfully.");
+        toggleSettings();
+    } catch (e) {}
+}
+
+function clearLogs() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    chatHistory = [];
+    const container = document.getElementById('chat-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="message assistant" id="msg_cleared">
+                <div class="msg-header">AA01 Core</div>
+                <div style="white-space:pre-wrap; margin-top: 6px;">Console history cleared. Standby mode, Commander.</div>
+            </div>
+        `;
+    }
+    showCyberNotification("Console logs cleared.");
+}
+
+async function handleAction(actionType, messageId) {
+    const textContent = messagePayloadStore[messageId] || "";
+    if (!textContent) return;
+
+    if (actionType === 'summarize') {
+        sendMessage(`Summarize the following data:\n\n${textContent}`);
+    } else if (actionType === 'save') {
+        const blob = new Blob([textContent], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${Date.now()}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } else if (actionType === 'ingest') {
+        updateHUDState("INGESTING");
+        const timestamp = new Date().toISOString();
+        const payload = `### LOG ENTRY [${timestamp}]\n${textContent}`;
+        await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest [${timestamp}]`);
+        await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log [${timestamp}]`);
+        updateHUDState("READY");
+        showCyberNotification("SUCCESS: Ingested into core plans and session log!");
+    }
+}
+
+function copyToClipboard(messageId, btn) {
+    const text = messagePayloadStore[messageId] || "";
+    navigator.clipboard.writeText(text).then(() => {
+        if (btn) btn.innerText = "COPIED!";
+        showCyberNotification("Copied to clipboard.");
+    });
+}
+
+function deleteMessage(messageId) {
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) {
+        delete messagePayloadStore[messageId];
+        msgElement.remove();
+        showCyberNotification("Message purged from buffer.");
+    }
+}
+
+function appendMsg(text, sender, label, includeActions = true) {
+    const container = document.getElementById('chat-container');
+    if (!container) return;
+
+    const msgId = 'msg_' + Math.random().toString(36).substring(2, 9);
+    messagePayloadStore[msgId] = text;
+
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
+    div.id = msgId;
+
+    let actions = includeActions ? `
+        <div class="action-row">
+            <button class="action-chip" onclick="handleAction('summarize', '${msgId}')">SUMMARIZE</button>
+            <button class="action-chip" onclick="handleAction('save', '${msgId}')">SAVE .MD</button>
+            <button class="action-chip" onclick="handleAction('ingest', '${msgId}')">INGEST</button>
+            <button class="action-chip" onclick="copyToClipboard('${msgId}', this)">COPY</button>
+            <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
+            <button class="action-chip del-btn" onclick="deleteMessage('${msgId}')">🗑️ DEL</button>
+        </div>
+    ` : '';
+
+    div.innerHTML = `<div class="msg-header">${label}</div><div style="white-space:pre-wrap; margin-top:6px;">${text}</div>${actions}`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
