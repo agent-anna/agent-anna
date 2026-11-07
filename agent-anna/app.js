@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // UNIFIED ALL-IN-ONE SYSTEM CORE (app.js)
+// AGENT ANNA 01 // UNIFIED ALL-IN-ONE SYSTEM CORE & REPO ENGINE
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -363,7 +363,7 @@ function executeStfuProtocol() {
 }
 
 // =================================================================
-// 4. CHAT INFERENCE ENGINE & AUTONOMOUS FILE INTERCEPTOR
+// 4. CHAT INFERENCE ENGINE & AUTONOMOUS GITHUB INTERCEPTOR
 // =================================================================
 async function sendMessage(forcedQuery = null) {
     const keyEl = document.getElementById('api-key');
@@ -483,16 +483,14 @@ ${liveTelemetry}`;
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
         reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
 
-// FLEXIBLE AUTONOMOUS FILE INTERCEPTOR
+        // FLEXIBLE AUTONOMOUS FILE INTERCEPTOR
         const putFileRegex = /PUT\s+([^\s\n]+)\s*(?:```(?:html|javascript|json|markdown)?\s*)?([\s\S]+?)(?:```|$)/gi;
         let match;
         while ((match = putFileRegex.exec(reply)) !== null) {
             const targetPath = match[1].trim();
             const fileContent = match[2].trim();
-            if (targetPath && fileContent && typeof commitFileToGitHub === 'function') {
-                if (typeof showCyberNotification === 'function') {
-                    showCyberNotification(`[AUTONOMOUS ACTION] Committing ${targetPath} to GitHub...`);
-                }
+            if (targetPath && fileContent) {
+                showCyberNotification(`[AUTONOMOUS ACTION] Committing ${targetPath} to GitHub...`);
                 await commitFileToGitHub(targetPath, fileContent, `Autonomous Deploy: ${targetPath}`);
             }
         }
@@ -518,8 +516,70 @@ ${liveTelemetry}`;
 }
 
 // =================================================================
-// 5. WEB SCRAPER & GITHUB ACTIONS HANDLERS
+// 5. SANITIZED GITHUB CRUD & WEB SCRAPER HANDLERS
 // =================================================================
+async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
+    const ghInput = document.getElementById('gh-token');
+    let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
+
+    if (!ghToken) {
+        showCyberNotification("Please tap ⚙️ KEYS and paste your GitHub PAT token.", true);
+        toggleSettings();
+        return false;
+    }
+
+    // SANITIZE PATH: Strip leading slashes or accidental repo name repeats
+    let cleanPath = filePath.trim().replace(/^\/+/, '');
+    if (cleanPath.startsWith('agent-anna/agent-anna/')) {
+        cleanPath = cleanPath.replace('agent-anna/agent-anna/', '');
+    }
+
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${cleanPath}`;
+
+    try {
+        const getRes = await fetch(apiUrl, {
+            headers: { "Authorization": `token ${ghToken}`, "Accept": "vnd.github.v3+json" }
+        });
+        
+        let fileSha = "";
+        let existingContent = "";
+        if (getRes.ok) {
+            const fileData = await getRes.json();
+            fileSha = fileData.sha;
+            existingContent = decodeURIComponent(escape(atob(fileData.content)));
+        }
+
+        const updatedContent = existingContent.includes(contentToAppend) ? existingContent : (existingContent ? existingContent + `\n\n${contentToAppend}` : contentToAppend);
+        const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
+
+        const putRes = await fetch(apiUrl, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${ghToken}`,
+                "Content-Type": "application/json",
+                "Accept": "vnd.github.v3+json"
+            },
+            body: JSON.stringify({
+                message: commitMessage || `Autonomous Deploy: ${cleanPath}`,
+                content: base64Encoded,
+                sha: fileSha || undefined
+            })
+        });
+
+        if (putRes.ok) {
+            showCyberNotification(`SUCCESS: Deployed ${cleanPath} to GitHub!`);
+            return true;
+        } else {
+            const errData = await putRes.json();
+            showCyberNotification(`GitHub Error: ${errData.message || 'PUT failed'}`, true);
+            return false;
+        }
+    } catch (err) {
+        showCyberNotification(`Network Error: ${err.message}`, true);
+        return false;
+    }
+}
+
 async function scrapeWebPage(forcedUrl = null) {
     const input = document.getElementById('user-input');
     const targetQuery = forcedUrl || (input ? input.value.trim() : "");
@@ -669,54 +729,6 @@ function clearLogs() {
     } catch (e) {}
 }
 
-async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
-    const ghInput = document.getElementById('gh-token');
-    let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
-
-    if (!ghToken) {
-        showCyberNotification("Please tap ⚙️ KEYS and paste your GitHub PAT token.", true);
-        toggleSettings();
-        return false;
-    }
-
-    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
-
-    try {
-        const getRes = await fetch(apiUrl, {
-            headers: { "Authorization": `token ${ghToken}`, "Accept": "vnd.github.v3+json" }
-        });
-        
-        let fileSha = "";
-        let existingContent = "";
-        if (getRes.ok) {
-            const fileData = await getRes.json();
-            fileSha = fileData.sha;
-            existingContent = decodeURIComponent(escape(atob(fileData.content)));
-        }
-
-        const updatedContent = existingContent.includes(contentToAppend) ? existingContent : (existingContent ? existingContent + `\n\n${contentToAppend}` : contentToAppend);
-        const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
-
-        const putRes = await fetch(apiUrl, {
-            method: "PUT",
-            headers: {
-                "Authorization": `token ${ghToken}`,
-                "Content-Type": "application/json",
-                "Accept": "vnd.github.v3+json"
-            },
-            body: JSON.stringify({
-                message: commitMessage,
-                content: base64Encoded,
-                sha: fileSha || undefined
-            })
-        });
-
-        return putRes.ok;
-    } catch (err) {
-        return false;
-    }
-}
-
 async function handleAction(actionType, messageId) {
     const textContent = messagePayloadStore[messageId] || "";
     if (!textContent) {
@@ -740,8 +752,8 @@ async function handleAction(actionType, messageId) {
         const timestamp = new Date().toISOString();
         const payload = `### CONSOLIDATED INTELLIGENCE ENTRY [${timestamp}]\n${textContent}`;
         
-        const planSuccess = await commitFileToGitHub("agent-anna/plans/active/current-plan.md", payload, `Auto-Ingest Current Plan [${timestamp}]`);
-        const logSuccess = await commitFileToGitHub("agent-anna/plans/logs/session-log.md", payload, `Auto-Log Session Entry [${timestamp}]`);
+        const planSuccess = await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest Current Plan [${timestamp}]`);
+        const logSuccess = await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log Session Entry [${timestamp}]`);
 
         updateHUDState("READY");
 
