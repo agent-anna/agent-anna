@@ -1,5 +1,5 @@
 /* ================================================================= */
-/* AGENT ANNA 01 // ORIGINAL MILITARY-GRADE CYBER STYLING MATRIX     */
+/* AGENT ANNA 01 // ULTIMATE MILITARY-GRADE CYBER STYLING MATRIX     */
 /* ================================================================= */
 
 :root {
@@ -7,6 +7,7 @@
     --bg-surface: #0b0f19;
     --border-cyan: #00ffcc;
     --border-blue: #00b3ff;
+    --border-pink: #ff007f;
     --border-red: #ff0055;
     --text-light: #e2e8f0;
     --text-muted: #64748b;
@@ -31,52 +32,64 @@ body {
 }
 
 /* ================================================================= */
-/* 1. LEFT HUD PANE & INNER DASHED BORDER MATRIX                      */
+/* 1. LEFT HUD PANE & INNER BORDER MATRIX                            */
 /* ================================================================= */
 .agent-hud-pane {
     width: 60%;
     height: 100%;
     background: var(--pane-bg);
-    border: 2px solid var(--border-cyan);
+    border-right: 2px solid var(--border-cyan);
     display: flex;
     flex-direction: column;
     padding: 24px;
-    box-shadow: inset 0 0 35px rgba(0, 255, 204, 0.2), 5px 0 35px rgba(0, 255, 204, 0.2);
+    box-shadow: inset 0 0 35px rgba(0, 255, 204, 0.15), 5px 0 35px rgba(0, 255, 204, 0.2);
     position: relative;
     z-index: 2;
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-/* THE INNER DASHED BORDER FRAME */
+/* THE INNER BORDER FRAME (Visible Box inside Left Pane) */
 .agent-hud-pane::before {
     content: "";
     position: absolute;
-    top: 8px; left: 8px; right: 8px; bottom: 8px;
-    border: 1px dashed rgba(0, 255, 204, 0.45);
+    top: 20px; left: 20px; right: 20px; bottom: 20px;
+    border: 1px solid rgba(0, 255, 204, 0.5);
+    box-shadow: inset 0 0 20px rgba(0, 255, 204, 0.1);
     pointer-events: none;
     z-index: 1;
+    border-radius: 4px;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* STATE COLOR TRANSITIONS: REASONING / THINKING (BLUE) */
+body.is-thinking .agent-hud-pane {
+    border-right-color: var(--border-blue);
+    box-shadow: inset 0 0 45px rgba(0, 179, 255, 0.25), 5px 0 40px rgba(0, 179, 255, 0.3);
+}
+body.is-thinking .agent-hud-pane::before {
+    border-color: rgba(0, 179, 255, 0.7);
+    box-shadow: inset 0 0 25px rgba(0, 179, 255, 0.2);
+}
+
+/* STATE COLOR TRANSITIONS: SPEAKING (HOT PINK / MAGENTA) */
+body.is-speaking .agent-hud-pane {
+    border-right-color: var(--border-pink);
+    box-shadow: inset 0 0 55px rgba(255, 0, 127, 0.3), 5px 0 50px rgba(255, 0, 127, 0.4);
+}
+body.is-speaking .agent-hud-pane::before {
+    border-color: rgba(255, 0, 127, 0.8);
+    box-shadow: inset 0 0 30px rgba(255, 0, 127, 0.3);
 }
 
 /* MILITARY ACTION STROBE PULSE */
 @keyframes militaryStrobe {
-    0% { border-color: #00ffcc; box-shadow: inset 0 0 50px rgba(0,255,204,0.7), 0 0 30px rgba(0,255,204,0.5); }
-    50% { border-color: #ff0055; box-shadow: inset 0 0 90px rgba(255,0,85,0.9), 0 0 50px rgba(255,0,85,0.8); }
-    100% { border-color: #00ffcc; box-shadow: inset 0 0 50px rgba(0,255,204,0.7), 0 0 30px rgba(0,255,204,0.5); }
+    0% { border-color: #00ffcc; box-shadow: inset 0 0 50px rgba(0,255,204,0.7); }
+    50% { border-color: #ff0055; box-shadow: inset 0 0 90px rgba(255,0,85,0.9); }
+    100% { border-color: #00ffcc; box-shadow: inset 0 0 50px rgba(0,255,204,0.7); }
 }
 
 .military-action-active {
     animation: militaryStrobe 0.4s ease-in-out infinite alternate !important;
-}
-
-/* REACTIVE STATE BORDERS */
-body.is-thinking .agent-hud-pane {
-    border-color: var(--border-blue);
-    box-shadow: inset 0 0 45px rgba(0, 179, 255, 0.3), 5px 0 40px rgba(0, 179, 255, 0.3);
-}
-
-body.is-speaking .agent-hud-pane {
-    border-color: var(--border-cyan);
-    box-shadow: inset 0 0 55px rgba(0, 255, 204, 0.35), 5px 0 50px rgba(0, 255, 204, 0.4);
 }
 
 .agent-header-meta {
@@ -94,6 +107,8 @@ body.is-speaking .agent-hud-pane {
     font-weight: bold;
     text-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
 }
+body.is-thinking .agent-id-badge { color: var(--border-blue); text-shadow: 0 0 10px rgba(0, 179, 255, 0.8); }
+body.is-speaking .agent-id-badge { color: var(--border-pink); text-shadow: 0 0 10px rgba(255, 0, 127, 0.8); }
 
 .status-bar-indicator {
     display: flex;
@@ -102,6 +117,8 @@ body.is-speaking .agent-hud-pane {
     font-size: 11px;
     color: var(--border-cyan);
 }
+body.is-thinking .status-bar-indicator { color: var(--border-blue); }
+body.is-speaking .status-bar-indicator { color: var(--border-pink); }
 
 .status-dot {
     width: 10px;
@@ -111,6 +128,8 @@ body.is-speaking .agent-hud-pane {
     box-shadow: 0 0 12px var(--border-cyan);
     animation: statusPulse 2s infinite ease-in-out;
 }
+body.is-thinking .status-dot { background: var(--border-blue); box-shadow: 0 0 12px var(--border-blue); }
+body.is-speaking .status-dot { background: var(--border-pink); box-shadow: 0 0 12px var(--border-pink); }
 
 @keyframes statusPulse {
     0%, 100% { transform: scale(1); opacity: 1; }
@@ -147,7 +166,7 @@ body.is-speaking .agent-hud-pane {
     z-index: 2;
     margin-bottom: 20px;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
 }
 
 body.is-thinking .agent-portrait-frame {
@@ -156,8 +175,8 @@ body.is-thinking .agent-portrait-frame {
 }
 
 body.is-speaking .agent-portrait-frame {
-    border-color: var(--border-cyan);
-    box-shadow: 0 0 50px rgba(0, 255, 204, 0.8), inset 0 0 25px rgba(0, 255, 204, 0.5);
+    border-color: var(--border-pink);
+    box-shadow: 0 0 50px rgba(255, 0, 127, 0.8), inset 0 0 25px rgba(255, 0, 127, 0.5);
 }
 
 .agent-portrait-frame img {
@@ -176,7 +195,10 @@ body.is-speaking .agent-portrait-frame {
     color: var(--border-cyan);
     letter-spacing: 3px;
     text-shadow: 0 0 10px rgba(0, 255, 204, 0.6);
+    transition: color 0.4s ease;
 }
+body.is-thinking .agent-nameplate h2 { color: var(--border-blue); text-shadow: 0 0 10px rgba(0, 179, 255, 0.6); }
+body.is-speaking .agent-nameplate h2 { color: var(--border-pink); text-shadow: 0 0 10px rgba(255, 0, 127, 0.6); }
 
 .agent-nameplate p {
     font-size: 11px;
@@ -200,8 +222,10 @@ body.is-speaking .agent-portrait-frame {
     background: var(--border-cyan);
     box-shadow: 0 0 10px var(--border-cyan);
     border-radius: 2px;
-    transition: height 0.08s ease;
+    transition: background 0.4s ease, height 0.08s ease;
 }
+body.is-thinking .eq-bar { background: var(--border-blue); box-shadow: 0 0 10px var(--border-blue); }
+body.is-speaking .eq-bar { background: var(--border-pink); box-shadow: 0 0 10px var(--border-pink); }
 
 /* ================================================================= */
 /* 2. RIGHT CHAT CONSOLE PANE (40% WIDTH)                             */
@@ -214,7 +238,10 @@ body.is-speaking .agent-portrait-frame {
     background: var(--bg-dark);
     border-left: 2px solid var(--border-cyan);
     box-shadow: inset 15px 0 30px rgba(0, 255, 204, 0.05);
+    transition: border-color 0.4s ease;
 }
+body.is-thinking .chat-console-pane { border-left-color: var(--border-blue); }
+body.is-speaking .chat-console-pane { border-left-color: var(--border-pink); }
 
 .chat-header {
     padding: 14px 20px;
@@ -225,7 +252,10 @@ body.is-speaking .agent-portrait-frame {
     align-items: center;
     font-size: 12px;
     color: var(--border-cyan);
+    transition: color 0.4s ease;
 }
+body.is-thinking .chat-header { color: var(--border-blue); }
+body.is-speaking .chat-header { color: var(--border-pink); }
 
 .latency-badge {
     font-size: 10px;
