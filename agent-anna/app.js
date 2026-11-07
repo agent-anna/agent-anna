@@ -833,6 +833,7 @@ function triggerManualTelemetry() {
 }
 
 function triggerMilitaryProtocol() {
+    triggerHudStrobe();
     sendMessage("MILITARY PROTOCOL ENGAGED: Executing deep diagnostic sweep.");
 }
 
