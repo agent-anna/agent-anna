@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // APP-CORE.JS (Forced Executive Female Voice Engine)
+// AGENT ANNA 01 // APP-CORE.JS (Operational Command & Telemetry)
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -27,7 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Executive female voice matrix synchronized. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade communication portal online. JUV telemetry core synchronized. Ready for command, Commander.";
     
     if ('speechSynthesis' in window) {
         loadVoices();
@@ -61,7 +61,7 @@ async function preloadCoreKnowledge() {
             }
         } catch (e) {}
     }));
-    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Agent Anna 01 Core Active]";
+    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Agent Anna 01 JUV Core Active]";
 }
 
 async function fetchLiveTelemetry() {
@@ -95,21 +95,25 @@ async function fetchLiveTelemetry() {
 - DRC-20 Token (SHI*): ${shi}`;
 }
 
-// STRICT EXECUTIVE FEMALE VOICE SYNTHESIS
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
-    try {
-        cachedVoices = window.speechSynthesis.getVoices();
-    } catch (e) {}
+    try { cachedVoices = window.speechSynthesis.getVoices(); } catch (e) {}
 }
 
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
     try {
         window.speechSynthesis.cancel();
-        const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
+        let cleanText = text
+            .replace(/```[\s\S]*?```/g, ' [Code block omitted] ')
+            .replace(/`[^`]*`/g, ' snippet ')
+            .replace(/<[^>]*>/g, '')
+            .replace(/[*_#`~=]/g, ' ')
+            .trim();
+
         if (!cleanText) return;
 
+        document.body.classList.remove('is-thinking');
         document.body.classList.add('is-speaking');
         if (typeof updateHUDState === 'function') updateHUDState("SPEAKING");
 
@@ -117,22 +121,16 @@ function speakText(text) {
         if (!voices || voices.length === 0) voices = cachedVoices;
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
-        
-        // Target high-grade English female voices explicitly
         const voice = voices.find(v => 
             v.name.includes("Google UK English Female") || 
             v.name.includes("Victoria") || 
             v.name.includes("Samantha") || 
-            v.name.includes("Karen") || 
-            v.name.includes("Zira") ||
-            v.name.includes("Hazel") ||
-            v.name.includes("Susan")
+            v.name.includes("Zira")
         ) || voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en-US')) || voices[0];
 
         if (voice) utterance.voice = voice;
-        
-        utterance.pitch = 1.0;
-        utterance.rate = 1.0;
+        utterance.pitch = 1.02;
+        utterance.rate = 0.98;
 
         utterance.onend = () => {
             document.body.classList.remove('is-speaking');
@@ -184,13 +182,14 @@ async function sendMessage(forcedQuery = null) {
     if (chatHistory.length > 8) chatHistory = chatHistory.slice(chatHistory.length - 8);
 
     const startTime = performance.now();
+    document.body.classList.remove('is-speaking');
     document.body.classList.add('is-thinking');
     if (typeof updateHUDState === 'function') updateHUDState("REASONING");
 
     if (!coreKnowledgeCache) await preloadCoreKnowledge();
     const liveTelemetry = await fetchLiveTelemetry();
     
-    const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry and trading operations core. Always respond in character as Commander's executive AI clone. Never break character.
+    const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade JUV telemetry and communication portal. Always respond in character as Commander's executive AI clone. Never break character.
 
 Persistent Memory Matrix:
 ${coreKnowledgeCache}
@@ -234,18 +233,19 @@ ${liveTelemetry}`;
 
         document.body.classList.remove('is-thinking');
         if (typeof updateHUDState === 'function') updateHUDState("READY");
-        appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
+        appendMsg(reply, 'assistant', `AA01 JUV Core [${tripSeconds}s]`, true);
         speakText(reply);
 
     } catch (err) {
         document.body.classList.remove('is-thinking');
         if (typeof updateHUDState === 'function') updateHUDState("READY");
-        const fallbackReply = `Telemetry uplink secured, Commander. Local matrix operational. Query processed successfully.`;
-        appendMsg(fallbackReply, 'assistant', 'AA01 Core [Local Bypass]', true);
+        const fallbackReply = `Communication portal secure, Commander. JUV Telemetry operational.`;
+        appendMsg(fallbackReply, 'assistant', 'AA01 Core [Bypass]', true);
         speakText(fallbackReply);
     }
 }
 
+// RESTORED LOCAL SERVER PING & BRIDGE TEST
 async function launchLocalServer() {
     if (typeof triggerMilitaryVisualPulse === 'function') triggerMilitaryVisualPulse();
     if (typeof updateHUDState === 'function') updateHUDState("ACTIVE");
@@ -255,11 +255,11 @@ async function launchLocalServer() {
         await fetch("http://localhost:8000/?t=" + Date.now(), { mode: 'no-cors' });
         if (typeof showCyberNotification === 'function') showCyberNotification("SUCCESS: Local server bridge responding at localhost:8000!");
         speakText("Local server bridge confirmed online, Commander.");
-        sendMessage("Confirm local bridge status and report operational readiness.");
+        appendMsg("Local Server Status: ACTIVE & CONFIRMED at http://localhost:8000", 'assistant', 'AA01 JUV Portal', false);
     } catch (e) {
-        if (typeof showCyberNotification === 'function') showCyberNotification("NOTICE: Run 'python3 -m http.server 8000' in terminal.", true);
-        speakText("Local server operational. Bridge ready.");
-        appendMsg("Local Bridge Status: Operational. Ready for local deployment cycles.", 'assistant', 'AA01 Core', false);
+        if (typeof showCyberNotification === 'function') showCyberNotification("NOTICE: Run 'python3 -m http.server 8000' in local terminal.", true);
+        speakText("Local server diagnostic check initiated. Bridge ready for test execution.");
+        appendMsg("Local Bridge Diagnostic: Browser sandbox prevents direct spawning. Run `python3 -m http.server 8000` in your local directory to host live.", 'assistant', 'AA01 JUV Portal', false);
     }
     if (typeof updateHUDState === 'function') updateHUDState("READY");
 }
@@ -288,7 +288,7 @@ async function triggerAutonomousBuild() {
     speakText("Autonomous module architectures deployed successfully.");
 }
 
-async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
+async function commitFileToGitHub(filePath, rawCodeContent, commitMessage) {
     const ghInput = document.getElementById('gh-token');
     let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
 
@@ -314,7 +314,7 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
             existingContent = decodeURIComponent(escape(atob(fileData.content)));
         }
 
-        const updatedContent = existingContent.includes(contentToAppend) ? existingContent : (existingContent ? existingContent + `\n\n${contentToAppend}` : contentToAppend);
+        const updatedContent = existingContent.includes(rawCodeContent) ? existingContent : (existingContent ? existingContent + `\n\n${rawCodeContent}` : rawCodeContent);
         const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
 
         const putRes = await fetch(apiUrl, {
