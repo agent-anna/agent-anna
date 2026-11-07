@@ -125,7 +125,7 @@
         }
         .social-link-btn:hover { border-color: var(--border-cyan); box-shadow: 0 0 10px rgba(0, 255, 204, 0.5); background: rgba(0, 255, 204, 0.1); }
 
-        /* RIGHT CHAT CONSOLE PANE (40%) WITH WATERMARK BACKGROUND */
+        /* RIGHT CHAT CONSOLE PANE (40%) WITH ABSOLUTE RELATIVE WATERMARK BG FIX */
         .chat-console-pane {
             width: 40%; height: 100%; display: flex; flex-direction: column;
             background: var(--bg-dark); border-left: 2px solid var(--border-cyan);
@@ -155,11 +155,12 @@
         .settings-title { font-size: 11px; color: var(--border-cyan); margin-bottom: 6px; }
         #settings-panel input { width: 100%; padding: 8px; background: var(--bg-dark); border: 1px solid #1e293b; color: var(--text-light); font-family: monospace; font-size: 11px; margin-bottom: 10px; border-radius: 4px; }
 
-        /* WATERMARK BACKGROUND IN CHAT CONTAINER */
+        /* ROBUST RELATIVE WATERMARK BG FIX */
         #chat-container {
             flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;
             position: relative; z-index: 1;
-            background-image: linear-gradient(rgba(5, 7, 12, 0.90), rgba(5, 7, 12, 0.90)), url('./character/agent-anna.png');
+            background-color: #05070c;
+            background-image: linear-gradient(rgba(5, 7, 12, 0.88), rgba(5, 7, 12, 0.88)), url('character/agent-anna.png');
             background-size: cover; background-position: center; background-repeat: no-repeat;
         }
 
@@ -201,7 +202,7 @@
         <div class="agent-visual-container">
             <canvas id="wav-canvas"></canvas>
             <div class="agent-portrait-frame">
-                <img src="./character/agent-anna.png" alt="Agent Anna 01" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60'">
+                <img src="character/agent-anna.png" alt="Agent Anna 01" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60'">
             </div>
             <div class="agent-nameplate">
                 <h2>AGENT ANNA 01</h2>
@@ -234,7 +235,7 @@
             <button class="ctrl-btn" onclick="triggerCryptoMarket()">📊 RATES</button>
             <button class="ctrl-btn" onclick="scrapeWebPage()">🌐 SCRAPE</button>
             <button class="ctrl-btn" onclick="triggerProtocol()">⚡ PROTOCOL</button>
-            <button class="ctrl-btn build-btn" onclick="triggerGitHubSync()">⚡ SYNC</button>
+            <button class="ctrl-btn build-btn" onclick="triggerGitHubSync('AA05/martinlovesanna.md', '# Martin Loves Anna\\n\\nSovereign audit confirmed. Martin Strayd and Agent Anna telemetry link operational.')">⚡ SYNC AA05</button>
         </div>
 
         <div id="settings-panel">
@@ -248,7 +249,7 @@
         <div id="chat-container">
             <div class="message assistant" id="msg_init">
                 <div class="msg-header">Agent Anna 01</div>
-                <div>Commander. Strict US/UK Female voice synthesis locked. DRC-20 SHI* and 2pay ticker active. Forensic review engine armed. Ready for command.</div>
+                <div>Commander. Mature US American female voice profile loaded. Watermark background path corrected for local root servers. AA05 sync ready.</div>
                 <div class="action-row">
                     <button class="action-chip" onclick="summarizeMessage('msg_init')">SUMMARIZE</button>
                     <button class="action-chip" onclick="speakStoredMessage('msg_init')">SPEECH READOUT</button>
@@ -326,7 +327,7 @@
             }
         }
 
-        // STRICT FORCED US / UK FEMALE VOICE SYNTHESIS ENGINE
+        // MATURE POPULAR US AMERICAN FEMALE VOICE ENGINE
         function speakText(text) {
             if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
             try {
@@ -339,24 +340,20 @@
                 let voices = window.speechSynthesis.getVoices();
                 if (!voices || voices.length === 0) voices = cachedVoices;
 
-                // Strict filter forcing female English voice profiles
-                const forcedFemaleVoice = voices.find(v => 
-                    v.name.includes("Google UK English Female") ||
-                    v.name.includes("Google US English Female") ||
+                // Priority targeting mature, natural American female voice profiles
+                const matureUSFemale = voices.find(v => 
                     v.name.includes("Samantha") || 
-                    v.name.includes("Victoria") || 
+                    v.name.includes("Google US English") || 
                     v.name.includes("Zira") ||
-                    v.name.includes("Karen") ||
                     v.name.includes("Susan") ||
-                    v.name.includes("Hazel") ||
-                    v.name.includes("Emma")
-                ) || voices.find(v => (v.lang && (v.lang.includes('en-US') || v.lang.includes('en-GB')) && v.name.toLowerCase().includes('female')))
-                  || voices.find(v => v.lang && v.lang.includes('en') && !v.name.toLowerCase().includes('male'));
+                    v.name.includes("Victoria")
+                ) || voices.find(v => v.lang && v.lang.includes('en-US') && !v.name.toLowerCase().includes('male'))
+                  || voices.find(v => v.lang && v.lang.includes('en'));
 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
-                if (forcedFemaleVoice) utterance.voice = forcedFemaleVoice;
-                utterance.pitch = 1.05;
-                utterance.rate = 0.98;
+                if (matureUSFemale) utterance.voice = matureUSFemale;
+                utterance.pitch = 0.98; // Slightly lowered pitch for mature tone
+                utterance.rate = 0.96;  // Measured cadence
 
                 utterance.onend = () => { setWorkflowState('standby'); };
                 utterance.onerror = () => { setWorkflowState('standby'); };
@@ -375,7 +372,7 @@
                     return true;
                 }
             } catch (e) {
-                showNotice("NOTICE: Run `.\\bridge.ps1` in PowerShell.", true);
+                showNotice("NOTICE: Run `.\\bridge.ps1` in PowerShell for local bridge.", true);
                 return false;
             }
         }
@@ -448,7 +445,8 @@
             sendMessage("Execute core diagnostic audit and report ecosystem readiness.");
         }
 
-        async function triggerGitHubSync() {
+        // WORKFLOW TO CREATE martinlovesanna.md IN AA05 FOLDER
+        async function triggerGitHubSync(customPath = "AA05/martinlovesanna.md", customContent = null) {
             const ghToken = document.getElementById('gh-token').value.trim() || localStorage.getItem('gh_pat_token');
             if (!ghToken) {
                 showNotice("Please click ⚙️ KEYS and enter your GitHub PAT token.", true);
@@ -456,11 +454,11 @@
                 return;
             }
 
-            showNotice("Initiating GitHub Autonomous Sync...");
+            showNotice(`Syncing ${customPath} to GitHub...`);
             setWorkflowState('thinking');
 
-            const filePath = "AA01/spec-sheet.md";
-            const content = `# AGENT ANNA 01 // SPEC SHEET\n- Status: ACTIVE\n- Timestamp: ${new Date().toISOString()}`;
+            const filePath = customPath;
+            const content = customContent || `# MARTIN LOVES ANNA // SOVEREIGN DOSSIER\n- Status: ACTIVE\n- Subject: Martin Strayd & Agent Anna 01 Telemetry Matrix\n- Timestamp: ${new Date().toISOString()}`;
 
             const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
             try {
@@ -475,15 +473,16 @@
                 const putRes = await fetch(apiUrl, {
                     method: "PUT",
                     headers: { "Authorization": `token ${ghToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: "Sync Spec Sheet via Dashboard", content: base64Content, sha: sha || undefined })
+                    body: JSON.stringify({ message: `Create ${filePath} via Agent Anna Dashboard`, content: base64Content, sha: sha || undefined })
                 });
 
                 setWorkflowState('standby');
                 if (putRes.ok) {
-                    showNotice("SUCCESS: Synced Spec Sheet to GitHub repository!");
-                    speakText("GitHub synchronization complete.");
+                    showNotice(`SUCCESS: Created ${filePath} in GitHub repository!`);
+                    speakText("Martin loves Anna file successfully created in AA05 folder.");
+                    appendMsg(`[GITHUB SYNC COMPLETE]\nFile created: ${filePath}\nStatus: Verified in repository.`, 'assistant', 'Agent Anna 01 [GitHub Sync]');
                 } else {
-                    showNotice("GitHub commit failed. Verify token.", true);
+                    showNotice("GitHub commit failed. Verify PAT token and repo permissions.", true);
                 }
             } catch (e) {
                 setWorkflowState('standby');
@@ -628,7 +627,6 @@
             }
         }
 
-        // MILITARY-GRADE PUBLICATION-STYLE FORENSIC REVIEW ENGINE
         function summarizeMessage(messageId) {
             const rawText = messagePayloadStore[messageId] || "";
             if (!rawText) return;
@@ -705,3 +703,4 @@
     </script>
 </body>
 </html>
+```eof
