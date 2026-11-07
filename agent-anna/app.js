@@ -416,23 +416,55 @@ ${liveTelemetry}`;
     ];
 
     try {
-        // Routed through CORS proxy wrapper to bypass GitHub Pages browser blocking
-        const rawInferenceUrl = "https://inference.dahl.global/v1/chat/completions";
-        const proxyInferenceUrl = `https://corsproxy.io/?${encodeURIComponent(rawInferenceUrl)}`;
+        // Robust CORS proxy fallback array to bypass GitHub Pages browser blocking permanently
+        const targetUrl = "https://inference.dahl.global/v1/chat/completions";
+        const proxyOptions = [
+            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+        ];
 
-        const res = await fetch(proxyInferenceUrl, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "MiniMaxAI/MiniMax-M2.7",
-                messages: messagesPayload,
-                temperature: 0.1,
-                max_tokens: 1000
-            })
-        });
+        let res = null;
+        let success = false;
+
+        for (const pUrl of proxyOptions) {
+            try {
+                res = await fetch(pUrl, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "MiniMaxAI/MiniMax-M2.7",
+                        messages: messagesPayload,
+                        temperature: 0.1,
+                        max_tokens: 1000
+                    }),
+                    signal: AbortSignal.timeout(12000)
+                });
+                if (res && res.ok) {
+                    success = true;
+                    break;
+                }
+            } catch (err) {}
+        }
+
+        if (!success || !res || !res.ok) {
+            // Fallback direct request if proxies fail
+            res = await fetch(targetUrl, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: "MiniMaxAI/MiniMax-M2.7",
+                    messages: messagesPayload,
+                    temperature: 0.1,
+                    max_tokens: 1000
+                })
+            });
+        }
 
         if (!res.ok) {
             if (res.status === 429) {
