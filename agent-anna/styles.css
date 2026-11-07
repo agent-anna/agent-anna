@@ -1,5 +1,5 @@
 /* ================================================================= */
-/* AGENT ANNA 01 // MILITARY-GRADE CYBER STYLING MATRIX              */
+/* AGENT ANNA 01 // MILITARY-GRADE CYBER STYLING & CUSTOM SCROLLBARS */
 /* ================================================================= */
 
 :root {
@@ -32,7 +32,7 @@ body {
 }
 
 /* ================================================================= */
-/* MILITARY-GRADE CUSTOM SCROLLBAR MATRIX (ALL CONTAINERS)           */
+/* CUSTOM MILITARY SCROLLBARS                                        */
 /* ================================================================= */
 *::-webkit-scrollbar {
     width: 6px;
@@ -56,7 +56,6 @@ body {
     box-shadow: 0 0 12px var(--border-cyan);
 }
 
-/* State-reactive scrollbar shifts */
 body.is-thinking *::-webkit-scrollbar-thumb {
     background: rgba(0, 179, 255, 0.5);
     box-shadow: 0 0 8px rgba(0, 179, 255, 0.4);
