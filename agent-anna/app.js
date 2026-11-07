@@ -416,7 +416,11 @@ ${liveTelemetry}`;
     ];
 
     try {
-        const res = await fetch("https://inference.dahl.global/v1/chat/completions", {
+        // Routed through CORS proxy wrapper to bypass GitHub Pages browser blocking
+        const rawInferenceUrl = "https://inference.dahl.global/v1/chat/completions";
+        const proxyInferenceUrl = `https://corsproxy.io/?${encodeURIComponent(rawInferenceUrl)}`;
+
+        const res = await fetch(proxyInferenceUrl, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
