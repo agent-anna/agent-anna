@@ -18,6 +18,10 @@ let analyser = null;
 let micStream = null;
 let animFrameId = null;
 
+let canvas = null;
+let ctx = null;
+let wavePhase = 0;
+
 // =================================================================
 // 0. SYSTEM INITIALIZATION & NOTIFICATIONS
 // =================================================================
@@ -47,7 +51,37 @@ window.onload = function() {
 
     preloadCoreKnowledge();
     initSpeechRecognition();
+    initWavCanvas();
+    injectVisualStimulationStyles();
 };
+
+function injectVisualStimulationStyles() {
+    if (document.getElementById('cyber-fx-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'cyber-fx-styles';
+    style.textContent = `
+        @keyframes actionFlash {
+            0% { box-shadow: inset 0 0 0 3px #00ffcc, 0 0 50px rgba(0,255,204,0.8); filter: brightness(1.3); }
+            50% { box-shadow: inset 0 0 0 6px #ff0055, 0 0 80px rgba(255,0,85,0.9); filter: brightness(1.6); }
+            100% { box-shadow: inset 0 0 0 0 transparent, 0 0 0 transparent; filter: brightness(1); }
+        }
+        .action-visual-pulse {
+            animation: actionFlash 0.6s ease-in-out !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function triggerVisualStimulation(color = "#00ffcc") {
+    try {
+        const hud = document.querySelector('.agent-hud-pane');
+        if (hud) {
+            hud.classList.add('action-visual-pulse');
+            setTimeout(() => hud.classList.remove('action-visual-pulse'), 600);
+        }
+        showCyberNotification("⚡ ACTION EXECUTED: Real-world visual matrix synchronized.");
+    } catch (e) {}
+}
 
 function showCyberNotification(message, isError = false) {
     try {
@@ -102,7 +136,65 @@ function updateHUDState(state) {
 }
 
 // =================================================================
-// 1. SPEECH RECOGNITION & VISUALIZER ENGINE
+// 1. NEURAL CANVAS WAVE VISUALIZER
+// =================================================================
+function initWavCanvas() {
+    canvas = document.getElementById('wav-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    
+    function resize() {
+        if (canvas.parentElement) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    renderNeuralWaves();
+}
+
+function renderNeuralWaves() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isSpeaking = document.body.classList.contains('is-speaking');
+    const isThinking = document.body.classList.contains('is-thinking');
+
+    const amplitude = isSpeaking ? 35 : (isThinking ? 20 : (isListening ? 25 : 8));
+    const frequency = isSpeaking ? 0.04 : (isThinking ? 0.08 : 0.02);
+    const speed = isSpeaking ? 0.15 : (isThinking ? 0.2 : 0.04);
+
+    wavePhase += speed;
+
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#00ffcc';
+    const centerY = canvas.height / 2;
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.sin(x * frequency + wavePhase) * amplitude;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(0, 179, 255, 0.6)';
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.cos(x * (frequency * 0.8) - wavePhase) * (amplitude * 0.7);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    requestAnimationFrame(renderNeuralWaves);
+}
+
+// =================================================================
+// 2. SPEECH RECOGNITION & VISUALIZER ENGINE
 // =================================================================
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -155,7 +247,7 @@ function stopListeningUI() {
 }
 
 // =================================================================
-// 2. KNOWLEDGE HARVESTER & LIVE TELEMETRY
+// 3. KNOWLEDGE HARVESTER & LIVE TELEMETRY
 // =================================================================
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -220,7 +312,7 @@ async function fetchLiveTelemetry() {
 }
 
 // =================================================================
-// 3. VOICE SYNTHESIS & KILLSWITCH
+// 4. VOICE SYNTHESIS ENGINE
 // =================================================================
 function speakText(text) {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
@@ -228,6 +320,9 @@ function speakText(text) {
         window.speechSynthesis.cancel();
         const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
         if (!cleanText) return;
+
+        document.body.classList.add('is-speaking');
+        updateHUDState("SPEAKING");
 
         let voices = window.speechSynthesis.getVoices();
         if (!voices || voices.length === 0) voices = cachedVoices;
@@ -238,18 +333,32 @@ function speakText(text) {
         
         utterance.pitch = 1.02;
         utterance.rate = 0.98;
+
+        utterance.onend = () => {
+            document.body.classList.remove('is-speaking');
+            updateHUDState("READY");
+        };
+        utterance.onerror = () => {
+            document.body.classList.remove('is-speaking');
+            updateHUDState("READY");
+        };
+
         window.speechSynthesis.speak(utterance);
-    } catch (e) {}
+    } catch (e) {
+        document.body.classList.remove('is-speaking');
+        updateHUDState("READY");
+    }
 }
 
 function executeStfuProtocol() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    document.body.classList.remove('is-speaking', 'is-thinking');
     updateHUDState("READY");
     showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
 }
 
 // =================================================================
-// 4. CHAT INFERENCE & GITHUB CRUD PIPELINE
+// 5. CHAT INFERENCE & GITHUB CRUD PIPELINE
 // =================================================================
 async function sendMessage(forcedQuery = null) {
     const keyEl = document.getElementById('api-key');
@@ -278,6 +387,7 @@ async function sendMessage(forcedQuery = null) {
     if (chatHistory.length > 8) chatHistory = chatHistory.slice(chatHistory.length - 8);
 
     const startTime = performance.now();
+    document.body.classList.add('is-thinking');
     updateHUDState("REASONING");
 
     if (!coreKnowledgeCache) await preloadCoreKnowledge();
@@ -325,20 +435,23 @@ ${liveTelemetry}`;
         const latencyBadge = document.getElementById('latency-display');
         if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
 
+        document.body.classList.remove('is-thinking');
         updateHUDState("READY");
         appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
         speakText(reply);
 
     } catch (err) {
+        document.body.classList.remove('is-thinking');
         updateHUDState("ERROR");
         appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
     }
 }
 
 // =================================================================
-// 5. AUTONOMOUS GITHUB BUILD TRIGGER & TACTICAL BUTTON BINDINGS
+// 6. AUTONOMOUS GITHUB BUILD TRIGGER & TACTICAL BUTTON HANDLERS
 // =================================================================
 async function triggerAutonomousBuild() {
+    triggerVisualStimulation("#00ffcc");
     showCyberNotification("Initiating Autonomous Architecture Build via GitHub API...");
     updateHUDState("BUILDING");
 
@@ -417,14 +530,15 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     }
 }
 
-// TACTICAL QUICK-LAUNCH BUTTON HANDLERS
 function launchLocalServer() {
+    triggerVisualStimulation("#00ffcc");
     updateHUDState("ACTIVE");
     showCyberNotification("🚀 LOCAL SERVER PROTOCOL ENGAGED");
     sendMessage("Check local bridge connectivity and confirm server state.");
 }
 
 async function triggerManualTelemetry() {
+    triggerVisualStimulation("#00ffcc");
     updateHUDState("REASONING");
     showCyberNotification("📊 FETCHING MARKET TELEMETRY...");
     const report = await fetchLiveTelemetry();
@@ -434,6 +548,7 @@ async function triggerManualTelemetry() {
 }
 
 function scrapeWebPage() {
+    triggerVisualStimulation("#00ffcc");
     const input = document.getElementById('user-input');
     const query = input ? input.value.trim() : "";
     if (!query) {
@@ -445,6 +560,7 @@ function scrapeWebPage() {
 }
 
 function triggerMilitaryProtocol() {
+    triggerVisualStimulation("#ff0055");
     updateHUDState("ACTIVE");
     showCyberNotification("⚡ MILITARY PROTOCOL ENGAGED");
     sendMessage("Execute core diagnostic audit and report system readiness.");
@@ -456,7 +572,9 @@ function handleKey(event) {
     }
 }
 
-// UI Helpers
+// =================================================================
+// 7. UI HELPERS & MESSAGE CONTAINERS
+// =================================================================
 function toggleVoice() {
     isVoiceEnabled = !isVoiceEnabled;
     const btn = document.getElementById('voice-btn');
