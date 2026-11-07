@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // APP-CORE.JS (Lightning-Fast Inference & Female Voice)
+// AGENT ANNA 01 // APP-CORE.JS (Forced Executive Female Voice Engine)
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -27,7 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Voice matrix locked to executive female profile. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Executive female voice matrix synchronized. Ready for command, Commander.";
     
     if ('speechSynthesis' in window) {
         loadVoices();
@@ -38,7 +38,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initSpeechRecognition();
 });
 
-// Knowledge & Telemetry Engine
 async function preloadCoreKnowledge() {
     const corePaths = [
         "character/agent-anna.md",
@@ -96,7 +95,7 @@ async function fetchLiveTelemetry() {
 - DRC-20 Token (SHI*): ${shi}`;
 }
 
-// Fixed Executive Female Voice Engine
+// STRICT EXECUTIVE FEMALE VOICE SYNTHESIS
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
     try {
@@ -119,10 +118,16 @@ function speakText(text) {
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
         
-        // Target exact female voices (Google UK Female, Victoria, Samantha, Zira, or any English female)
-        const voice = voices.find(v => v.name.includes("Google UK English Female") || v.name.includes("Victoria") || v.name.includes("Samantha") || v.name.includes("Karen") || v.name.includes("Zira")) || 
-                      voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en-US')) || 
-                      voices[0];
+        // Target high-grade English female voices explicitly
+        const voice = voices.find(v => 
+            v.name.includes("Google UK English Female") || 
+            v.name.includes("Victoria") || 
+            v.name.includes("Samantha") || 
+            v.name.includes("Karen") || 
+            v.name.includes("Zira") ||
+            v.name.includes("Hazel") ||
+            v.name.includes("Susan")
+        ) || voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en-US')) || voices[0];
 
         if (voice) utterance.voice = voice;
         
@@ -152,7 +157,6 @@ function executeStfuProtocol() {
     if (typeof showCyberNotification === 'function') showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
 }
 
-// Lightning-Fast AI Inference Pipeline (Direct Fetch with Zero-Hang Fallback)
 async function sendMessage(forcedQuery = null) {
     const keyEl = document.getElementById('api-key');
     const input = document.getElementById('user-input');
@@ -201,8 +205,6 @@ ${liveTelemetry}`;
 
     try {
         const targetUrl = "https://inference.dahl.global/v1/chat/completions";
-        
-        // Execute direct fetch first for maximum speed
         let res;
         try {
             res = await fetch(targetUrl, {
@@ -211,7 +213,6 @@ ${liveTelemetry}`;
                 body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
             });
         } catch (netErr) {
-            // Fallback to proxy if CORS blocks direct fetch
             const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
             res = await fetch(proxyUrl, {
                 method: "POST",
@@ -239,15 +240,12 @@ ${liveTelemetry}`;
     } catch (err) {
         document.body.classList.remove('is-thinking');
         if (typeof updateHUDState === 'function') updateHUDState("READY");
-        
-        // Fallback local response so the system never hangs or shows dead errors
         const fallbackReply = `Telemetry uplink secured, Commander. Local matrix operational. Query processed successfully.`;
         appendMsg(fallbackReply, 'assistant', 'AA01 Core [Local Bypass]', true);
         speakText(fallbackReply);
     }
 }
 
-// Local Server Connection Ping
 async function launchLocalServer() {
     if (typeof triggerMilitaryVisualPulse === 'function') triggerMilitaryVisualPulse();
     if (typeof updateHUDState === 'function') updateHUDState("ACTIVE");
@@ -266,7 +264,6 @@ async function launchLocalServer() {
     if (typeof updateHUDState === 'function') updateHUDState("READY");
 }
 
-// GitHub Deployment Pipeline
 async function triggerAutonomousBuild() {
     if (typeof triggerMilitaryVisualPulse === 'function') triggerMilitaryVisualPulse();
     if (typeof showCyberNotification === 'function') showCyberNotification("Initiating Autonomous Architecture Build via GitHub API...");
