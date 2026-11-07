@@ -1,0 +1,6 @@
+to repository
+curl -X PUT \
+     -H "Authorization: token $GITHUB_TOKEN" \
+     -H "Accept: application/vnd.github.v3+json" \
+     -d "{\"message\":\"AA01 autonomous commit: verify.json\",\"content\":\"$ENCODED\",\"sha\":\"<FILE_SHA>\"}" \
+     https://api.github.com/repos/agent-anna/agent-anna/contents/AA05/test/verify.json
