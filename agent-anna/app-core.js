@@ -1,5 +1,5 @@
 // =================================================================
-// AGENT ANNA 01 // APP-CORE.JS (AI, Voice, Telemetry, GitHub API)
+// AGENT ANNA 01 // APP-CORE.JS (AI, Voice, Telemetry, GitHub, Server Ping)
 // =================================================================
 
 const REPO_OWNER = "agent-anna";
@@ -27,7 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     } catch (e) {}
 
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Modular core synchronized. Ready for command, Commander.";
+    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Modular core synchronized. Voice engine and local bridge active. Ready for command, Commander.";
     
     if ('speechSynthesis' in window) {
         loadVoices();
@@ -96,10 +96,12 @@ async function fetchLiveTelemetry() {
 - DRC-20 Token (SHI*): ${shi}`;
 }
 
-// Speech Engine
+// Voice Synthesis Engine
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
-    try { cachedVoices = window.speechSynthesis.getVoices(); } catch (e) {}
+    try {
+        cachedVoices = window.speechSynthesis.getVoices();
+    } catch (e) {}
 }
 
 function speakText(text) {
@@ -116,7 +118,7 @@ function speakText(text) {
         if (!voices || voices.length === 0) voices = cachedVoices;
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
-        const voice = voices.find(v => v.name.includes("Google UK English Female") || v.lang.includes('en-GB')) || voices.find(v => v.lang.startsWith('en'));
+        const voice = voices.find(v => v.name.includes("Google UK English Female") || v.name.includes("Victoria") || v.name.includes("Zira") || v.lang.includes('en-GB')) || voices.find(v => v.lang.startsWith('en'));
         if (voice) utterance.voice = voice;
         
         utterance.pitch = 1.02;
@@ -230,7 +232,27 @@ ${liveTelemetry}`;
         document.body.classList.remove('is-thinking');
         if (typeof updateHUDState === 'function') updateHUDState("ERROR");
         appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
+        speakText("System alert. Execution error encountered.");
     }
+}
+
+// Local Server Connection Ping (Since browser cannot execute node from static html)
+async function launchLocalServer() {
+    if (typeof triggerMilitaryVisualPulse === 'function') triggerMilitaryVisualPulse();
+    if (typeof updateHUDState === 'function') updateHUDState("ACTIVE");
+    if (typeof showCyberNotification === 'function') showCyberNotification("🚀 PINGING LOCAL BRIDGE AT http://localhost:8000...");
+    
+    try {
+        const res = await fetch("http://localhost:8000/?t=" + Date.now(), { mode: 'no-cors' });
+        if (typeof showCyberNotification === 'function') showCyberNotification("SUCCESS: Local server bridge responding at localhost:8000!");
+        speakText("Local server bridge confirmed online, Commander.");
+        sendMessage("Confirm local bridge status and report operational readiness.");
+    } catch (e) {
+        if (typeof showCyberNotification === 'function') showCyberNotification("NOTICE: Run 'python3 -m http.server 8000' in terminal to host locally.", true);
+        speakText("Local server notice. Please start your HTTP server in terminal.");
+        appendMsg("Local Bridge Notice: Browsers block direct server spawning from static files. Run `python3 -m http.server 8000` or `node server.js` in your local directory to host on http://localhost:8000.", 'assistant', 'System Alert', false);
+    }
+    if (typeof updateHUDState === 'function') updateHUDState("READY");
 }
 
 // GitHub Deployment Pipeline
@@ -255,6 +277,7 @@ async function triggerAutonomousBuild() {
     
     if (typeof updateHUDState === 'function') updateHUDState("READY");
     if (typeof showCyberNotification === 'function') showCyberNotification("SUCCESS: All module architectures (AA02-AA06) deployed via GitHub API!");
+    speakText("Autonomous module architectures deployed successfully.");
 }
 
 async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
