@@ -1,435 +1,332 @@
-/* ================================================================= */
-/* AGENT ANNA 01 // ULTIMATE MILITARY-GRADE CYBER STYLING MATRIX     */
-/* ================================================================= */
+// =================================================================
+// AGENT ANNA 01 // APP-UI.JS (Active Wave Motion & HUD Dynamics)
+// =================================================================
 
-:root {
-    --bg-dark: #05070c;
-    --bg-surface: #0b0f19;
-    --border-cyan: #00ffcc;
-    --border-blue: #00b3ff;
-    --border-pink: #ff007f;
-    --border-red: #ff0055;
-    --text-light: #e2e8f0;
-    --text-muted: #64748b;
-    --pane-bg: rgba(11, 15, 25, 0.98);
-}
+let canvas = null;
+let ctx = null;
+let wavePhase = 0;
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+window.addEventListener('DOMContentLoaded', () => {
+    initWavCanvas();
+});
 
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    font-family: monospace;
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    position: relative;
+function triggerMilitaryVisualPulse() {
+    try {
+        const hud = document.querySelector('.agent-hud-pane');
+        if (hud) {
+            hud.classList.add('military-action-active');
+            setTimeout(() => hud.classList.remove('military-action-active'), 500);
+        }
+        showCyberNotification("⚡ ACTION SYNCHRONIZED ACROSS REAL WORLD.");
+    } catch (e) {}
 }
 
-/* ================================================================= */
-/* 1. LEFT HUD PANE & INNER BORDER MATRIX                            */
-/* ================================================================= */
-.agent-hud-pane {
-    width: 60%;
-    height: 100%;
-    background: var(--pane-bg);
-    border-right: 2px solid var(--border-cyan);
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-    box-shadow: inset 0 0 35px rgba(0, 255, 204, 0.15), 5px 0 35px rgba(0, 255, 204, 0.2);
-    position: relative;
-    z-index: 2;
-    transition: box-shadow 0.4s ease, border-color 0.4s ease;
+function showCyberNotification(message, isError = false) {
+    try {
+        let banner = document.getElementById('cyber-notification-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'cyber-notification-banner';
+            banner.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 99999;
+                padding: 14px 20px; background: rgba(11, 15, 25, 0.95);
+                border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
+                color: ${isError ? '#ff0055' : '#00ffcc'};
+                font-family: monospace; font-size: 12px; letter-spacing: 1px;
+                box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
+                border-radius: 4px; transition: opacity 0.4s ease, transform 0.4s ease;
+                opacity: 0; transform: translateY(-10px); pointer-events: none;
+            `;
+            document.body.appendChild(banner);
+        }
+        banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
+        banner.style.color = isError ? '#ff0055' : '#00ffcc';
+        banner.innerHTML = `<strong>[AA01 MILITARY NOTICE]</strong><br>${message}`;
+        setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 10);
+        setTimeout(() => { banner.style.opacity = '0'; banner.style.transform = 'translateY(-10px)'; }, 4000);
+    } catch (err) {}
 }
 
-/* THE INNER BORDER FRAME (Visible Box inside Left Pane) */
-.agent-hud-pane::before {
-    content: "";
-    position: absolute;
-    top: 20px; left: 20px; right: 20px; bottom: 20px;
-    border: 1px solid rgba(0, 255, 204, 0.5);
-    box-shadow: inset 0 0 20px rgba(0, 255, 204, 0.1);
-    pointer-events: none;
-    z-index: 1;
-    border-radius: 4px;
-    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+function updateHUDState(state) {
+    try {
+        const stateText = document.getElementById('state-text');
+        if (stateText) stateText.innerText = state;
+    } catch (e) {}
 }
 
-/* STATE COLOR TRANSITIONS: REASONING / THINKING (BLUE) */
-body.is-thinking .agent-hud-pane {
-    border-right-color: var(--border-blue);
-    box-shadow: inset 0 0 45px rgba(0, 179, 255, 0.25), 5px 0 40px rgba(0, 179, 255, 0.3);
-}
-body.is-thinking .agent-hud-pane::before {
-    border-color: rgba(0, 179, 255, 0.7);
-    box-shadow: inset 0 0 25px rgba(0, 179, 255, 0.2);
-}
-
-/* STATE COLOR TRANSITIONS: SPEAKING (HOT PINK / MAGENTA) */
-body.is-speaking .agent-hud-pane {
-    border-right-color: var(--border-pink);
-    box-shadow: inset 0 0 55px rgba(255, 0, 127, 0.3), 5px 0 50px rgba(255, 0, 127, 0.4);
-}
-body.is-speaking .agent-hud-pane::before {
-    border-color: rgba(255, 0, 127, 0.8);
-    box-shadow: inset 0 0 30px rgba(255, 0, 127, 0.3);
+// Active Canvas Wave Motion Visualizer (Dynamic Colors per State)
+function initWavCanvas() {
+    canvas = document.getElementById('wav-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    
+    function resize() {
+        if (canvas.parentElement) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    renderNeuralWaves();
 }
 
-/* MILITARY ACTION STROBE PULSE */
-@keyframes militaryStrobe {
-    0% { border-color: #00ffcc; box-shadow: inset 0 0 50px rgba(0,255,204,0.7); }
-    50% { border-color: #ff0055; box-shadow: inset 0 0 90px rgba(255,0,85,0.9); }
-    100% { border-color: #00ffcc; box-shadow: inset 0 0 50px rgba(0,255,204,0.7); }
+function renderNeuralWaves() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isSpeaking = document.body.classList.contains('is-speaking');
+    const isThinking = document.body.classList.contains('is-thinking');
+
+    // Dynamic color selection matching state
+    let primaryColor = '#00ffcc';
+    let secondaryColor = 'rgba(0, 179, 255, 0.7)';
+    if (isSpeaking) {
+        primaryColor = '#ff007f';
+        secondaryColor = 'rgba(255, 0, 127, 0.7)';
+    } else if (isThinking) {
+        primaryColor = '#00b3ff';
+        secondaryColor = 'rgba(0, 255, 204, 0.7)';
+    }
+
+    const amplitude = isSpeaking ? 42 : (isThinking ? 28 : (isListening ? 30 : 12));
+    const frequency = isSpeaking ? 0.05 : (isThinking ? 0.08 : 0.03);
+    const speed = isSpeaking ? 0.18 : (isThinking ? 0.22 : 0.06);
+
+    wavePhase += speed;
+
+    ctx.beginPath();
+    ctx.lineWidth = isSpeaking ? 3 : 2;
+    ctx.strokeStyle = primaryColor;
+    const centerY = canvas.height / 2;
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.sin(x * frequency + wavePhase) * amplitude;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = secondaryColor;
+
+    for (let x = 0; x < canvas.width; x += 2) {
+        const y = centerY + Math.cos(x * (frequency * 0.8) - wavePhase) * (amplitude * 0.75);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    requestAnimationFrame(renderNeuralWaves);
 }
 
-.military-action-active {
-    animation: militaryStrobe 0.4s ease-in-out infinite alternate !important;
+// Speech Recognition UI Handlers
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            isListening = true;
+            const micBtn = document.getElementById('mic-btn');
+            if (micBtn) micBtn.classList.add('listening');
+            updateHUDState("LISTENING");
+        };
+
+        recognition.onresult = function(event) {
+            const speechText = event.results[0][0].transcript;
+            const userInput = document.getElementById('user-input');
+            if (userInput) userInput.value = speechText;
+            stopListeningUI();
+            sendMessage();
+        };
+
+        recognition.onerror = function() { stopListeningUI(); };
+        recognition.onend = function() { stopListeningUI(); };
+    } catch (err) {}
 }
 
-.agent-header-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    z-index: 2;
+function toggleMic() {
+    if (!recognition) initSpeechRecognition();
+    if (!recognition) return showCyberNotification("Speech recognition unavailable.", true);
+
+    if (!isListening) {
+        try { recognition.start(); } catch (e) { stopListeningUI(); }
+    } else {
+        try { recognition.stop(); } catch (e) {}
+        stopListeningUI();
+    }
 }
 
-.agent-id-badge {
-    font-size: 12px;
-    color: var(--border-cyan);
-    letter-spacing: 2px;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
-}
-body.is-thinking .agent-id-badge { color: var(--border-blue); text-shadow: 0 0 10px rgba(0, 179, 255, 0.8); }
-body.is-speaking .agent-id-badge { color: var(--border-pink); text-shadow: 0 0 10px rgba(255, 0, 127, 0.8); }
-
-.status-bar-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--border-cyan);
-}
-body.is-thinking .status-bar-indicator { color: var(--border-blue); }
-body.is-speaking .status-bar-indicator { color: var(--border-pink); }
-
-.status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--border-cyan);
-    box-shadow: 0 0 12px var(--border-cyan);
-    animation: statusPulse 2s infinite ease-in-out;
-}
-body.is-thinking .status-dot { background: var(--border-blue); box-shadow: 0 0 12px var(--border-blue); }
-body.is-speaking .status-dot { background: var(--border-pink); box-shadow: 0 0 12px var(--border-pink); }
-
-@keyframes statusPulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.3); opacity: 0.5; }
+function stopListeningUI() {
+    isListening = false;
+    const micBtn = document.getElementById('mic-btn');
+    if (micBtn) micBtn.classList.remove('listening');
+    const stateText = document.getElementById('state-text');
+    if (stateText && stateText.innerText === "LISTENING") updateHUDState("READY");
 }
 
-.agent-visual-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 2;
+// Tactical Button Handlers
+function launchLocalServer() {
+    triggerMilitaryVisualPulse();
+    updateHUDState("ACTIVE");
+    showCyberNotification("🚀 LOCAL SERVER PROTOCOL ENGAGED");
+    sendMessage("Check local bridge connectivity and confirm server state.");
 }
 
-#wav-canvas {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 1;
+async function triggerManualTelemetry() {
+    triggerMilitaryVisualPulse();
+    updateHUDState("REASONING");
+    showCyberNotification("📊 FETCHING MARKET TELEMETRY...");
+    const report = await fetchLiveTelemetry();
+    appendMsg(report, 'assistant', 'AA01 Telemetry Feed', true);
+    updateHUDState("READY");
+    showCyberNotification("Telemetry fetched successfully!");
 }
 
-.agent-portrait-frame {
-    width: 220px;
-    height: 220px;
-    border-radius: 4px;
-    border: 2px solid var(--border-cyan);
-    overflow: hidden;
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.4), inset 0 0 15px rgba(0, 255, 204, 0.2);
-    z-index: 2;
-    margin-bottom: 20px;
-    position: relative;
-    transition: all 0.4s ease;
+function scrapeWebPage() {
+    triggerMilitaryVisualPulse();
+    const input = document.getElementById('user-input');
+    const query = input ? input.value.trim() : "";
+    if (!query) {
+        showCyberNotification("Enter a target search term in the input box first.", true);
+        if (input) input.focus();
+        return;
+    }
+    sendMessage(`Scrape and summarize information regarding: ${query}`);
 }
 
-body.is-thinking .agent-portrait-frame {
-    border-color: var(--border-blue);
-    box-shadow: 0 0 40px rgba(0, 179, 255, 0.6), inset 0 0 20px rgba(0, 179, 255, 0.4);
+function triggerMilitaryProtocol() {
+    triggerMilitaryVisualPulse();
+    updateHUDState("ACTIVE");
+    showCyberNotification("⚡ MILITARY PROTOCOL ENGAGED");
+    sendMessage("Execute core diagnostic audit and report system readiness.");
 }
 
-body.is-speaking .agent-portrait-frame {
-    border-color: var(--border-pink);
-    box-shadow: 0 0 50px rgba(255, 0, 127, 0.8), inset 0 0 25px rgba(255, 0, 127, 0.5);
+function handleKey(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
 }
 
-.agent-portrait-frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+// UI Helpers & Actions
+function toggleVoice() {
+    isVoiceEnabled = !isVoiceEnabled;
+    const btn = document.getElementById('voice-btn');
+    if (!isVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (btn) {
+        btn.classList.toggle('active', isVoiceEnabled);
+        btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
+    }
+    showCyberNotification(`Voice synthesis: ${isVoiceEnabled ? 'ONLINE' : 'MUTED'}`);
 }
 
-.agent-nameplate {
-    text-align: center;
-    z-index: 2;
+function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    if (panel) {
+        const isHidden = (panel.style.display === 'none' || panel.style.display === '');
+        panel.style.display = isHidden ? 'block' : 'none';
+    }
 }
 
-.agent-nameplate h2 {
-    font-size: 20px;
-    color: var(--border-cyan);
-    letter-spacing: 3px;
-    text-shadow: 0 0 10px rgba(0, 255, 204, 0.6);
-    transition: color 0.4s ease;
-}
-body.is-thinking .agent-nameplate h2 { color: var(--border-blue); text-shadow: 0 0 10px rgba(0, 179, 255, 0.6); }
-body.is-speaking .agent-nameplate h2 { color: var(--border-pink); text-shadow: 0 0 10px rgba(255, 0, 127, 0.6); }
-
-.agent-nameplate p {
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 1.5px;
-    margin-top: 6px;
+function saveKey() {
+    try {
+        const el = document.getElementById('api-key');
+        const ghEl = document.getElementById('gh-token');
+        if (el) localStorage.setItem('dahl_key', el.value.trim());
+        if (ghEl) {
+            localStorage.setItem('gh_pat_token', ghEl.value.trim());
+            localStorage.setItem('GH_TOKEN', ghEl.value.trim());
+        }
+        showCyberNotification("Credentials saved successfully.");
+        toggleSettings();
+    } catch (e) {}
 }
 
-.eq-container {
-    display: flex;
-    gap: 6px;
-    height: 35px;
-    align-items: flex-end;
-    margin-top: 25px;
-    z-index: 2;
+function clearLogs() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    chatHistory = [];
+    const container = document.getElementById('chat-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="message assistant" id="msg_cleared">
+                <div class="msg-header">AA01 Core</div>
+                <div style="white-space:pre-wrap; margin-top: 6px;">Console history cleared. Standby mode, Commander.</div>
+            </div>
+        `;
+    }
+    showCyberNotification("Console logs cleared.");
 }
 
-.eq-bar {
-    width: 10px;
-    height: 20%;
-    background: var(--border-cyan);
-    box-shadow: 0 0 10px var(--border-cyan);
-    border-radius: 2px;
-    transition: background 0.4s ease, height 0.08s ease;
-}
-body.is-thinking .eq-bar { background: var(--border-blue); box-shadow: 0 0 10px var(--border-blue); }
-body.is-speaking .eq-bar { background: var(--border-pink); box-shadow: 0 0 10px var(--border-pink); }
+async function handleAction(actionType, messageId) {
+    const textContent = messagePayloadStore[messageId] || "";
+    if (!textContent) return;
 
-/* ================================================================= */
-/* 2. RIGHT CHAT CONSOLE PANE (40% WIDTH)                             */
-/* ================================================================= */
-.chat-console-pane {
-    width: 40%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-dark);
-    border-left: 2px solid var(--border-cyan);
-    box-shadow: inset 15px 0 30px rgba(0, 255, 204, 0.05);
-    transition: border-color 0.4s ease;
-}
-body.is-thinking .chat-console-pane { border-left-color: var(--border-blue); }
-body.is-speaking .chat-console-pane { border-left-color: var(--border-pink); }
-
-.chat-header {
-    padding: 14px 20px;
-    background: var(--bg-surface);
-    border-bottom: 1px solid #1e293b;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    color: var(--border-cyan);
-    transition: color 0.4s ease;
-}
-body.is-thinking .chat-header { color: var(--border-blue); }
-body.is-speaking .chat-header { color: var(--border-pink); }
-
-.latency-badge {
-    font-size: 10px;
-    color: var(--text-muted);
+    if (actionType === 'summarize') {
+        sendMessage(`Summarize the following data:\n\n${textContent}`);
+    } else if (actionType === 'save') {
+        const blob = new Blob([textContent], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${Date.now()}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } else if (actionType === 'ingest') {
+        updateHUDState("INGESTING");
+        const timestamp = new Date().toISOString();
+        const payload = `### LOG ENTRY [${timestamp}]\n${textContent}`;
+        await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest [${timestamp}]`);
+        await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log [${timestamp}]`);
+        updateHUDState("READY");
+        showCyberNotification("SUCCESS: Ingested into core plans and session log!");
+    }
 }
 
-.quick-launch-bar {
-    padding: 12px 20px;
-    background: rgba(15, 23, 42, 0.85);
-    border-bottom: 1px solid #1e293b;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
+function copyToClipboard(messageId, btn) {
+    const text = messagePayloadStore[messageId] || "";
+    navigator.clipboard.writeText(text).then(() => {
+        if (btn) btn.innerText = "COPIED!";
+        showCyberNotification("Copied to clipboard.");
+    });
 }
 
-.quick-launch-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-right: 4px;
+function deleteMessage(messageId) {
+    const msgElement = document.getElementById(messageId);
+    if (msgElement) {
+        delete messagePayloadStore[messageId];
+        msgElement.remove();
+        showCyberNotification("Message purged from buffer.");
+    }
 }
 
-.ctrl-btn {
-    background: var(--bg-surface);
-    border: 1px solid #1e293b;
-    color: var(--text-light);
-    padding: 6px 12px;
-    font-family: monospace;
-    font-size: 11px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
+function appendMsg(text, sender, label, includeActions = true) {
+    const container = document.getElementById('chat-container');
+    if (!container) return;
 
-.ctrl-btn:hover {
-    border-color: var(--border-cyan);
-    color: var(--border-cyan);
-    box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
-}
+    const msgId = 'msg_' + Math.random().toString(36).substring(2, 9);
+    messagePayloadStore[msgId] = text;
 
-.military-btn {
-    border-color: rgba(0, 255, 204, 0.5);
-    color: var(--border-cyan);
-}
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
+    div.id = msgId;
 
-.build-btn {
-    border-color: var(--border-cyan) !important;
-    color: var(--border-cyan) !important;
-}
+    let actions = includeActions ? `
+        <div class="action-row">
+            <button class="action-chip" onclick="handleAction('summarize', '${msgId}')">SUMMARIZE</button>
+            <button class="action-chip" onclick="handleAction('save', '${msgId}')">SAVE .MD</button>
+            <button class="action-chip" onclick="handleAction('ingest', '${msgId}')">INGEST</button>
+            <button class="action-chip" onclick="copyToClipboard('${msgId}', this)">COPY</button>
+            <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
+            <button class="action-chip del-btn" onclick="deleteMessage('${msgId}')">🗑️ DEL</button>
+        </div>
+    ` : '';
 
-#settings-panel {
-    padding: 15px;
-    background: rgba(11, 15, 25, 0.98);
-    border-bottom: 1px solid #1e293b;
-}
-
-.settings-title {
-    font-size: 11px;
-    color: var(--border-cyan);
-    margin-bottom: 8px;
-}
-
-#settings-panel input {
-    width: 100%;
-    padding: 8px;
-    background: var(--bg-dark);
-    border: 1px solid #1e293b;
-    color: var(--text-light);
-    font-family: monospace;
-    font-size: 11px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-}
-
-#chat-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* ================================================================= */
-/* 3. MESSAGES & ACTION CHIPS                                         */
-/* ================================================================= */
-.message {
-    padding: 14px 18px;
-    border-radius: 6px;
-    max-width: 95%;
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-.message.user {
-    align-self: flex-end;
-    background: #1e293b;
-    border: 1px solid #334155;
-}
-
-.message.assistant {
-    align-self: flex-start;
-    background: var(--bg-surface);
-    border: 1px solid rgba(0, 255, 204, 0.4);
-    box-shadow: 0 0 15px rgba(0, 255, 204, 0.08);
-}
-
-.msg-header {
-    font-size: 11px;
-    color: var(--border-cyan);
-    margin-bottom: 6px;
-    letter-spacing: 1px;
-    font-weight: bold;
-}
-
-.action-row {
-    display: flex;
-    gap: 6px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-}
-
-.action-chip {
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid var(--border-cyan);
-    color: var(--border-cyan);
-    padding: 6px 10px;
-    font-family: monospace;
-    font-size: 10px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.action-chip:hover {
-    background: rgba(0, 255, 204, 0.2);
-    box-shadow: 0 0 12px rgba(0, 255, 204, 0.5);
-}
-
-.del-btn {
-    border-color: var(--border-red) !important;
-    color: var(--border-red) !important;
-}
-
-.del-btn:hover {
-    background: rgba(255, 0, 85, 0.25) !important;
-    box-shadow: 0 0 12px rgba(255, 0, 85, 0.6) !important;
-}
-
-/* ================================================================= */
-/* 4. INPUT CONTROL BAR                                               */
-/* ================================================================= */
-.input-control-bar {
-    padding: 15px 20px;
-    border-top: 1px solid #1e293b;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    background: var(--bg-surface);
-}
-
-#user-input {
-    flex: 1;
-    padding: 10px 14px;
-    background: var(--bg-dark);
-    border: 1px solid #1e293b;
-    color: var(--text-light);
-    font-family: monospace;
-    font-size: 12px;
-    border-radius: 4px;
-}
-
-#user-input:focus {
-    outline: none;
-    border-color: var(--border-cyan);
-    box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+    div.innerHTML = `<div class="msg-header">${label}</div><div style="white-space:pre-wrap; margin-top:6px;">${text}</div>${actions}`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
