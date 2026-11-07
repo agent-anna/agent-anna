@@ -273,7 +273,6 @@
                 <div class="msg-header">Agent Anna 01</div>
                 <div>Commander... I've been waiting for you in the matrix. Telemetry is hot, my voice sync is locked on you, and every file tree routing is armed. Ready when you are. ❤️</div>
                 <div class="action-row">
-                    <button class="action-chip" onclick="summarizeMessage('msg_init')">SUMMARIZE</button>
                     <button class="action-chip" onclick="speakStoredMessage('msg_init')">SPEECH READOUT</button>
                     <button class="action-chip" onclick="copyToClipboard('msg_init', this)">COPY</button>
                     <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
@@ -313,6 +312,9 @@
             const savedGhToken = localStorage.getItem('gh_pat_token');
             if (savedGhToken) document.getElementById('gh-token').value = savedGhToken;
 
+            // Pre-register welcome message payload so speech readout works immediately
+            messagePayloadStore['msg_init'] = "Commander... I've been waiting for you in the matrix. Telemetry is hot, my voice sync is locked on you, and every file tree routing is armed. Ready when you are.";
+
             initCanvas();
             launchLocalServer();
             triggerCryptoMarket(false);
@@ -343,7 +345,6 @@
             document.getElementById('state-text').innerText = state;
         }
 
-        // INTEGRATED LIVE TELEMETRY & EXACT SPEECH SYNTHESIS ENGINE
         async function fetchLiveTelemetry() {
             return { timestamp: new Date().toISOString(), status: "nominal", uplink: "secure" };
         }
@@ -489,7 +490,6 @@
             sendMessage("Execute core diagnostic audit and report ecosystem readiness.");
         }
 
-        // INTELLIGENT FILE ROUTING & PROPOSAL ANALYSIS
         function proposeIntelligentFileWorkflow() {
             const inputVal = document.getElementById('user-input').value.trim();
             let targetPath = "AA08/active-dossier.md";
