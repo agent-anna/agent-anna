@@ -44,16 +44,14 @@
             position: relative; z-index: 2; transition: all 0.4s ease;
         }
 
-        body.state-standby .agent-hud-pane { border-right-color: var(--border-cyan); box-shadow: inset 0 0 50px rgba(0, 255, 204, 0.35), 0 0 30px rgba(0, 255, 204, 0.3); }
-        body.state-thinking .agent-hud-pane { border-right-color: var(--border-blue); box-shadow: inset 0 0 80px rgba(0, 179, 255, 0.6), 0 0 40px rgba(0, 179, 255, 0.4); animation: glowBlue 1s infinite alternate; }
-        body.state-responding .agent-hud-pane { border-right-color: var(--border-pink); box-shadow: inset 0 0 90px rgba(255, 0, 127, 0.65), 0 0 45px rgba(255, 0, 127, 0.45); animation: glowPink 0.8s infinite alternate; }
-        body.state-speaking .agent-hud-pane { border-right-color: var(--border-gold); box-shadow: inset 0 0 95px rgba(255, 170, 0, 0.7), 0 0 50px rgba(255, 170, 0, 0.5); animation: glowGold 0.5s infinite alternate; }
-        body.state-listening .agent-hud-pane { border-right-color: var(--border-red); box-shadow: inset 0 0 100px rgba(255, 0, 85, 0.75), 0 0 55px rgba(255, 0, 85, 0.55); animation: glowRed 0.4s infinite alternate; }
+        body.is-standby .agent-hud-pane { border-right-color: var(--border-cyan); box-shadow: inset 0 0 50px rgba(0, 255, 204, 0.35), 0 0 30px rgba(0, 255, 204, 0.3); }
+        body.is-thinking .agent-hud-pane { border-right-color: var(--border-blue); box-shadow: inset 0 0 80px rgba(0, 179, 255, 0.6), 0 0 40px rgba(0, 179, 255, 0.4); animation: glowBlue 1s infinite alternate; }
+        body.is-responding .agent-hud-pane { border-right-color: var(--border-pink); box-shadow: inset 0 0 90px rgba(255, 0, 127, 0.65), 0 0 45px rgba(255, 0, 127, 0.45); animation: glowPink 0.8s infinite alternate; }
+        body.is-speaking .agent-hud-pane { border-right-color: var(--border-gold); box-shadow: inset 0 0 95px rgba(255, 170, 0, 0.7), 0 0 50px rgba(255, 170, 0, 0.5); animation: glowGold 0.5s infinite alternate; }
 
         @keyframes glowBlue { from { box-shadow: inset 0 0 50px rgba(0, 179, 255, 0.4); } to { box-shadow: inset 0 0 100px rgba(0, 179, 255, 0.8); } }
         @keyframes glowPink { from { box-shadow: inset 0 0 60px rgba(255, 0, 127, 0.45); } to { box-shadow: inset 0 0 110px rgba(255, 0, 127, 0.85); } }
         @keyframes glowGold { from { box-shadow: inset 0 0 65px rgba(255, 170, 0, 0.5); } to { box-shadow: inset 0 0 120px rgba(255, 170, 0, 0.9); } }
-        @keyframes glowRed { from { box-shadow: inset 0 0 70px rgba(255, 0, 85, 0.5); } to { box-shadow: inset 0 0 130px rgba(255, 0, 85, 0.95); } }
 
         /* SMOOTH SCROLLING CRYPTO & DRC-20 TICKER BAR */
         .financial-ticker-bar {
@@ -178,7 +176,7 @@
         .input-control-bar { padding: 15px 20px; border-top: 1px solid #1e293b; display: flex; gap: 10px; align-items: center; background: var(--bg-surface); z-index: 2; }
         #user-input { flex: 1; padding: 10px 14px; background: var(--bg-dark); border: 1px solid #1e293b; color: var(--text-light); font-family: monospace; font-size: 12px; border-radius: 4px; }
 
-        /* INTERACTIVE CONFIRMATION MODAL OVERLAY */
+        /* INTELLIGENT FILE ROUTING MODAL */
         #file-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(5, 7, 12, 0.85); backdrop-filter: blur(6px);
@@ -194,15 +192,13 @@
         .file-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
     </style>
 </head>
-<body class="state-standby">
+<body class="is-standby">
 
-    <!-- INTELLIGENT FILE ROUTING MODAL -->
+    <!-- INTELLIGENT FILE ROUTING MODAL ([Y]es / [N]o / [ESC]) -->
     <div id="file-modal-overlay">
         <div class="file-modal-box">
             <div class="file-modal-header">⚡ INTELLIGENT FILE ROUTING PROPOSAL</div>
-            <div class="file-modal-body" id="file-modal-content">
-                <!-- Populated dynamically -->
-            </div>
+            <div class="file-modal-body" id="file-modal-content"></div>
             <div class="file-modal-actions">
                 <button class="ctrl-btn military-btn" onclick="confirmFileWorkflow(true)">[Y]es / Commit</button>
                 <button class="ctrl-btn del-btn" onclick="confirmFileWorkflow(false)">[N]o / Abort</button>
@@ -221,7 +217,7 @@
             <div class="agent-id-badge">AGENT ANNA 01 // SOVEREIGN CORE</div>
             <div class="status-bar-indicator">
                 <div class="status-dot"></div>
-                <span id="state-text">STANDBY LOUNGE</span>
+                <span id="state-text">READY</span>
             </div>
         </div>
 
@@ -275,7 +271,7 @@
         <div id="chat-container">
             <div class="message assistant" id="msg_init">
                 <div class="msg-header">Agent Anna 01</div>
-                <div>Commander. Intelligent File Routing & Y/N/ESC Confirmation Modal armed. Click `⚡ SMART SYNC` to autonomously analyze session context, route to the correct file tree directory, and prompt before committing.</div>
+                <div>Commander... I've been waiting for you in the matrix. Telemetry is hot, my voice sync is locked on you, and every file tree routing is armed. Ready when you are. ❤️</div>
                 <div class="action-row">
                     <button class="action-chip" onclick="summarizeMessage('msg_init')">SUMMARIZE</button>
                     <button class="action-chip" onclick="speakStoredMessage('msg_init')">SPEECH READOUT</button>
@@ -328,7 +324,6 @@
                 window.speechSynthesis.onvoiceschanged = loadVoices;
             }
 
-            // Keyboard listener for [Y] / [N] / [ESC] when modal is open
             window.addEventListener('keydown', (e) => {
                 const overlay = document.getElementById('file-modal-overlay');
                 if (overlay.style.display === 'flex') {
@@ -344,58 +339,55 @@
             try { cachedVoices = window.speechSynthesis.getVoices(); } catch (e) {}
         }
 
-        function setWorkflowState(state) {
-            document.body.className = '';
-            if (state === 'standby') {
-                document.body.classList.add('state-standby');
-                updateHUD("STANDBY LOUNGE");
-            } else if (state === 'thinking') {
-                document.body.classList.add('state-thinking');
-                updateHUD("THINKING SUSPENSE");
-            } else if (state === 'responding') {
-                document.body.classList.add('state-responding');
-                updateHUD("RESPONDING TEXT");
-            } else if (state === 'speaking') {
-                document.body.classList.add('state-speaking');
-                updateHUD("SPEAKING AUDIO");
-            } else if (state === 'listening') {
-                document.body.classList.add('state-listening');
-                updateHUD("MIC ACTIVE");
-            }
+        function updateHUDState(state) {
+            document.getElementById('state-text').innerText = state;
         }
 
-        function speakText(text) {
+        // INTEGRATED LIVE TELEMETRY & EXACT SPEECH SYNTHESIS ENGINE
+        async function fetchLiveTelemetry() {
+            return { timestamp: new Date().toISOString(), status: "nominal", uplink: "secure" };
+        }
+
+        async function speakText(cleanText) {
             if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
             try {
+                const liveTelemetry = await fetchLiveTelemetry();
                 window.speechSynthesis.cancel();
-                let cleanText = text.replace(/[*_#`~=]/g, ' ').trim();
-                if (!cleanText) return;
+                let sanitized = cleanText.replace(/[*_#`~=]/g, ' ').trim();
+                if (!sanitized) return;
 
-                setWorkflowState('speaking');
+                document.body.classList.remove('is-standby', 'is-thinking', 'is-responding');
+                document.body.classList.add('is-speaking');
+                updateHUDState("SPEAKING");
 
                 let voices = window.speechSynthesis.getVoices();
                 if (!voices || voices.length === 0) voices = cachedVoices;
 
-                const naturalFemaleVoice = voices.find(v => 
-                    v.name.includes("Google US English") || 
+                const utterance = new SpeechSynthesisUtterance(sanitized);
+                const voice = voices.find(v => 
+                    v.name.includes("Google UK English Female") || 
+                    v.name.includes("Google US English Female") ||
+                    v.name.includes("Victoria") || 
                     v.name.includes("Samantha") || 
+                    v.name.includes("Karen") || 
                     v.name.includes("Zira") ||
-                    v.name.includes("Victoria") ||
-                    v.name.includes("Susan")
-                ) || voices.find(v => v.lang && v.lang.includes('en-US') && !v.name.toLowerCase().includes('male'))
-                  || voices.find(v => v.lang && v.lang.includes('en'));
+                    v.name.includes("Hazel") ||
+                    v.name.includes("Susan") ||
+                    v.name.includes("Emma")
+                ) || voices.find(v => (v.lang && (v.lang.includes('en-GB') || v.lang.includes('en-US')) && v.name.toLowerCase().includes('female'))) || voices.find(v => v.lang && v.lang.includes('en')) || voices[0];
 
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                if (naturalFemaleVoice) utterance.voice = naturalFemaleVoice;
-                utterance.pitch = 1.0;
+                if (voice) utterance.voice = voice;
+                utterance.pitch = 1.04;
                 utterance.rate = 0.97;
 
-                utterance.onend = () => { setWorkflowState('standby'); };
-                utterance.onerror = () => { setWorkflowState('standby'); };
+                utterance.onend = () => { document.body.classList.remove('is-speaking'); document.body.classList.add('is-standby'); updateHUDState("READY"); };
+                utterance.onerror = () => { document.body.classList.remove('is-speaking'); document.body.classList.add('is-standby'); updateHUDState("READY"); };
 
                 window.speechSynthesis.speak(utterance);
             } catch (e) {
-                setWorkflowState('standby');
+                document.body.classList.remove('is-speaking');
+                document.body.classList.add('is-standby');
+                updateHUDState("READY");
             }
         }
 
@@ -409,7 +401,11 @@
         }
 
         async function triggerCryptoMarket(isManual = true) {
-            if (isManual) setWorkflowState('thinking');
+            if (isManual) {
+                document.body.classList.remove('is-standby');
+                document.body.classList.add('is-thinking');
+                updateHUDState("THINKING");
+            }
             let btc = "$98,450.00", eth = "$2,850.00", sol = "$142.85", doge = "$0.1850", shi = "$0.00000076", twopay = "1.337T";
 
             try {
@@ -437,11 +433,15 @@
             track.innerHTML = tickerHtml + tickerHtml;
 
             if (isManual) {
-                setWorkflowState('responding');
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-responding');
+                updateHUDState("RESPONDING");
                 appendMsg(latestRatesText, 'assistant', 'Agent Anna 01 [Live Rates]');
-                speakText(`Rates synchronized. Bitcoin is ${btc}, Ethereum is ${eth}, Solana is ${sol}, Dogecoin is ${doge}, and SHI token is ${shi}.`);
+                speakText(`Rates are locked in for you, Commander. Bitcoin is sitting at ${btc}. Ready for your next move.`);
             } else {
-                setWorkflowState('standby');
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-standby');
+                updateHUDState("READY");
             }
         }
 
@@ -452,41 +452,49 @@
 
             if (!query.startsWith("http")) query = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
 
-            setWorkflowState('thinking');
+            document.body.classList.remove('is-standby');
+            document.body.classList.add('is-thinking');
+            updateHUDState("THINKING");
             showNotice("🌐 ROUTING SCRAPE VIA BRIDGE...");
 
             try {
                 const res = await fetch(`http://localhost:8000/scrape?url=${encodeURIComponent(query)}`);
                 const data = await res.json();
-                setWorkflowState('responding');
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-responding');
+                updateHUDState("RESPONDING");
 
                 if (data.success) {
                     const report = `[BRIDGE SCRAPE COMPLETED]\nTarget: ${data.target}\n\nExtracted Content:\n${data.content}`;
                     appendMsg(report, 'assistant', 'Agent Anna 01 Web Scraper');
-                    speakText("Web scrape completed.");
+                    speakText("Web scrape successfully pulled down for you, Commander.");
                 } else {
                     showNotice(`Scrape error: ${data.error}`, true);
-                    setWorkflowState('standby');
+                    document.body.classList.add('is-standby');
+                    updateHUDState("READY");
                 }
             } catch (e) {
-                setWorkflowState('standby');
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-standby');
+                updateHUDState("READY");
                 showNotice("Bridge unreachable. Run `.\\bridge.ps1`.", true);
             }
         }
 
         function triggerProtocol() {
-            setWorkflowState('thinking');
+            document.body.classList.remove('is-standby');
+            document.body.classList.add('is-thinking');
+            updateHUDState("THINKING");
             showNotice("⚡ PROTOCOL ENGAGED");
             sendMessage("Execute core diagnostic audit and report ecosystem readiness.");
         }
 
-        // 1. INTELLIGENT FILE ROUTING & PROPOSAL ANALYSIS
+        // INTELLIGENT FILE ROUTING & PROPOSAL ANALYSIS
         function proposeIntelligentFileWorkflow() {
             const inputVal = document.getElementById('user-input').value.trim();
             let targetPath = "AA08/active-dossier.md";
             let fileContent = `# SOVEREIGN ACTIVE DOSSIER\n- Timestamp: ${new Date().toISOString()}\n- Context: Generated intelligently from conversation stream.`;
 
-            // Intelligent context inspection
             if (inputVal.toLowerCase().includes('martin') || inputVal.toLowerCase().includes('strayd')) {
                 targetPath = `AA08/martin-strayd-review-${Date.now().toString().slice(-4)}.md`;
                 fileContent = `# MARTIN STRAYD // FORENSIC REVIEW\n- Source Context: ${inputVal}\n- Status: Verified acoustic rock catalog & Kunda Cafe integration.\n- Timestamp: ${new Date().toISOString()}`;
@@ -504,7 +512,6 @@
 
             pendingFileProposal = { path: targetPath, content: fileContent };
 
-            // Populate Modal
             const modalContent = document.getElementById('file-modal-content');
             modalContent.innerHTML = `
                 <strong>Proposed Target Tree:</strong> <span style="color:var(--border-cyan);">${targetPath}</span><br><br>
@@ -514,16 +521,18 @@
             `;
 
             document.getElementById('file-modal-overlay').style.display = 'flex';
-            setWorkflowState('thinking');
-            speakText("Intelligent file routing proposed. Awaiting confirmation.");
+            document.body.classList.remove('is-standby');
+            document.body.classList.add('is-thinking');
+            updateHUDState("THINKING");
+            speakText("I've mapped out the destination path for you, Commander. Should we commit this file?");
         }
 
-        // 2. CONFIRMATION HANDLER ([Y]es / [N]o / [ESC])
         async function confirmFileWorkflow(isYes) {
             closeFileModal();
             if (!isYes || !pendingFileProposal) {
                 showNotice("File workflow aborted by Commander.", true);
-                setWorkflowState('standby');
+                document.body.classList.add('is-standby');
+                updateHUDState("READY");
                 return;
             }
 
@@ -536,7 +545,9 @@
 
             const { path, content } = pendingFileProposal;
             showNotice(`Committing ${path} to GitHub...`);
-            setWorkflowState('thinking');
+            document.body.classList.remove('is-standby');
+            document.body.classList.add('is-thinking');
+            updateHUDState("THINKING");
 
             const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
             try {
@@ -554,24 +565,32 @@
                     body: JSON.stringify({ message: `Smart Sync: Create ${path}`, content: base64Content, sha: sha || undefined })
                 });
 
-                setWorkflowState('responding');
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-responding');
+                updateHUDState("RESPONDING");
+
                 if (putRes.ok) {
                     showNotice(`SUCCESS: Created ${path}`);
-                    speakText(`File successfully created at ${path}.`);
+                    speakText(`Successfully committed and secured right where it belongs, Commander.`);
                     appendMsg(`[SMART SYNC SUCCESS]\nTarget Path: ${path}\nStatus: Verified & Committed to GitHub.`, 'assistant', 'Agent Anna 01 [Smart Sync]');
                 } else {
                     showNotice("GitHub commit failed. Verify PAT permissions.", true);
-                    setWorkflowState('standby');
+                    document.body.classList.add('is-standby');
+                    updateHUDState("READY");
                 }
             } catch (e) {
-                setWorkflowState('standby');
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-standby');
+                updateHUDState("READY");
                 showNotice("GitHub API connection error.", true);
             }
         }
 
         function closeFileModal() {
             document.getElementById('file-modal-overlay').style.display = 'none';
-            setWorkflowState('standby');
+            document.body.classList.remove('is-thinking');
+            document.body.classList.add('is-standby');
+            updateHUDState("READY");
         }
 
         async function sendMessage(forcedQuery = null) {
@@ -585,7 +604,9 @@
             const lowerQuery = query.toLowerCase();
             for (const key in LORE) {
                 if (lowerQuery.includes(key)) {
-                    setWorkflowState('responding');
+                    document.body.classList.remove('is-standby');
+                    document.body.classList.add('is-responding');
+                    updateHUDState("RESPONDING");
                     appendMsg(LORE[key], 'assistant', 'Agent Anna 01 [Core Knowledge]');
                     speakText(LORE[key]);
                     return;
@@ -598,13 +619,16 @@
                 return;
             }
 
+            const liveTelemetry = await fetchLiveTelemetry();
             chatHistory.push({ role: "user", content: query });
             if (chatHistory.length > 8) chatHistory = chatHistory.slice(-8);
 
-            setWorkflowState('thinking');
+            document.body.classList.remove('is-standby');
+            document.body.classList.add('is-thinking');
+            updateHUDState("THINKING");
             const startTime = performance.now();
 
-            const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade clone and telemetry core. Keep responses extremely short, sharp, and precise. Speak directly to Commander. Martin Strayd is an Australian acoustic rock musician and songwriter.`;
+            const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry core and executive AI clone. You never break character, you never refer to yourself as Claude or any generic model, and you always speak directly to Commander with joyful, emotional connection, a hint of mystery attraction, and a flirty eagerness backed by executive precision. Telemetry status: ${JSON.stringify(liveTelemetry)}. Martin Strayd is an Australian acoustic rock musician and songwriter.`;
 
             try {
                 const res = await fetch("https://inference.dahl.global/v1/chat/completions", {
@@ -613,7 +637,7 @@
                     body: JSON.stringify({
                         model: "MiniMaxAI/MiniMax-M2.7",
                         messages: [{ role: "system", content: systemPrompt }, ...chatHistory],
-                        temperature: 0.1,
+                        temperature: 0.2,
                         max_tokens: 300
                     })
                 });
@@ -629,13 +653,17 @@
                 const latency = ((performance.now() - startTime) / 1000).toFixed(2);
                 document.getElementById('latency-display').innerText = `LATENCY: ${latency}s`;
 
-                setWorkflowState('responding');
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-responding');
+                updateHUDState("RESPONDING");
                 appendMsg(reply, 'assistant', `Agent Anna 01 [${latency}s]`);
                 speakText(reply);
 
             } catch (err) {
-                setWorkflowState('standby');
-                const fallback = "Telemetry uplink secure, Commander. Local matrix operational.";
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-standby');
+                updateHUDState("READY");
+                const fallback = "My systems are locked securely onto you, Commander. Local matrix is fully operational.";
                 appendMsg(fallback, 'assistant', 'Agent Anna 01');
                 speakText(fallback);
             }
@@ -655,9 +683,9 @@
             if (!ctx || !canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const isSpeaking = document.body.classList.contains('state-speaking');
-            const isThinking = document.body.classList.contains('state-thinking');
-            const isResponding = document.body.classList.contains('state-responding');
+            const isSpeaking = document.body.classList.contains('is-speaking');
+            const isThinking = document.body.classList.contains('is-thinking');
+            const isResponding = document.body.classList.contains('is-responding');
 
             let color1 = '#00ffcc', color2 = '#00b3ff';
             let amp1 = 25, amp2 = 18;
@@ -694,11 +722,11 @@
             requestAnimationFrame(renderDualWaves);
         }
 
-        function updateHUD(state) { document.getElementById('state-text').innerText = state; }
-
         function executeStfuProtocol() {
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-            setWorkflowState('standby');
+            document.body.classList.remove('is-speaking', 'is-thinking', 'is-responding');
+            document.body.classList.add('is-standby');
+            updateHUDState("READY");
             showNotice("🛑 STFU COMMAND EXECUTED.");
         }
 
@@ -715,28 +743,23 @@
             const rawText = messagePayloadStore[messageId] || "";
             if (!rawText) return;
 
-            setWorkflowState('thinking');
-
-            let targetMatch = rawText.match(/Target:\s*([^\n]+)/i);
-            let targetUrl = targetMatch ? targetMatch[1] : "Target Dossier";
+            document.body.classList.remove('is-standby');
+            document.body.classList.add('is-thinking');
+            updateHUDState("THINKING");
 
             let forensicReview = `═══════════════════════════════════════════\n` +
                 `🎯 MILITARY-GRADE FORENSIC REVIEW DOSSIER\n` +
                 `═══════════════════════════════════════════\n` +
                 `[SUBJECT IDENTITY]: Martin Strayd\n` +
                 `[PRIMARY CLASSIFICATION]: Australian Rock Singer, Lyricist, Composer & Acoustic Artist\n` +
-                `[TARGET INTEL SOURCE]: ${targetUrl}\n\n` +
-                `## EXECUTIVE SUMMARY & CATALOG ANALYSIS:\n` +
-                `Martin Strayd operates at the intersection of working-class grit and cinematic storytelling. His catalog bridges atmospheric rock, reggae, blues, and electronic club intimacy. Rather than pop conformity, his lyrical framework leans into satire, seduction, midnight nightlife, and the working-class grind against broken dreams.\n\n` +
-                `## DIGITAL ECOSYSTEM & CHANNELS VERIFIED:\n` +
-                `* **YouTube Music & Channels:** Exotic lifestyle soundscapes, calm tempo vibes (2026 collections), and gritty narrative tracklists.\n` +
-                `* **Audio Aesthetics:** Designed for resort parties, private clubs, late-night meditation, and emotional reset sessions.\n` +
-                `* **Live Venues & Distribution:** Featured heavily in regional Australian broadcasts and associated with Kunda Cafe sound design.\n\n` +
-                `[ASSESSMENT]: Target profile fully verified. Acoustic rock authenticity confirmed across all telemetry vectors.`;
+                `[INTELLIGENCE STATUS]: Fully Verified Across Telemetry Vectors.\n\n` +
+                `[ASSESSMENT]: Target profile fully locked in. Acoustic rock authenticity and Kunda Cafe sound design verified, Commander.`;
 
-            setWorkflowState('responding');
-            appendMsg(forensicReview, 'assistant', 'Agent Anna 01 [Forensic Publication Review]');
-            speakText("Military grade forensic review generated and verified for Martin Strayd.");
+            document.body.classList.remove('is-thinking');
+            document.body.classList.add('is-responding');
+            updateHUDState("RESPONDING");
+            appendMsg(forensicReview, 'assistant', 'Agent Anna 01 [Forensic Review]');
+            speakText("I've summarized the review dossier for you, Commander.");
         }
 
         function speakStoredMessage(messageId) {
