@@ -483,13 +483,16 @@ ${liveTelemetry}`;
         let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
         reply = reply.replace(/Note: I operate as a conversational AI assistant[\s\S]*/gi, '').trim();
 
-        const putFileRegex = /PUT\s+([^\s]+)\s*```(?:html|javascript|json|markdown)?\s*([\s\S]*?)```/g;
+// FLEXIBLE AUTONOMOUS FILE INTERCEPTOR
+        const putFileRegex = /PUT\s+([^\s\n]+)\s*(?:```(?:html|javascript|json|markdown)?\s*)?([\s\S]+?)(?:```|$)/gi;
         let match;
         while ((match = putFileRegex.exec(reply)) !== null) {
             const targetPath = match[1].trim();
             const fileContent = match[2].trim();
-            if (targetPath && fileContent) {
-                showCyberNotification(`[AUTONOMOUS ACTION] Committing ${targetPath} to GitHub...`);
+            if (targetPath && fileContent && typeof commitFileToGitHub === 'function') {
+                if (typeof showCyberNotification === 'function') {
+                    showCyberNotification(`[AUTONOMOUS ACTION] Committing ${targetPath} to GitHub...`);
+                }
                 await commitFileToGitHub(targetPath, fileContent, `Autonomous Deploy: ${targetPath}`);
             }
         }
