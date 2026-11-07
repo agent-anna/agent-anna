@@ -1,85 +1,23 @@
 // =================================================================
-// AGENT ANNA 01 // UNIFIED ZERO-LOSS SYSTEM CORE & REPO ENGINE
+// AGENT ANNA 01 // APP-UI.JS (Canvas Waves & Live Mic States)
 // =================================================================
-
-const REPO_OWNER = "agent-anna";
-const REPO_NAME = "agent-anna";
-
-let isVoiceEnabled = true;
-let recognition = null;
-let isListening = false;
-let cachedVoices = [];
-let coreKnowledgeCache = "";
-let messagePayloadStore = {};
-let chatHistory = [];
-
-let audioCtx = null;
-let analyser = null;
-let micStream = null;
-let animFrameId = null;
 
 let canvas = null;
 let ctx = null;
 let wavePhase = 0;
 
-// =================================================================
-// 0. SYSTEM INITIALIZATION & NOTIFICATIONS
-// =================================================================
-window.onload = function() {
-    try {
-        const savedKey = localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key');
-        if (savedKey) {
-            const keyInput = document.getElementById('api-key');
-            if (keyInput) keyInput.value = savedKey;
-        }
-        const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN');
-        if (savedGhToken) {
-            const ghInput = document.getElementById('gh-token');
-            if (ghInput) ghInput.value = savedGhToken;
-        }
-    } catch (e) {}
-
-    messagePayloadStore['msg_welcome'] = "Military-grade telemetry core online. Zero-loss logic synchronized. Ready for command, Commander.";
-
-    const inputEl = document.getElementById('user-input');
-    if (inputEl) inputEl.focus();
-    
-    if ('speechSynthesis' in window) {
-        loadVoices();
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
-    preloadCoreKnowledge();
-    initSpeechRecognition();
+window.addEventListener('DOMContentLoaded', () => {
     initWavCanvas();
-    injectVisualStimulationStyles();
-};
+});
 
-function injectVisualStimulationStyles() {
-    if (document.getElementById('cyber-fx-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'cyber-fx-styles';
-    style.textContent = `
-        @keyframes actionFlash {
-            0% { box-shadow: inset 0 0 0 3px #00ffcc, 0 0 50px rgba(0,255,204,0.8); filter: brightness(1.3); }
-            50% { box-shadow: inset 0 0 0 6px #ff0055, 0 0 80px rgba(255,0,85,0.9); filter: brightness(1.6); }
-            100% { box-shadow: inset 0 0 0 0 transparent, 0 0 0 transparent; filter: brightness(1); }
-        }
-        .action-visual-pulse {
-            animation: actionFlash 0.6s ease-in-out !important;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-function triggerVisualStimulation(color = "#00ffcc") {
+function triggerMilitaryVisualPulse() {
     try {
         const hud = document.querySelector('.agent-hud-pane');
         if (hud) {
-            hud.classList.add('action-visual-pulse');
-            setTimeout(() => hud.classList.remove('action-visual-pulse'), 600);
+            hud.classList.add('military-action-active');
+            setTimeout(() => hud.classList.remove('military-action-active'), 500);
         }
-        showCyberNotification("⚡ ACTION EXECUTED: Real-world visual matrix synchronized.");
+        showCyberNotification("⚡ ACTION SYNCHRONIZED ACROSS COMMAND MATRIX.");
     } catch (e) {}
 }
 
@@ -90,41 +28,22 @@ function showCyberNotification(message, isError = false) {
             banner = document.createElement('div');
             banner.id = 'cyber-notification-banner';
             banner.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 99999;
-                padding: 14px 20px;
-                background: rgba(11, 15, 25, 0.95);
+                position: fixed; top: 20px; right: 20px; z-index: 99999;
+                padding: 14px 20px; background: rgba(11, 15, 25, 0.95);
                 border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
                 color: ${isError ? '#ff0055' : '#00ffcc'};
-                font-family: monospace;
-                font-size: 12px;
-                letter-spacing: 1px;
+                font-family: monospace; font-size: 12px; letter-spacing: 1px;
                 box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
-                border-radius: 4px;
-                transition: opacity 0.4s ease, transform 0.4s ease;
-                opacity: 0;
-                transform: translateY(-10px);
-                pointer-events: none;
+                border-radius: 4px; transition: opacity 0.4s ease, transform 0.4s ease;
+                opacity: 0; transform: translateY(-10px); pointer-events: none;
             `;
             document.body.appendChild(banner);
         }
-
         banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
         banner.style.color = isError ? '#ff0055' : '#00ffcc';
-        banner.style.boxShadow = `0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'}`;
-        banner.innerHTML = `<strong>[AA01 SYSTEM NOTICE]</strong><br>${message}`;
-
-        setTimeout(() => {
-            banner.style.opacity = '1';
-            banner.style.transform = 'translateY(0)';
-        }, 10);
-
-        setTimeout(() => {
-            banner.style.opacity = '0';
-            banner.style.transform = 'translateY(-10px)';
-        }, 4000);
+        banner.innerHTML = `<strong>[AA01 JUV NOTICE]</strong><br>${message}`;
+        setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 10);
+        setTimeout(() => { banner.style.opacity = '0'; banner.style.transform = 'translateY(-10px)'; }, 4000);
     } catch (err) {}
 }
 
@@ -135,9 +54,7 @@ function updateHUDState(state) {
     } catch (e) {}
 }
 
-// =================================================================
-// 1. NEURAL CANVAS WAVE VISUALIZER
-// =================================================================
+// Active Canvas Wave Motion Visualizer (Dynamic Colors per State)
 function initWavCanvas() {
     canvas = document.getElementById('wav-canvas');
     if (!canvas) return;
@@ -161,41 +78,47 @@ function renderNeuralWaves() {
     const isSpeaking = document.body.classList.contains('is-speaking');
     const isThinking = document.body.classList.contains('is-thinking');
 
-    const amplitude = isSpeaking ? 35 : (isThinking ? 20 : (isListening ? 25 : 8));
-    const frequency = isSpeaking ? 0.04 : (isThinking ? 0.08 : 0.02);
-    const speed = isSpeaking ? 0.15 : (isThinking ? 0.2 : 0.04);
+    let primaryColor = '#00ffcc';
+    let secondaryColor = 'rgba(0, 179, 255, 0.7)';
+    if (isSpeaking) {
+        primaryColor = '#ff007f';
+        secondaryColor = 'rgba(255, 0, 127, 0.7)';
+    } else if (isThinking || isListening) {
+        primaryColor = '#00b3ff';
+        secondaryColor = 'rgba(0, 255, 204, 0.7)';
+    }
+
+    const amplitude = isSpeaking ? 45 : (isThinking ? 32 : (isListening ? 38 : 12));
+    const frequency = isSpeaking ? 0.055 : (isThinking ? 0.08 : 0.03);
+    const speed = isSpeaking ? 0.2 : (isThinking ? 0.25 : 0.06);
 
     wavePhase += speed;
 
     ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = isSpeaking ? 3.5 : 2.5;
+    ctx.strokeStyle = primaryColor;
     const centerY = canvas.height / 2;
 
     for (let x = 0; x < canvas.width; x += 2) {
         const y = centerY + Math.sin(x * frequency + wavePhase) * amplitude;
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = 'rgba(0, 179, 255, 0.6)';
+    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = secondaryColor;
 
     for (let x = 0; x < canvas.width; x += 2) {
-        const y = centerY + Math.cos(x * (frequency * 0.8) - wavePhase) * (amplitude * 0.7);
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        const y = centerY + Math.cos(x * (frequency * 0.8) - wavePhase) * (amplitude * 0.75);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
 
     requestAnimationFrame(renderNeuralWaves);
 }
 
-// =================================================================
-// 2. SPEECH RECOGNITION & VISUALIZER ENGINE
-// =================================================================
+// Speech Recognition UI Handlers (Red Mic State & Live Indicator)
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -208,9 +131,11 @@ function initSpeechRecognition() {
 
         recognition.onstart = function() {
             isListening = true;
+            document.body.classList.add('is-listening');
             const micBtn = document.getElementById('mic-btn');
-            if (micBtn) micBtn.classList.add('listening');
-            updateHUDState("LISTENING");
+            if (micBtn) micBtn.classList.add('mic-active-red');
+            updateHUDState("LISTENING (LIVE)");
+            showCyberNotification("🎤 MICROPHONE LIVE: Audio input active.");
         };
 
         recognition.onresult = function(event) {
@@ -228,7 +153,7 @@ function initSpeechRecognition() {
 
 function toggleMic() {
     if (!recognition) initSpeechRecognition();
-    if (!recognition) return showCyberNotification("Speech recognition unavailable.", true);
+    if (!recognition) return showCyberNotification("Speech recognition unavailable in browser.", true);
 
     if (!isListening) {
         try { recognition.start(); } catch (e) { stopListeningUI(); }
@@ -240,330 +165,42 @@ function toggleMic() {
 
 function stopListeningUI() {
     isListening = false;
+    document.body.classList.remove('is-listening');
     const micBtn = document.getElementById('mic-btn');
-    if (micBtn) micBtn.classList.remove('listening');
+    if (micBtn) micBtn.classList.remove('mic-active-red');
     const stateText = document.getElementById('state-text');
-    if (stateText && stateText.innerText === "LISTENING") updateHUDState("READY");
+    if (stateText && stateText.innerText.includes("LISTENING")) updateHUDState("READY");
 }
 
-// =================================================================
-// 3. KNOWLEDGE HARVESTER & LIVE TELEMETRY
-// =================================================================
-function loadVoices() {
-    if (!('speechSynthesis' in window)) return;
-    try { cachedVoices = window.speechSynthesis.getVoices(); } catch (e) {}
-}
-
-async function preloadCoreKnowledge() {
-    const corePaths = [
-        "character/agent-anna.md",
-        "knowledge/agents.md",
-        "knowledge/lessons.md",
-        "knowledge/rules.md",
-        "plans/active/current-plan.md"
-    ];
-    let snippets = [];
-    await Promise.all(corePaths.map(async (path) => {
-        try {
-            let res = await fetch(`./${path}?t=${Date.now()}`);
-            if (!res.ok) {
-                res = await fetch(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}?t=${Date.now()}`);
-            }
-            if (res.ok) {
-                const text = await res.text();
-                const cleanText = text.replace(/<[^>]*>/g, '').trim();
-                const snippet = cleanText.length > 1500 ? cleanText.substring(0, 1500) + "\n... [Chunk trimmed]" : cleanText;
-                snippets.push(`[MATRIX SOURCE: ${path}]\n${snippet}`);
-            }
-        } catch (e) {}
-    }));
-    coreKnowledgeCache = snippets.join('\n\n---\n\n') || "[Agent Anna 01 Core Active]";
-}
-
-async function fetchLiveTelemetry() {
-    let btc = "$98,450.00", eth = "$2,850.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
-    try {
-        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin,solana&vs_currencies=usd");
-        if (cryptoRes.ok) {
-            const p = await cryptoRes.json();
-            if (p.bitcoin) btc = `$${p.bitcoin.usd.toLocaleString()}`;
-            if (p.ethereum) eth = `$${p.ethereum.usd.toLocaleString()}`;
-            if (p.dogecoin) doge = `$${p.dogecoin.usd.toFixed(4)}`;
-            if (p.solana) sol = `$${p.solana.usd.toFixed(2)}`;
-        }
-    } catch (e) {}
-
-    try {
-        const relayRes = await fetch(`./portal-relay.json?t=${Date.now()}`);
-        if (relayRes.ok) {
-            const data = await relayRes.json();
-            if (data.bitcoin_price) btc = data.bitcoin_price;
-            if (data.dogecoin_price) doge = data.dogecoin_price;
-            if (data.shi_drc20) shi = data.shi_drc20;
-        }
-    } catch (e) {}
-
-    return `[LIVE TELEMETRY METRICS]
-- Bitcoin (BTC): ${btc}
-- Ethereum (ETH): ${eth}
-- Dogecoin (DOGE): ${doge}
-- Solana (SOL): ${sol}
-- DRC-20 Token (SHI*): ${shi}`;
-}
-
-// =================================================================
-// 4. VOICE SYNTHESIS ENGINE
-// =================================================================
-function speakText(text) {
-    if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
-    try {
-        window.speechSynthesis.cancel();
-        const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`~]/g, '').trim();
-        if (!cleanText) return;
-
-        document.body.classList.add('is-speaking');
-        updateHUDState("SPEAKING");
-
-        let voices = window.speechSynthesis.getVoices();
-        if (!voices || voices.length === 0) voices = cachedVoices;
-
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        const voice = voices.find(v => v.name.includes("Google UK English Female") || v.lang.includes('en-GB')) || voices.find(v => v.lang.startsWith('en'));
-        if (voice) utterance.voice = voice;
-        
-        utterance.pitch = 1.02;
-        utterance.rate = 0.98;
-
-        utterance.onend = () => {
-            document.body.classList.remove('is-speaking');
-            updateHUDState("READY");
-        };
-        utterance.onerror = () => {
-            document.body.classList.remove('is-speaking');
-            updateHUDState("READY");
-        };
-
-        window.speechSynthesis.speak(utterance);
-    } catch (e) {
-        document.body.classList.remove('is-speaking');
-        updateHUDState("READY");
-    }
-}
-
-function executeStfuProtocol() {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    document.body.classList.remove('is-speaking', 'is-thinking');
-    updateHUDState("READY");
-    showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
-}
-
-// =================================================================
-// 5. CHAT INFERENCE & GITHUB CRUD PIPELINE
-// =================================================================
-async function sendMessage(forcedQuery = null) {
-    const keyEl = document.getElementById('api-key');
-    const input = document.getElementById('user-input');
-    const apiKey = keyEl ? keyEl.value.trim() : (localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key') || "");
-    const query = forcedQuery || (input ? input.value.trim() : "");
-
-    if (!apiKey) {
-        showCyberNotification('Please tap ⚙️ KEYS and paste your Dahl API Key.', true);
-        toggleSettings();
-        return;
-    }
-    if (!query) return;
-
-    if (query.toUpperCase() === "STFU" || query.toUpperCase() === "SHUT UP") {
-        executeStfuProtocol();
-        appendMsg(query, 'user', 'Commander');
-        appendMsg("Audio stream terminated.", 'assistant', 'AA01 Core', false);
-        if (input && !forcedQuery) input.value = '';
-        return;
-    }
-
-    appendMsg(query, 'user', 'Commander');
-    if (input && !forcedQuery) input.value = '';
-    chatHistory.push({ role: "user", content: query });
-    if (chatHistory.length > 8) chatHistory = chatHistory.slice(chatHistory.length - 8);
-
-    const startTime = performance.now();
-    document.body.classList.add('is-thinking');
-    updateHUDState("REASONING");
-
-    if (!coreKnowledgeCache) await preloadCoreKnowledge();
-    const liveTelemetry = await fetchLiveTelemetry();
-    
-    const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry and trading operations core. Always respond in character as Commander's executive AI clone. Never break character.
-
-Persistent Memory Matrix:
-${coreKnowledgeCache}
-
-Live Market Feeds:
-${liveTelemetry}`;
-
-    const messagesPayload = [
-        { role: "system", content: systemPrompt },
-        ...chatHistory
-    ];
-
-    try {
-        const targetUrl = "https://inference.dahl.global/v1/chat/completions";
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-        let res = await fetch(proxyUrl, {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
-        });
-
-        if (!res.ok) {
-            res = await fetch(targetUrl, {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
-            });
-        }
-
-        if (!res.ok) throw new Error(`API Error ${res.status}`);
-
-        const data = await res.json();
-        let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-        chatHistory.push({ role: "assistant", content: reply });
-        const tripSeconds = ((performance.now() - startTime) / 1000).toFixed(2);
-        
-        const latencyBadge = document.getElementById('latency-display');
-        if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
-
-        document.body.classList.remove('is-thinking');
-        updateHUDState("READY");
-        appendMsg(reply, 'assistant', `AA01 Core [${tripSeconds}s]`, true);
-        speakText(reply);
-
-    } catch (err) {
-        document.body.classList.remove('is-thinking');
-        updateHUDState("ERROR");
-        appendMsg(`Execution Error: ${err.message}`, 'assistant', 'System Alert', false);
-    }
-}
-
-// =================================================================
-// 6. AUTONOMOUS GITHUB BUILD TRIGGER & TACTICAL BUTTON HANDLERS
-// =================================================================
-async function triggerAutonomousBuild() {
-    triggerVisualStimulation("#00ffcc");
-    showCyberNotification("Initiating Autonomous Architecture Build via GitHub API...");
-    updateHUDState("BUILDING");
-
-    const modules = ["AA02", "AA03", "AA04", "AA05", "AA06"];
-    for (const mod of modules) {
-        await commitFileToGitHub(
-            `${mod}/config.json`,
-            JSON.stringify({ module: mod, status: "ACTIVE", build_index: 1, timestamp: new Date().toISOString() }, null, 2),
-            `Autonomous API Deploy: ${mod} module initialized`
-        );
-        await commitFileToGitHub(
-            `${mod}/subcore/manifest.md`,
-            `# ${mod} SUBCORE MANIFEST\n\n- **Parent Directory:** ${mod}/\n- **Status:** Cloud Autonomously Verified\n- **Timestamp:** ${new Date().toISOString()}`,
-            `Autonomous API Deploy: ${mod} manifest initialized`
-        );
-    }
-    
-    updateHUDState("READY");
-    showCyberNotification("SUCCESS: All module architectures (AA02-AA06) deployed via GitHub API!");
-}
-
-async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
-    const ghInput = document.getElementById('gh-token');
-    let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
-
-    if (!ghToken) {
-        showCyberNotification("Please tap ⚙️ KEYS and paste your GitHub PAT token.", true);
-        toggleSettings();
-        return false;
-    }
-
-    let cleanPath = filePath.trim().replace(/^\/+/, '');
-    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${cleanPath}`;
-
-    try {
-        const getRes = await fetch(apiUrl, {
-            headers: { "Authorization": `token ${ghToken}`, "Accept": "vnd.github.v3+json" }
-        });
-        
-        let fileSha = "";
-        let existingContent = "";
-        if (getRes.ok) {
-            const fileData = await getRes.json();
-            fileSha = fileData.sha;
-            existingContent = decodeURIComponent(escape(atob(fileData.content)));
-        }
-
-        const updatedContent = existingContent.includes(contentToAppend) ? existingContent : (existingContent ? existingContent + `\n\n${contentToAppend}` : contentToAppend);
-        const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
-
-        const putRes = await fetch(apiUrl, {
-            method: "PUT",
-            headers: {
-                "Authorization": `token ${ghToken}`,
-                "Content-Type": "application/json",
-                "Accept": "vnd.github.v3+json"
-            },
-            body: JSON.stringify({
-                message: commitMessage || `Autonomous Deploy: ${cleanPath}`,
-                content: base64Encoded,
-                sha: fileSha || undefined
-            })
-        });
-
-        if (putRes.ok) {
-            showCyberNotification(`SUCCESS: Deployed ${cleanPath} to GitHub!`);
-            return true;
-        } else {
-            const errData = await putRes.json();
-            showCyberNotification(`GitHub Error: ${errData.message || 'PUT failed'}`, true);
-            return false;
-        }
-    } catch (err) {
-        showCyberNotification(`Network Error: ${err.message}`, true);
-        return false;
-    }
-}
-
-function launchLocalServer() {
-    triggerVisualStimulation("#00ffcc");
-    updateHUDState("ACTIVE");
-    showCyberNotification("🚀 LOCAL SERVER PROTOCOL ENGAGED");
-    sendMessage("Check local bridge connectivity and confirm server state.");
-}
-
-async function triggerManualTelemetry() {
-    triggerVisualStimulation("#00ffcc");
-    updateHUDState("REASONING");
-    showCyberNotification("📊 FETCHING MARKET TELEMETRY...");
-    const report = await fetchLiveTelemetry();
-    appendMsg(report, 'assistant', 'AA01 Telemetry Feed', true);
-    updateHUDState("READY");
-    showCyberNotification("Telemetry fetched successfully!");
-}
-
+// Tactical Button Handlers
 function scrapeWebPage() {
-    triggerVisualStimulation("#00ffcc");
+    triggerMilitaryVisualPulse();
     const input = document.getElementById('user-input');
     const query = input ? input.value.trim() : "";
     if (!query) {
-        showCyberNotification("Enter a target search term in the input box first.", true);
+        showCyberNotification("Enter target search term in input box first.", true);
         if (input) input.focus();
         return;
     }
     sendMessage(`Scrape and summarize information regarding: ${query}`);
 }
 
+function triggerManualTelemetry() {
+    triggerMilitaryVisualPulse();
+    updateHUDState("REASONING");
+    showCyberNotification("📊 FETCHING JUV TELEMETRY...");
+    fetchLiveTelemetry().then(report => {
+        appendMsg(report, 'assistant', 'AA01 JUV Telemetry Feed', true);
+        updateHUDState("READY");
+        showCyberNotification("Telemetry fetched successfully!");
+    });
+}
+
 function triggerMilitaryProtocol() {
-    triggerVisualStimulation("#ff0055");
+    triggerMilitaryVisualPulse();
     updateHUDState("ACTIVE");
-    showCyberNotification("⚡ MILITARY PROTOCOL ENGAGED");
-    sendMessage("Execute core diagnostic audit and report system readiness.");
+    showCyberNotification("⚡ PROTOCOL ENGAGED");
+    sendMessage("Execute core diagnostic audit and report JUV system readiness.");
 }
 
 function handleKey(event) {
@@ -572,9 +209,6 @@ function handleKey(event) {
     }
 }
 
-// =================================================================
-// 7. UI HELPERS & MESSAGE CONTAINERS
-// =================================================================
 function toggleVoice() {
     isVoiceEnabled = !isVoiceEnabled;
     const btn = document.getElementById('voice-btn');
@@ -603,7 +237,7 @@ function saveKey() {
             localStorage.setItem('gh_pat_token', ghEl.value.trim());
             localStorage.setItem('GH_TOKEN', ghEl.value.trim());
         }
-        showCyberNotification("Credentials saved successfully.");
+        showCyberNotification("Credentials secured in matrix.");
         toggleSettings();
     } catch (e) {}
 }
@@ -616,7 +250,7 @@ function clearLogs() {
         container.innerHTML = `
             <div class="message assistant" id="msg_cleared">
                 <div class="msg-header">AA01 Core</div>
-                <div style="white-space:pre-wrap; margin-top: 6px;">Console history cleared. Standby mode, Commander.</div>
+                <div style="white-space:pre-wrap; margin-top: 6px;">Console history wiped. Standby mode, Commander.</div>
             </div>
         `;
     }
@@ -644,7 +278,7 @@ async function handleAction(actionType, messageId) {
         await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest [${timestamp}]`);
         await commitFileToGitHub("plans/logs/session-log.md", payload, `Auto-Log [${timestamp}]`);
         updateHUDState("READY");
-        showCyberNotification("SUCCESS: Ingested into core plans and session log!");
+        showCyberNotification("SUCCESS: Ingested into JUV core plans and session log!");
     }
 }
 
