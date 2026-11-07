@@ -336,7 +336,7 @@ ${liveTelemetry}`;
 }
 
 // =================================================================
-// 5. AUTONOMOUS GITHUB BUILD TRIGGER
+// 5. AUTONOMOUS GITHUB BUILD TRIGGER & TACTICAL BUTTON BINDINGS
 // =================================================================
 async function triggerAutonomousBuild() {
     showCyberNotification("Initiating Autonomous Architecture Build via GitHub API...");
@@ -414,6 +414,45 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     } catch (err) {
         showCyberNotification(`Network Error: ${err.message}`, true);
         return false;
+    }
+}
+
+// TACTICAL QUICK-LAUNCH BUTTON HANDLERS
+function launchLocalServer() {
+    updateHUDState("ACTIVE");
+    showCyberNotification("🚀 LOCAL SERVER PROTOCOL ENGAGED");
+    sendMessage("Check local bridge connectivity and confirm server state.");
+}
+
+async function triggerManualTelemetry() {
+    updateHUDState("REASONING");
+    showCyberNotification("📊 FETCHING MARKET TELEMETRY...");
+    const report = await fetchLiveTelemetry();
+    appendMsg(report, 'assistant', 'AA01 Telemetry Feed', true);
+    updateHUDState("READY");
+    showCyberNotification("Telemetry fetched successfully!");
+}
+
+function scrapeWebPage() {
+    const input = document.getElementById('user-input');
+    const query = input ? input.value.trim() : "";
+    if (!query) {
+        showCyberNotification("Enter a target search term in the input box first.", true);
+        if (input) input.focus();
+        return;
+    }
+    sendMessage(`Scrape and summarize information regarding: ${query}`);
+}
+
+function triggerMilitaryProtocol() {
+    updateHUDState("ACTIVE");
+    showCyberNotification("⚡ MILITARY PROTOCOL ENGAGED");
+    sendMessage("Execute core diagnostic audit and report system readiness.");
+}
+
+function handleKey(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
     }
 }
 
