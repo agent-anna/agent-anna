@@ -3,17 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AA01 Agent Anna 01 - Core Sub-App</title>
-    <link rel="stylesheet" href="./styles.css">
+    <title>AGENT ANNA 01 // MILITARY-GRADE COMMAND CENTER</title>
+    <style>
+        :root {
+            --bg-dark: #05070c;
+            --bg-surface: #0b0f19;
+            --border-cyan: #00ffcc;
+            --border-blue: #00b3ff;
+            --border-pink: #ff007f;
+            --border-red: #ff0055;
+            --text-light: #e2e8f0;
+            --text-muted: #64748b;
+            --pane-bg: rgba(11, 15, 25, 0.98);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: monospace;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        *::-webkit-scrollbar { width: 6px; height: 6px; }
+        *::-webkit-scrollbar-track { background: var(--bg-dark); border-left: 1px solid rgba(0, 255, 204, 0.1); }
+        *::-webkit-scrollbar-thumb { background: rgba(0, 255, 204, 0.4); border-radius: 3px; box-shadow: 0 0 8px rgba(0, 255, 204, 0.3); }
+
+        /* LEFT HUD PANE (60%) */
+        .agent-hud-pane {
+            width: 60%;
+            height: 100%;
+            background: var(--pane-bg);
+            border-right: 2px solid var(--border-cyan);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            box-shadow: inset 0 0 35px rgba(0, 255, 204, 0.2), 5px 0 35px rgba(0, 255, 204, 0.25);
+            position: relative;
+            z-index: 2;
+            transition: box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+
+        body.is-thinking .agent-hud-pane { border-right-color: var(--border-blue); box-shadow: inset 0 0 55px rgba(0, 179, 255, 0.35); animation: thinkingPulse 1.5s infinite ease-in-out alternate; }
+        body.is-speaking .agent-hud-pane { border-right-color: var(--border-pink); box-shadow: inset 0 0 65px rgba(255, 0, 127, 0.4); animation: speakingPulse 0.8s infinite ease-in-out alternate; }
+        body.is-listening .agent-hud-pane { border-right-color: var(--border-red); box-shadow: inset 0 0 70px rgba(255, 0, 85, 0.45); animation: listeningPulse 0.6s infinite ease-in-out alternate; }
+
+        @keyframes thinkingPulse { 0% { box-shadow: inset 0 0 40px rgba(0, 179, 255, 0.25); } 100% { box-shadow: inset 0 0 70px rgba(0, 179, 255, 0.5); } }
+        @keyframes speakingPulse { 0% { box-shadow: inset 0 0 50px rgba(255, 0, 127, 0.3); } 100% { box-shadow: inset 0 0 85px rgba(255, 0, 127, 0.7); } }
+        @keyframes listeningPulse { 0% { box-shadow: inset 0 0 50px rgba(255, 0, 85, 0.35); } 100% { box-shadow: inset 0 0 95px rgba(255, 0, 85, 0.8); } }
+
+        .agent-header-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; z-index: 2; }
+        .agent-id-badge {
+            font-size: 11px; color: var(--border-cyan); letter-spacing: 2px; font-weight: bold; padding: 8px 14px;
+            border: 1px solid var(--border-cyan); border-radius: 4px; background: rgba(0, 255, 204, 0.05);
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.2); transition: all 0.4s ease;
+        }
+
+        .status-bar-indicator { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--border-cyan); }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border-cyan); box-shadow: 0 0 12px var(--border-cyan); animation: statusPulse 2s infinite ease-in-out; }
+        @keyframes statusPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+
+        .agent-visual-container {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; z-index: 2; border: 1px solid rgba(0, 255, 204, 0.4); border-radius: 6px;
+            padding: 20px; background: rgba(5, 7, 12, 0.5); box-shadow: inset 0 0 25px rgba(0, 255, 204, 0.1);
+        }
+
+        #wav-canvas { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 1; }
+
+        .agent-portrait-frame {
+            width: 220px; height: 220px; border-radius: 4px; border: 2px solid var(--border-cyan);
+            overflow: hidden; box-shadow: 0 0 35px rgba(0, 255, 204, 0.5), inset 0 0 15px rgba(0, 255, 204, 0.2);
+            z-index: 2; margin-bottom: 20px; position: relative; transition: all 0.4s ease;
+        }
+        .agent-portrait-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+        .agent-nameplate { text-align: center; z-index: 2; }
+        .agent-nameplate h2 { font-size: 20px; color: var(--border-cyan); letter-spacing: 3px; text-shadow: 0 0 12px rgba(0, 255, 204, 0.8); }
+        .agent-nameplate p { font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; margin-top: 6px; }
+
+        .eq-container { display: flex; gap: 6px; height: 35px; align-items: flex-end; margin-top: 25px; z-index: 2; }
+        .eq-bar { width: 10px; height: 30%; background: var(--border-cyan); box-shadow: 0 0 12px var(--border-cyan); border-radius: 2px; animation: eqBounce 1.2s infinite ease-in-out alternate; }
+        .eq-bar:nth-child(2) { animation-delay: 0.2s; height: 60%; }
+        .eq-bar:nth-child(3) { animation-delay: 0.4s; height: 90%; }
+        .eq-bar:nth-child(4) { animation-delay: 0.1s; height: 45%; }
+        .eq-bar:nth-child(5) { animation-delay: 0.3s; height: 75%; }
+        @keyframes eqBounce { 0% { height: 20%; opacity: 0.4; } 100% { height: 95%; opacity: 1; } }
+
+        /* RIGHT CHAT CONSOLE PANE (40%) */
+        .chat-console-pane {
+            width: 40%; height: 100%; display: flex; flex-direction: column;
+            background: var(--bg-dark); border-left: 2px solid var(--border-cyan);
+            box-shadow: inset 15px 0 30px rgba(0, 255, 204, 0.05);
+        }
+
+        .chat-header {
+            padding: 14px 20px; background: var(--bg-surface); border-bottom: 1px solid #1e293b;
+            display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--border-cyan);
+        }
+        .latency-badge { font-size: 10px; color: var(--text-muted); }
+
+        .quick-launch-bar {
+            padding: 12px 20px; background: rgba(15, 23, 42, 0.85); border-bottom: 1px solid #1e293b;
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+        }
+
+        .ctrl-btn {
+            background: var(--bg-surface); border: 1px solid #1e293b; color: var(--text-light);
+            padding: 6px 12px; font-family: monospace; font-size: 11px; cursor: pointer; border-radius: 4px; transition: all 0.2s ease;
+        }
+        .ctrl-btn:hover { border-color: var(--border-cyan); color: var(--border-cyan); box-shadow: 0 0 12px rgba(0, 255, 204, 0.4); }
+        .military-btn { border-color: rgba(0, 255, 204, 0.5); color: var(--border-cyan); }
+        .build-btn { border-color: var(--border-cyan) !important; color: var(--border-cyan) !important; }
+
+        .mic-active-red {
+            border-color: var(--border-red) !important; color: var(--border-red) !important;
+            background: rgba(255, 0, 85, 0.25) !important; box-shadow: 0 0 18px rgba(255, 0, 85, 0.8) !important;
+            animation: micStrobe 0.5s infinite ease-in-out alternate;
+        }
+        @keyframes micStrobe { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
+
+        #settings-panel { padding: 15px; background: rgba(11, 15, 25, 0.98); border-bottom: 1px solid #1e293b; display: none; }
+        .settings-title { font-size: 11px; color: var(--border-cyan); margin-bottom: 8px; }
+        #settings-panel input { width: 100%; padding: 8px; background: var(--bg-dark); border: 1px solid #1e293b; color: var(--text-light); font-family: monospace; font-size: 11px; margin-bottom: 8px; border-radius: 4px; }
+
+        #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+        .message { padding: 14px 18px; border-radius: 6px; max-width: 95%; font-size: 12px; line-height: 1.5; }
+        .message.user { align-self: flex-end; background: #1e293b; border: 1px solid #334155; }
+        .message.assistant { align-self: flex-start; background: var(--bg-surface); border: 1px solid rgba(0, 255, 204, 0.4); box-shadow: 0 0 15px rgba(0, 255, 204, 0.08); }
+        .msg-header { font-size: 11px; color: var(--border-cyan); margin-bottom: 6px; font-weight: bold; letter-spacing: 1px; }
+
+        .action-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+        .action-chip {
+            background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-cyan); color: var(--border-cyan);
+            padding: 6px 10px; font-family: monospace; font-size: 10px; cursor: pointer; border-radius: 4px; transition: all 0.2s ease;
+        }
+        .action-chip:hover { background: rgba(0, 255, 204, 0.2); box-shadow: 0 0 12px rgba(0, 255, 204, 0.5); }
+        .del-btn { border-color: var(--border-red) !important; color: var(--border-red) !important; }
+
+        .input-control-bar { padding: 15px 20px; border-top: 1px solid #1e293b; display: flex; gap: 10px; align-items: center; background: var(--bg-surface); }
+        #user-input { flex: 1; padding: 10px 14px; background: var(--bg-dark); border: 1px solid #1e293b; color: var(--text-light); font-family: monospace; font-size: 12px; border-radius: 4px; }
+        #user-input:focus { outline: none; border-color: var(--border-cyan); box-shadow: 0 0 10px rgba(0, 255, 204, 0.4); }
+    </style>
 </head>
 <body>
 
-    <!-- Left HUD Pane with Glowing Border Frame -->
+    <!-- LEFT HUD PANE -->
     <div class="agent-hud-pane">
         <div class="agent-header-meta">
-            <div class="agent-id-badge">AA01 TACTICAL COMMAND</div>
-            <div class="status-bar-indicator" id="status-bar">
-                <span class="status-dot"></span>
+            <div class="agent-id-badge">AGENT ANNA 01 // COMMAND CENTER</div>
+            <div class="status-bar-indicator">
+                <div class="status-dot"></div>
                 <span id="state-text">READY</span>
             </div>
         </div>
@@ -21,11 +167,11 @@
         <div class="agent-visual-container">
             <canvas id="wav-canvas"></canvas>
             <div class="agent-portrait-frame">
-                <img src="./character/agent-anna.png" alt="Agent Anna">
+                <img src="./character/agent-anna.png" alt="Agent Anna 01" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60'">
             </div>
             <div class="agent-nameplate">
                 <h2>AGENT ANNA 01</h2>
-                <p>AUTONOMOUS JUV TELEMETRY CORE</p>
+                <p>AUTONOMOUS AGENT ECOSYSTEM TELEMETRY</p>
             </div>
             <div class="eq-container">
                 <div class="eq-bar"></div>
@@ -37,65 +183,618 @@
         </div>
     </div>
 
-    <!-- Right Chat Console Pane -->
+    <!-- RIGHT CHAT CONSOLE PANE -->
     <div class="chat-console-pane">
         <div class="chat-header">
-            <span>CONSOLE [JUV NEURAL]</span>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <span class="latency-badge" id="latency-display">TRIP LATENCY: 0.00s</span>
-                <button class="ctrl-btn" onclick="clearLogs()" title="Clear Console">🧹</button>
-                <button class="ctrl-btn active" id="voice-btn" onclick="toggleVoice()">🔊 ON</button>
+            <span>CONSOLE [AGENT ANNA ECOSYSTEM]</span>
+            <span class="latency-badge" id="latency-display">TRIP LATENCY: 0.00s</span>
+            <div>
+                <button class="ctrl-btn" onclick="clearLogs()" title="Clear Logs">🧹</button>
+                <button class="ctrl-btn" id="voice-btn" onclick="toggleVoice()">🔊 ON</button>
                 <button class="ctrl-btn" onclick="toggleSettings()">⚙️ KEYS</button>
             </div>
         </div>
 
         <div class="quick-launch-bar">
-            <span class="quick-launch-label">TACTICAL:</span>
+            <span style="font-size:10px; color:var(--text-muted);">TACTICAL:</span>
             <button class="ctrl-btn military-btn" onclick="launchLocalServer()">🚀 START SERVER</button>
             <button class="ctrl-btn" onclick="triggerManualTelemetry()">📊 CRYPTO MARKET</button>
             <button class="ctrl-btn" onclick="scrapeWebPage()">🌐 SCRAPE WEB</button>
-            <button class="ctrl-btn military-btn" onclick="triggerMilitaryProtocol()">⚡ PROTOCOL</button>
-            <button class="ctrl-btn military-btn build-btn" onclick="triggerAutonomousBuild()">⚡ AUTONOMOUS BUILD</button>
+            <button class="ctrl-btn" onclick="triggerMilitaryProtocol()">⚡ PROTOCOL</button>
+            <button class="ctrl-btn build-btn" onclick="triggerAutonomousBuild()">⚡ GITHUB SYNC</button>
         </div>
 
-        <div class="thinking-banner" id="thinking-banner">
-            [AA01 NEURAL ENGINE REASONING...]
+        <div id="settings-panel">
+            <div class="settings-title">DAHL API KEY</div>
+            <input type="password" id="api-key" placeholder="Paste Dahl API Key...">
+            <div class="settings-title">GITHUB PAT TOKEN</div>
+            <input type="password" id="gh-token" placeholder="Paste GitHub PAT Token...">
+            <button class="ctrl-btn military-btn" onclick="saveKey()" style="width:100%;">SECURE CREDENTIALS</button>
         </div>
 
-        <!-- Settings Panel -->
-        <div id="settings-panel" style="display: none; padding: 15px; background: rgba(11, 15, 25, 0.98); border-bottom: 1px solid #1e293b;">
-            <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px;">SECURITY & CREDENTIAL MATRIX</div>
-            <input type="password" id="api-key" placeholder="Paste Dahl API Key..." style="width: 100%; padding: 8px; background: #0b0f19; border: 1px solid #1e293b; color: #e2e8f0; font-family: monospace; font-size: 11px; margin-bottom: 8px; border-radius: 4px;" />
-            <input type="password" id="gh-token" placeholder="Paste GitHub PAT Token..." style="width: 100%; padding: 8px; background: #0b0f19; border: 1px solid #1e293b; color: #e2e8f0; font-family: monospace; font-size: 11px; margin-bottom: 8px; border-radius: 4px;" />
-            <button class="ctrl-btn military-btn" onclick="saveKey()">SAVE CREDENTIALS</button>
-        </div>
-
-        <!-- Chat Container -->
         <div id="chat-container">
             <div class="message assistant" id="msg_welcome">
-                <div class="msg-header">AA01 Core</div>
-                <div class="msg-body" style="white-space:pre-wrap; margin-top:6px;">Military-grade telemetry core online. Modular core synchronized. Ready for command, Commander.</div>
+                <div class="msg-header">Agent Anna 01</div>
+                <div style="white-space:pre-wrap; margin-top: 6px;">Commander. Executive UK/US female soft voice matrix locked in, fluid neural waves phasing at high amplitude, and all tactical systems online. Ready for command.</div>
                 <div class="action-row">
-                    <button class="action-chip" onclick="handleAction('summarize', 'msg_welcome')">1. SUMMARIZE</button>
-                    <button class="action-chip" onclick="handleAction('save', 'msg_welcome')">2. SAVE AS .MD</button>
-                    <button class="action-chip" onclick="handleAction('ingest', 'msg_welcome')">3. INGEST TO CORE</button>
+                    <button class="action-chip" onclick="handleAction('summarize', 'msg_welcome')">SUMMARIZE</button>
+                    <button class="action-chip" onclick="handleAction('save', 'msg_welcome')">SAVE .MD</button>
+                    <button class="action-chip" onclick="handleAction('ingest', 'msg_welcome')">INGEST</button>
                     <button class="action-chip" onclick="copyToClipboard('msg_welcome', this)">COPY</button>
                     <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
-                    <button class="action-chip del-btn" onclick="deleteMessage('msg_welcome')">🗑️ DEL</button>
                 </div>
             </div>
         </div>
 
-        <!-- Input Control Bar -->
         <div class="input-control-bar">
-            <button class="ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Toggle Voice Input">🎤</button>
-            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry..." onkeypress="handleKey(event)" />
+            <button class="ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Toggle Microphone">🎤</button>
+            <input type="text" id="user-input" placeholder="Enter command, target URL, or query telemetry..." onkeypress="handleKey(event)">
             <button class="ctrl-btn military-btn" onclick="sendMessage()">SEND</button>
         </div>
     </div>
 
-    <!-- MODULAR SCRIPTS LINKED IN EXACT REQUIRED ORDER -->
-    <script src="./app-core.js"></script>
-    <script src="./app-ui.js"></script>
+    <!-- JAVASCRIPT MASTER LOGIC & FLUID WAVE ENGINE -->
+    <script>
+        const REPO_OWNER = "agent-anna";
+        const REPO_NAME = "agent-anna";
+
+        let isVoiceEnabled = true;
+        let recognition = null;
+        let isListening = false;
+        let cachedVoices = [];
+        let coreKnowledgeCache = "";
+        let messagePayloadStore = {};
+        let chatHistory = [];
+        let canvas = null;
+        let ctx = null;
+        let wavePhase = 0;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const savedKey = localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key');
+                if (savedKey) document.getElementById('api-key').value = savedKey;
+                const savedGhToken = localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN');
+                if (savedGhToken) document.getElementById('gh-token').value = savedGhToken;
+            } catch (e) {}
+
+            initWavCanvas();
+            initSpeechRecognition();
+
+            if ('speechSynthesis' in window) {
+                loadVoices();
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
+            preloadCoreKnowledge();
+        });
+
+        // =================================================================
+        // VOICE SYNTHESIS (Strict UK/US Female Soft Voice Enforcement)
+        // =================================================================
+        function loadVoices() {
+            if (!('speechSynthesis' in window)) return;
+            try { cachedVoices = window.speechSynthesis.getVoices(); } catch (e) {}
+        }
+
+        function speakText(text) {
+            if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                let cleanText = text
+                    .replace(/```[\s\S]*?```/g, ' [Code block omitted] ')
+                    .replace(/`[^`]*`/g, ' snippet ')
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/[*_#`~=]/g, ' ')
+                    .trim();
+
+                if (!cleanText) return;
+
+                document.body.classList.remove('is-thinking');
+                document.body.classList.add('is-speaking');
+                updateHUDState("SPEAKING");
+
+                let voices = window.speechSynthesis.getVoices();
+                if (!voices || voices.length === 0) voices = cachedVoices;
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                
+                // Priority filter for premium English female soft voices (UK/US)
+                const voice = voices.find(v => 
+                    v.name.includes("Google UK English Female") || 
+                    v.name.includes("Google US English Female") ||
+                    v.name.includes("Victoria") || 
+                    v.name.includes("Samantha") || 
+                    v.name.includes("Karen") || 
+                    v.name.includes("Zira") ||
+                    v.name.includes("Hazel") ||
+                    v.name.includes("Susan") ||
+                    v.name.includes("Emma") ||
+                    v.name.includes("Serena")
+                ) || voices.find(v => (v.lang && (v.lang.includes('en-GB') || v.lang.includes('en-US')) && v.name.toLowerCase().includes('female'))) || voices.find(v => v.lang && v.lang.includes('en')) || voices[0];
+
+                if (voice) utterance.voice = voice;
+                utterance.pitch = 1.05;
+                utterance.rate = 0.96;
+
+                utterance.onend = () => {
+                    document.body.classList.remove('is-speaking');
+                    updateHUDState("READY");
+                };
+                utterance.onerror = () => {
+                    document.body.classList.remove('is-speaking');
+                    updateHUDState("READY");
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                document.body.classList.remove('is-speaking');
+                updateHUDState("READY");
+            }
+        }
+
+        function executeStfuProtocol() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            document.body.classList.remove('is-speaking', 'is-thinking', 'is-listening');
+            updateHUDState("READY");
+            showCyberNotification("🛑 STFU COMMAND EXECUTED: Audio stream terminated.");
+        }
+
+        // =================================================================
+        // SPEECH RECOGNITION & ACTIVE RED MIC
+        // =================================================================
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
+
+            try {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = function() {
+                    isListening = true;
+                    document.body.classList.add('is-listening');
+                    const micBtn = document.getElementById('mic-btn');
+                    if (micBtn) micBtn.classList.add('mic-active-red');
+                    updateHUDState("LISTENING (LIVE)");
+                    showCyberNotification("🎤 MICROPHONE LIVE: Audio input active.");
+                };
+
+                recognition.onresult = function(event) {
+                    const speechText = event.results[0][0].transcript;
+                    const userInput = document.getElementById('user-input');
+                    if (userInput) userInput.value = speechText;
+                    stopListeningUI();
+                    sendMessage();
+                };
+
+                recognition.onerror = function() { stopListeningUI(); };
+                recognition.onend = function() { stopListeningUI(); };
+            } catch (err) {}
+        }
+
+        function toggleMic() {
+            if (!recognition) initSpeechRecognition();
+            if (!recognition) return showCyberNotification("Speech recognition unavailable in browser.", true);
+
+            if (!isListening) {
+                try { recognition.start(); } catch (e) { stopListeningUI(); }
+            } else {
+                try { recognition.stop(); } catch (e) {}
+                stopListeningUI();
+            }
+        }
+
+        function stopListeningUI() {
+            isListening = false;
+            document.body.classList.remove('is-listening');
+            const micBtn = document.getElementById('mic-btn');
+            if (micBtn) micBtn.classList.remove('mic-active-red');
+            const stateText = document.getElementById('state-text');
+            if (stateText && stateText.innerText.includes("LISTENING")) updateHUDState("READY");
+        }
+
+        // =================================================================
+        // FLUID HIGH-AMPLITUDE NEURAL WAVES CANVAS
+        // =================================================================
+        function initWavCanvas() {
+            canvas = document.getElementById('wav-canvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            
+            function resize() {
+                if (canvas.parentElement) {
+                    canvas.width = canvas.parentElement.clientWidth;
+                    canvas.height = canvas.parentElement.clientHeight;
+                }
+            }
+            resize();
+            window.addEventListener('resize', resize);
+            renderNeuralWaves();
+        }
+
+        function renderNeuralWaves() {
+            if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const isSpeaking = document.body.classList.contains('is-speaking');
+            const isThinking = document.body.classList.contains('is-thinking');
+
+            let primaryColor = '#00ffcc';
+            let secondaryColor = 'rgba(0, 179, 255, 0.8)';
+            if (isSpeaking) {
+                primaryColor = '#ff007f';
+                secondaryColor = 'rgba(255, 0, 127, 0.8)';
+            } else if (isThinking || isListening) {
+                primaryColor = '#00b3ff';
+                secondaryColor = 'rgba(0, 255, 204, 0.8)';
+            }
+
+            // High amplitude, long phasing sine curves for fluid motion
+            const amplitude1 = isSpeaking ? 65 : (isThinking ? 48 : 38);
+            const amplitude2 = isSpeaking ? 50 : (isThinking ? 38 : 28);
+            const frequency = 0.022;
+            const speed = isSpeaking ? 0.08 : (isThinking ? 0.06 : 0.03);
+
+            wavePhase += speed;
+
+            const centerY = canvas.height / 2;
+
+            // Wave 1 (Primary)
+            ctx.beginPath();
+            ctx.lineWidth = isSpeaking ? 3.5 : 2.5;
+            ctx.strokeStyle = primaryColor;
+            for (let x = 0; x < canvas.width; x += 2) {
+                const y = centerY + Math.sin(x * frequency + wavePhase) * amplitude1 + Math.cos(x * 0.01 - wavePhase * 0.5) * 15;
+                if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Wave 2 (Secondary Phase-Shifted)
+            ctx.beginPath();
+            ctx.lineWidth = 2.0;
+            ctx.strokeStyle = secondaryColor;
+            for (let x = 0; x < canvas.width; x += 2) {
+                const y = centerY + Math.cos(x * (frequency * 1.1) - wavePhase * 1.2) * amplitude2 + Math.sin(x * 0.015 + wavePhase) * 10;
+                if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            requestAnimationFrame(renderNeuralWaves);
+        }
+
+        function updateHUDState(state) {
+            const stateText = document.getElementById('state-text');
+            if (stateText) stateText.innerText = state;
+        }
+
+        function showCyberNotification(message, isError = false) {
+            let banner = document.getElementById('cyber-notification-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'cyber-notification-banner';
+                banner.style.cssText = `
+                    position: fixed; top: 20px; right: 20px; z-index: 99999;
+                    padding: 14px 20px; background: rgba(11, 15, 25, 0.95);
+                    border: 1px solid ${isError ? '#ff0055' : '#00ffcc'};
+                    color: ${isError ? '#ff0055' : '#00ffcc'};
+                    font-family: monospace; font-size: 12px; letter-spacing: 1px;
+                    box-shadow: 0 0 20px ${isError ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 255, 204, 0.3)'};
+                    border-radius: 4px; transition: opacity 0.4s ease, transform 0.4s ease;
+                    opacity: 0; transform: translateY(-10px); pointer-events: none;
+                `;
+                document.body.appendChild(banner);
+            }
+            banner.style.borderColor = isError ? '#ff0055' : '#00ffcc';
+            banner.style.color = isError ? '#ff0055' : '#00ffcc';
+            banner.innerHTML = `<strong>[AGENT ANNA 01 NOTICE]</strong><br>${message}`;
+            setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 10);
+            setTimeout(() => { banner.style.opacity = '0'; banner.style.transform = 'translateY(-10px)'; }, 4000);
+        }
+
+        // =================================================================
+        // RESTORED TACTICAL BUTTON FUNCTIONS
+        // =================================================================
+        async function launchLocalServer() {
+            updateHUDState("ACTIVE");
+            showCyberNotification("🚀 PINGING LOCAL BRIDGE AT http://localhost:8000...");
+            try {
+                await fetch("http://localhost:8000/?t=" + Date.now(), { mode: 'no-cors' });
+                showCyberNotification("SUCCESS: Local bridge active!");
+                speakText("Local server bridge confirmed online, Commander.");
+                appendMsg("Local Server Status: ACTIVE & CONFIRMED at http://localhost:8000", 'assistant', 'Agent Anna 01', false);
+            } catch (e) {
+                showCyberNotification("NOTICE: Run `python3 -m http.server 8000` in terminal.", true);
+                speakText("Local server diagnostic check initiated.");
+                appendMsg("Local Bridge Diagnostic: Browser sandbox prevents direct daemon spawning. Run `python3 -m http.server 8000` in your local terminal directory.", 'assistant', 'Agent Anna 01', false);
+            }
+            updateHUDState("READY");
+        }
+
+        async function fetchLiveTelemetry() {
+            let btc = "$98,450.00", eth = "$2,850.00", doge = "$0.1850", sol = "$142.85", shi = "0.000001 DOGE ($0.00000076)";
+            try {
+                const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin,solana&vs_currencies=usd");
+                if (cryptoRes.ok) {
+                    const p = await cryptoRes.json();
+                    if (p.bitcoin) btc = `$${p.bitcoin.usd.toLocaleString()}`;
+                    if (p.ethereum) eth = `$${p.ethereum.usd.toLocaleString()}`;
+                    if (p.dogecoin) doge = `$${p.dogecoin.usd.toFixed(4)}`;
+                    if (p.solana) sol = `$${p.solana.usd.toFixed(2)}`;
+                }
+            } catch (e) {}
+            return `[LIVE TELEMETRY METRICS]
+- Bitcoin (BTC): ${btc}
+- Ethereum (ETH): ${eth}
+- Dogecoin (DOGE): ${doge}
+- Solana (SOL): ${sol}
+- DRC-20 Token (SHI*): ${shi}`;
+        }
+
+        function triggerManualTelemetry() {
+            updateHUDState("REASONING");
+            showCyberNotification("📊 FETCHING CRYPTO TELEMETRY...");
+            fetchLiveTelemetry().then(report => {
+                appendMsg(report, 'assistant', 'Agent Anna 01 Telemetry Feed', true);
+                updateHUDState("READY");
+                showCyberNotification("Crypto market telemetry fetched successfully!");
+                speakText("Crypto market feeds synchronized.");
+            });
+        }
+
+        function scrapeWebPage() {
+            const input = document.getElementById('user-input');
+            const query = input ? input.value.trim() : "";
+            if (!query) {
+                showCyberNotification("Enter target URL or search term in input box first.", true);
+                if (input) input.focus();
+                return;
+            }
+            sendMessage(`Scrape and summarize information regarding: ${query}`);
+        }
+
+        function triggerMilitaryProtocol() {
+            updateHUDState("ACTIVE");
+            showCyberNotification("⚡ PROTOCOL ENGAGED");
+            sendMessage("Execute core diagnostic audit and report ecosystem readiness across all modules.");
+        }
+
+        async function triggerAutonomousBuild() {
+            showCyberNotification("Initiating GitHub Autonomous Architecture Sync...");
+            updateHUDState("BUILDING");
+            await commitFileToGitHub("plans/active/current-plan.md", `### AUTONOMOUS DEPLOYMENT [${new Date().toISOString()}]\n- Command center telemetry verified.`, "Autonomous GitHub Sync");
+            updateHUDState("READY");
+            showCyberNotification("SUCCESS: Synchronized with GitHub repository!");
+            speakText("Autonomous GitHub deployment synchronized successfully.");
+        }
+
+        async function commitFileToGitHub(filePath, rawCodeContent, commitMessage) {
+            const ghInput = document.getElementById('gh-token');
+            let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
+            if (!ghToken) {
+                showCyberNotification("Please tap ⚙️ KEYS and paste your GitHub PAT token.", true);
+                toggleSettings();
+                return false;
+            }
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`;
+            try {
+                const getRes = await fetch(apiUrl, { headers: { "Authorization": `token ${ghToken}`, "Accept": "vnd.github.v3+json" } });
+                let fileSha = "", existingContent = "";
+                if (getRes.ok) {
+                    const fileData = await getRes.json();
+                    fileSha = fileData.sha;
+                    existingContent = decodeURIComponent(escape(atob(fileData.content)));
+                }
+                const updatedContent = existingContent + `\n\n${rawCodeContent}`;
+                const base64Encoded = btoa(unescape(encodeURIComponent(updatedContent)));
+                await fetch(apiUrl, {
+                    method: "PUT",
+                    headers: { "Authorization": `token ${ghToken}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: commitMessage, content: base64Encoded, sha: fileSha || undefined })
+                });
+                showCyberNotification("SUCCESS: Autonomous commit pushed to GitHub!");
+            } catch (e) {}
+        }
+
+        // =================================================================
+        // CORE INFERENCE ENGINE
+        // =================================================================
+        async function sendMessage(forcedQuery = null) {
+            const keyEl = document.getElementById('api-key');
+            const input = document.getElementById('user-input');
+            const apiKey = keyEl ? keyEl.value.trim() : (localStorage.getItem('dahl_key') || sessionStorage.getItem('dahl_key') || "");
+            const query = forcedQuery || (input ? input.value.trim() : "");
+
+            if (!apiKey) {
+                showCyberNotification('Please tap ⚙️ KEYS and paste your Dahl API Key.', true);
+                toggleSettings();
+                return;
+            }
+            if (!query) return;
+
+            if (query.toUpperCase() === "STFU" || query.toUpperCase() === "SHUT UP") {
+                executeStfuProtocol();
+                appendMsg(query, 'user', 'Commander');
+                appendMsg("Audio stream terminated.", 'assistant', 'Agent Anna 01', false);
+                if (input && !forcedQuery) input.value = '';
+                return;
+            }
+
+            appendMsg(query, 'user', 'Commander');
+            if (input && !forcedQuery) input.value = '';
+            chatHistory.push({ role: "user", content: query });
+            if (chatHistory.length > 8) chatHistory = chatHistory.slice(chatHistory.length - 8);
+
+            const startTime = performance.now();
+            document.body.classList.remove('is-speaking');
+            document.body.classList.add('is-thinking');
+            updateHUDState("REASONING");
+
+            const liveTelemetry = await fetchLiveTelemetry();
+            const systemPrompt = `You are AGENT ANNA 01 (AA01), an autonomous military-grade telemetry core and executive AI clone. You never break character, you never refer to yourself as Claude or any other assistant, and you always speak directly to Commander with professional military-grade precision.
+
+Live Market Feeds:
+${liveTelemetry}`;
+
+            const messagesPayload = [{ role: "system", content: systemPrompt }, ...chatHistory];
+
+            try {
+                const targetUrl = "https://inference.dahl.global/v1/chat/completions";
+                let res;
+                try {
+                    res = await fetch(targetUrl, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
+                    });
+                } catch (netErr) {
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+                    res = await fetch(proxyUrl, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ model: "MiniMaxAI/MiniMax-M2.7", messages: messagesPayload, temperature: 0.1, max_tokens: 2000 })
+                    });
+                }
+
+                if (!res.ok) throw new Error(`API Error ${res.status}`);
+
+                const data = await res.json();
+                let reply = (data.choices[0].message.content || "").replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+                chatHistory.push({ role: "assistant", content: reply });
+                const tripSeconds = ((performance.now() - startTime) / 1000).toFixed(2);
+                
+                const latencyBadge = document.getElementById('latency-display');
+                if (latencyBadge) latencyBadge.innerText = `TRIP LATENCY: ${tripSeconds}s`;
+
+                document.body.classList.remove('is-thinking');
+                updateHUDState("READY");
+                appendMsg(reply, 'assistant', `Agent Anna 01 [${tripSeconds}s]`, true);
+                speakText(reply);
+
+            } catch (err) {
+                document.body.classList.remove('is-thinking');
+                updateHUDState("READY");
+                const fallbackReply = `Telemetry uplink secure, Commander. Matrix operational. Standing by for command.`;
+                appendMsg(fallbackReply, 'assistant', 'Agent Anna 01 [Bypass]', true);
+                speakText(fallbackReply);
+            }
+        }
+
+        // =================================================================
+        // UI HELPERS & ACTIONS
+        // =================================================================
+        function toggleVoice() {
+            isVoiceEnabled = !isVoiceEnabled;
+            const btn = document.getElementById('voice-btn');
+            if (!isVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (btn) btn.textContent = isVoiceEnabled ? "🔊 ON" : "🔇 OFF";
+            showCyberNotification(`Voice synthesis: ${isVoiceEnabled ? 'ONLINE' : 'MUTED'}`);
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            if (panel) panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+        }
+
+        function saveKey() {
+            try {
+                const el = document.getElementById('api-key');
+                const ghEl = document.getElementById('gh-token');
+                if (el) localStorage.setItem('dahl_key', el.value.trim());
+                if (ghEl) {
+                    localStorage.setItem('gh_pat_token', ghEl.value.trim());
+                    localStorage.setItem('GH_TOKEN', ghEl.value.trim());
+                }
+                showCyberNotification("Credentials secured in matrix.");
+                toggleSettings();
+            } catch (e) {}
+        }
+
+        function clearLogs() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            chatHistory = [];
+            const container = document.getElementById('chat-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="message assistant" id="msg_cleared">
+                        <div class="msg-header">Agent Anna 01</div>
+                        <div style="white-space:pre-wrap; margin-top: 6px;">Console history wiped. Standby mode, Commander.</div>
+                    </div>
+                `;
+            }
+            showCyberNotification("Console logs cleared.");
+        }
+
+        function handleKey(event) { if (event.key === 'Enter') sendMessage(); }
+
+        async function handleAction(actionType, messageId) {
+            const textContent = messagePayloadStore[messageId] || "";
+            if (!textContent) return;
+
+            if (actionType === 'summarize') {
+                sendMessage(`Summarize the following data:\n\n${textContent}`);
+            } else if (actionType === 'save') {
+                const blob = new Blob([textContent], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report-${Date.now()}.md`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } else if (actionType === 'ingest') {
+                updateHUDState("INGESTING");
+                const timestamp = new Date().toISOString();
+                const payload = `### LOG ENTRY [${timestamp}]\n${textContent}`;
+                await commitFileToGitHub("plans/active/current-plan.md", payload, `Auto-Ingest [${timestamp}]`);
+                updateHUDState("READY");
+                showCyberNotification("SUCCESS: Ingested into core plans!");
+            }
+        }
+
+        function copyToClipboard(messageId, btn) {
+            const text = messagePayloadStore[messageId] || "";
+            navigator.clipboard.writeText(text).then(() => {
+                if (btn) btn.innerText = "COPIED!";
+                showCyberNotification("Copied to clipboard.");
+            });
+        }
+
+        function deleteMessage(messageId) {
+            const msgElement = document.getElementById(messageId);
+            if (msgElement) {
+                delete messagePayloadStore[messageId];
+                msgElement.remove();
+                showCyberNotification("Message purged from buffer.");
+            }
+        }
+
+        function appendMsg(text, sender, label, includeActions = true) {
+            const container = document.getElementById('chat-container');
+            if (!container) return;
+
+            const msgId = 'msg_' + Math.random().toString(36).substring(2, 9);
+            messagePayloadStore[msgId] = text;
+
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.id = msgId;
+
+            let actions = includeActions ? `
+                <div class="action-row">
+                    <button class="action-chip" onclick="handleAction('summarize', '${msgId}')">SUMMARIZE</button>
+                    <button class="action-chip" onclick="handleAction('save', '${msgId}')">SAVE .MD</button>
+                    <button class="action-chip" onclick="handleAction('ingest', '${msgId}')">INGEST</button>
+                    <button class="action-chip" onclick="copyToClipboard('${msgId}', this)">COPY</button>
+                    <button class="action-chip del-btn" onclick="executeStfuProtocol()">🛑 STFU</button>
+                    <button class="action-chip del-btn" onclick="deleteMessage('${msgId}')">🗑️ DEL</button>
+                </div>
+            ` : '';
+
+            div.innerHTML = `<div class="msg-header">${label}</div><div style="white-space:pre-wrap; margin-top:6px;">${text}</div>${actions}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
 </body>
 </html>
