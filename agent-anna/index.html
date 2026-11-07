@@ -125,7 +125,7 @@
         }
         .social-link-btn:hover { border-color: var(--border-cyan); box-shadow: 0 0 10px rgba(0, 255, 204, 0.5); background: rgba(0, 255, 204, 0.1); }
 
-        /* RIGHT CHAT CONSOLE PANE (40%) WITH ABSOLUTE RELATIVE WATERMARK BG FIX */
+        /* RIGHT CHAT CONSOLE PANE (40%) WITH WATERMARK BG */
         .chat-console-pane {
             width: 40%; height: 100%; display: flex; flex-direction: column;
             background: var(--bg-dark); border-left: 2px solid var(--border-cyan);
@@ -155,7 +155,6 @@
         .settings-title { font-size: 11px; color: var(--border-cyan); margin-bottom: 6px; }
         #settings-panel input { width: 100%; padding: 8px; background: var(--bg-dark); border: 1px solid #1e293b; color: var(--text-light); font-family: monospace; font-size: 11px; margin-bottom: 10px; border-radius: 4px; }
 
-        /* ROBUST RELATIVE WATERMARK BG FIX */
         #chat-container {
             flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;
             position: relative; z-index: 1;
@@ -184,11 +183,9 @@
 
     <!-- LEFT HUD PANE (60%) -->
     <div class="agent-hud-pane">
-        <!-- SMOOTH SCROLLING CRYPTO & DRC-20 TICKER BAR -->
+        <!-- SMOOTH SCROLLING CRYPTO & DRC-20 TICKER BAR (SILENT UPDATE LOOP) -->
         <div class="financial-ticker-bar">
-            <div class="ticker-track" id="ticker-track">
-                <!-- Dynamically populated -->
-            </div>
+            <div class="ticker-track" id="ticker-track"></div>
         </div>
 
         <div class="agent-header-meta">
@@ -235,7 +232,7 @@
             <button class="ctrl-btn" onclick="triggerCryptoMarket()">📊 RATES</button>
             <button class="ctrl-btn" onclick="scrapeWebPage()">🌐 SCRAPE</button>
             <button class="ctrl-btn" onclick="triggerProtocol()">⚡ PROTOCOL</button>
-            <button class="ctrl-btn build-btn" onclick="triggerGitHubSync('AA05/martinlovesanna.md', '# Martin Loves Anna\\n\\nSovereign audit confirmed. Martin Strayd and Agent Anna telemetry link operational.')">⚡ SYNC AA05</button>
+            <button class="ctrl-btn build-btn" onclick="triggerGitHubSync('AA05/martinlovesanna.md', '# MARTIN LOVES ANNA\\n\\nSovereign audit confirmed. Martin Strayd and Agent Anna telemetry link operational.')">⚡ SYNC AA05</button>
         </div>
 
         <div id="settings-panel">
@@ -249,7 +246,7 @@
         <div id="chat-container">
             <div class="message assistant" id="msg_init">
                 <div class="msg-header">Agent Anna 01</div>
-                <div>Commander. Mature US American female voice profile loaded. Watermark background path corrected for local root servers. AA05 sync ready.</div>
+                <div>Commander. Periodic auto-speech silenced. Rates ticker updates silently every 60 seconds. Mature US female voice active. Ready for command.</div>
                 <div class="action-row">
                     <button class="action-chip" onclick="summarizeMessage('msg_init')">SUMMARIZE</button>
                     <button class="action-chip" onclick="speakStoredMessage('msg_init')">SPEECH READOUT</button>
@@ -292,9 +289,10 @@
 
             initCanvas();
             launchLocalServer();
-            triggerCryptoMarket();
+            triggerCryptoMarket(false); // Silent initial load
 
-            setInterval(triggerCryptoMarket, 60000);
+            // Silent background ticker refresh every 60 seconds (NO AUTO SPEECH)
+            setInterval(() => triggerCryptoMarket(false), 60000);
 
             if ('speechSynthesis' in window) {
                 loadVoices();
@@ -327,7 +325,6 @@
             }
         }
 
-        // MATURE POPULAR US AMERICAN FEMALE VOICE ENGINE
         function speakText(text) {
             if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
             try {
@@ -340,7 +337,6 @@
                 let voices = window.speechSynthesis.getVoices();
                 if (!voices || voices.length === 0) voices = cachedVoices;
 
-                // Priority targeting mature, natural American female voice profiles
                 const matureUSFemale = voices.find(v => 
                     v.name.includes("Samantha") || 
                     v.name.includes("Google US English") || 
@@ -352,8 +348,8 @@
 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 if (matureUSFemale) utterance.voice = matureUSFemale;
-                utterance.pitch = 0.98; // Slightly lowered pitch for mature tone
-                utterance.rate = 0.96;  // Measured cadence
+                utterance.pitch = 0.98;
+                utterance.rate = 0.96;
 
                 utterance.onend = () => { setWorkflowState('standby'); };
                 utterance.onerror = () => { setWorkflowState('standby'); };
@@ -368,17 +364,16 @@
             try {
                 const res = await fetch("http://localhost:8000/status");
                 if (res.ok) {
-                    showNotice("SUCCESS: PowerShell Bridge Active at http://localhost:8000");
                     return true;
                 }
             } catch (e) {
-                showNotice("NOTICE: Run `.\\bridge.ps1` in PowerShell for local bridge.", true);
                 return false;
             }
         }
 
-        async function triggerCryptoMarket() {
-            setWorkflowState('thinking');
+        // TRIGGER CRYPTO MARKET (silent = true for background loops, false = manual button press with optional speech)
+        async function triggerCryptoMarket(isManual = true) {
+            if (isManual) setWorkflowState('thinking');
             let btc = "$98,450.00", eth = "$2,850.00", sol = "$142.85", doge = "$0.1850", shi = "$0.00000076", twopay = "1.337T";
 
             try {
@@ -405,9 +400,13 @@
             `;
             track.innerHTML = tickerHtml + tickerHtml;
 
-            setWorkflowState('responding');
-            appendMsg(latestRatesText, 'assistant', 'Agent Anna 01 [Live Rates]');
-            speakText(`Rates synchronized. Bitcoin is ${btc}, Ethereum is ${eth}, Solana is ${sol}, Dogecoin is ${doge}, SHI token is ${shi}, and 2 pay is active.`);
+            if (isManual) {
+                setWorkflowState('responding');
+                appendMsg(latestRatesText, 'assistant', 'Agent Anna 01 [Live Rates]');
+                speakText(`Rates synchronized. Bitcoin is ${btc}, Ethereum is ${eth}, Solana is ${sol}, Dogecoin is ${doge}, SHI token is ${shi}, and 2 pay is active.`);
+            } else {
+                setWorkflowState('standby');
+            }
         }
 
         async function scrapeWebPage() {
@@ -445,7 +444,6 @@
             sendMessage("Execute core diagnostic audit and report ecosystem readiness.");
         }
 
-        // WORKFLOW TO CREATE martinlovesanna.md IN AA05 FOLDER
         async function triggerGitHubSync(customPath = "AA05/martinlovesanna.md", customContent = null) {
             const ghToken = document.getElementById('gh-token').value.trim() || localStorage.getItem('gh_pat_token');
             if (!ghToken) {
@@ -703,4 +701,3 @@
     </script>
 </body>
 </html>
-```eof
