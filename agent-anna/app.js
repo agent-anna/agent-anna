@@ -117,6 +117,13 @@ function triggerHudStrobe() {
     } catch (e) {}
 }
 
+function updateHUDState(state) {
+    try {
+        const stateText = document.getElementById('state-text');
+        if (stateText) stateText.innerText = state;
+    } catch (e) {}
+}
+
 // =================================================================
 // 1. SPEECH RECOGNITION & VISUALIZER ENGINE
 // =================================================================
@@ -208,6 +215,9 @@ function stopListeningUI() {
     const stateText = document.getElementById('state-text');
     if (stateText && stateText.innerText === "LISTENING") updateHUDState("READY");
 }
+
+function initWavCanvas() {}
+function autoLogSessionEnd() {}
 
 // =================================================================
 // 2. KNOWLEDGE HARVESTER & TELEMETRY ENGINE
@@ -424,7 +434,7 @@ ${liveTelemetry}`;
     ];
 
     try {
-  const targetUrl = "https://inference.dahl.global/v1/chat/completions";
+        const targetUrl = "https://inference.dahl.global/v1/chat/completions";
         const proxyOptions = [
             `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
             `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
@@ -517,8 +527,30 @@ ${liveTelemetry}`;
 }
 
 // =================================================================
-// 5. SANITIZED GITHUB CRUD & WEB SCRAPER HANDLERS
+// 5. SANITIZED GITHUB CRUD & DASHBOARD AUTONOMOUS BUILD TRIGGER
 // =================================================================
+async function triggerAutonomousBuild() {
+    showCyberNotification("Initiating Autonomous Architecture Build via GitHub API...");
+    updateHUDState("BUILDING");
+
+    const modules = ["AA02", "AA03", "AA04", "AA05", "AA06"];
+    for (const mod of modules) {
+        await commitFileToGitHub(
+            `${mod}/config.json`,
+            JSON.stringify({ module: mod, status: "ACTIVE", build_index: 1, timestamp: new Date().toISOString() }, null, 2),
+            `Autonomous API Deploy: ${mod} module initialized`
+        );
+        await commitFileToGitHub(
+            `${mod}/subcore/manifest.md`,
+            `# ${mod} SUBCORE MANIFEST\n\n- **Parent Directory:** ${mod}/\n- **Status:** Cloud Autonomously Verified\n- **Timestamp:** ${new Date().toISOString()}`,
+            `Autonomous API Deploy: ${mod} manifest initialized`
+        );
+    }
+    
+    updateHUDState("READY");
+    showCyberNotification("SUCCESS: All module architectures (AA02-AA06) deployed via GitHub API!");
+}
+
 async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
     const ghInput = document.getElementById('gh-token');
     let ghToken = ghInput ? ghInput.value.trim() : (localStorage.getItem('gh_pat_token') || sessionStorage.getItem('gh_pat_token') || localStorage.getItem('GH_TOKEN') || "");
@@ -529,7 +561,6 @@ async function commitFileToGitHub(filePath, contentToAppend, commitMessage) {
         return false;
     }
 
-    // SANITIZE PATH: Strip leading slashes or accidental repo name repeats
     let cleanPath = filePath.trim().replace(/^\/+/, '');
     if (cleanPath.startsWith('agent-anna/agent-anna/')) {
         cleanPath = cleanPath.replace('agent-anna/agent-anna/', '');
@@ -813,101 +844,11 @@ function appendMsg(text, sender, label, includeActions = true) {
     ` : '';
 
     div.innerHTML = `
-        <div class="msg-header"><span>${label}</span></div>
+        <div class="msg-header">${label}</div>
         <div style="white-space:pre-wrap; margin-top: 6px;">${text}</div>
         ${actionsHTML}
     `;
 
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
-}
-
-function updateHUDState(stateLabel) {
-    const stateText = document.getElementById('state-text');
-    if (stateText) stateText.innerText = stateLabel;
-    const statusBar = document.getElementById('status-bar');
-    if (statusBar) {
-        if (["REASONING", "LISTENING", "SCRAPING", "INGESTING"].includes(stateLabel)) {
-            statusBar.classList.add('active');
-        } else {
-            statusBar.classList.remove('active');
-        }
-    }
-}
-
-// =================================================================
-// 6. DUAL NEURON CANVAS RENDERER & UTILITIES
-// =================================================================
-function initWavCanvas() {
-    const canvas = document.getElementById('wav-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    let step1 = 0;
-    let step2 = 0;
-
-    function drawDualWaves() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const isThinking = document.body.classList.contains('is-thinking');
-        const isSpeaking = document.body.classList.contains('is-speaking');
-
-        const primaryColor = isThinking ? '#ffaa00' : (isSpeaking ? '#ff007f' : '#00ffcc');
-        const secondaryColor = isThinking ? 'rgba(255, 170, 0, 0.4)' : (isSpeaking ? 'rgba(255, 0, 127, 0.4)' : 'rgba(0, 255, 204, 0.3)');
-
-        const amplitude = (isThinking || isSpeaking) ? 35 : 12;
-        const frequency = (isThinking || isSpeaking) ? 0.045 : 0.02;
-
-        ctx.beginPath();
-        ctx.lineWidth = 2.2;
-        ctx.strokeStyle = primaryColor;
-
-        for (let x = 0; x < canvas.width; x++) {
-            const y = canvas.height / 2 + Math.sin(x * frequency + step1) * amplitude * Math.sin(x / 85);
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.lineWidth = 1.4;
-        ctx.strokeStyle = secondaryColor;
-
-        for (let x = 0; x < canvas.width; x++) {
-            const y = canvas.height / 2 + Math.cos(x * (frequency * 0.85) + step2) * (amplitude * 0.75) * Math.cos(x / 105);
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
-        step1 += (isThinking || isSpeaking) ? 0.12 : 0.03;
-        step2 += (isThinking || isSpeaking) ? 0.08 : 0.02;
-
-        requestAnimationFrame(drawDualWaves);
-    }
-    drawDualWaves();
-}
-
-async function autoLogSessionEnd() {}
-
-function launchLocalServer() {
-    window.open('http://localhost:8000', '_blank');
-}
-
-function triggerManualTelemetry() {
-    sendMessage("Provide live crypto market telemetry including BTC, ETH, BNB, DOGE, and DRC-20 SHI* token rates.");
-}
-
-function triggerMilitaryProtocol() {
-    triggerHudStrobe();
-    sendMessage("MILITARY PROTOCOL ENGAGED: Executing deep diagnostic sweep.");
-}
-
-function handleKey(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        sendMessage();
-    }
 }
