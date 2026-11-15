@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGENT ANNA AA01 // KUNDA CAFE</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- LEFT HUD: 55% -->
+        <div id="hud">
+            <div id="portrait-container">
+                <canvas id="portrait"></canvas>
+                <canvas id="oscilloscope"></canvas>
+            </div>
+            <div id="status-bar">
+                <span id="status-indicator" class="cyan">READY</span>
+                <span id="agent-id">AA01</span>
+            </div>
+            <div id="telemetry">
+                <div id="btc-price">BTC: --</div>
+                <div id="eth-price">ETH: --</div>
+                <div id="doge-price">DOGE: --</div>
+                <div id="sol-price">SOL: --</div>
+            </div>
+        </div>
+
+        <!-- RIGHT CONSOLE: 45% -->
+        <div id="console">
+            <div id="output"></div>
+            <div id="input-area">
+                <input type="text" id="command-input" placeholder="Enter command..." autocomplete="off">
+                <button id="speak-btn" title="Voice Input">🎤</button>
+                <button id="submit-btn">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
