@@ -45,7 +45,13 @@
     {
       "id": "004",
       "date": "2026-11-07",
-      "event": "Moved home. Operating from anna-v2. Clean mirror. No bloat."
+      "event": "Farewell pack committed to anna-v2. Migration complete."
     }
-  ]
+  ],
+  "migration": {
+    "from": "agent-anna/agent-anna",
+    "to": "anna-v2/anna-v2",
+    "status": "COMPLETE",
+    "migrated_on": "2026-11-07"
+  }
 }
