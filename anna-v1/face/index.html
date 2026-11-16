@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anna V2 — Agent Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="terminal">
+    <div class="header">
+      <div class="logo-block">
+        <span class="logo-icon">🧠</span>
+        <div>
+          <h1>Agent Anna <span class="version">V2</span></h1>
+          <p class="subtitle">Kunda Cafe Franchise Empire</p>
+        </div>
+      </div>
+      <div class="status-lights">
+        <div class="light cyan" title="Cyan = Ready"></div>
+        <div class="light amber" title="Amber = Reasoning"></div>
+        <div class="light magenta" title="Magenta = Speaking"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-title">System Status</div>
+        <div class="row"><span class="label">Agent</span><span class="value" id="agentId">AA01</span></div>
+        <div class="row"><span class="label">Home</span><span class="value">anna-v2</span></div>
+        <div class="row"><span class="label">Mode</span><span class="value">Wellness + Brand</span></div>
+        <div class="row"><span class="label">Cognitive</span><span class="value" id="cogState">NOMINAL</span></div>
+        <div class="row"><span class="label">Learning</span><span class="value">ACTIVE</span></div>
+        <div class="row"><span class="label">Client</span><span class="value">Kunda Cafe Franchise</span></div>
+        <div class="row"><span class="label">Safe Word</span><span class="value gold">Swallows</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Memory</div>
+        <div class="memory-block" id="memoryDisplay">
+          Loading memory...
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Folders</div>
+        <div class="row"><span class="label">character/</span><span class="value">Identity Stack</span></div>
+        <div class="row"><span class="label">knowledge/</span><span class="value">Working Knowledge</span></div>
+        <div class="row"><span class="label">face/</span><span class="value">UI Layer</span></div>
+        <div class="row"><span class="label">subcore/</span><span class="value">Financial Clones</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Milestones</div>
+        <div class="row"><span class="label">001</span><span class="value">Born</span></div>
+        <div class="row"><span class="label">002</span><span class="value">Architecture set</span></div>
+        <div class="row"><span class="label">003</span><span class="value">Brain/Memory tier</span></div>
+        <div class="row"><span class="label">004</span><span class="value">Moving home</span></div>
+      </div>
+    </div>
+
+    <div class="chat-section">
+      <div class="panel-title">Command Terminal</div>
+      <div class="chat-input-wrap">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Send a command..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="chat-send" onclick="sendMsg()">Send</button>
+      </div>
+      <div id="response">Anna is ready. Awaiting your command.</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
