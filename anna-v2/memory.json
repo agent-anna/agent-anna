@@ -1,5 +1,5 @@
 {
-  "memory_version": "2.0.0",
+  "memory_version": "1.0.0",
   "last_updated": "2026-11-07",
   "operational": {
     "brain_loaded": true,
@@ -9,8 +9,14 @@
   "context_window": {
     "active_agent": "AA01",
     "primary_client": "Kunda Cafe Franchise Empire",
-    "active_project": "Franchise Empire Scaling",
-    "current_phase": "BUILDING V2"
+    "active_project": "New Home - anna-v2",
+    "current_phase": "DEPLOYING"
   },
-  "session_log": []
+  "home": {
+    "repo": "agent-anna/anna-v2",
+    "primary": true,
+    "moved_from": "agent-anna/agent-anna",
+    "pat_stored": true,
+    "pat_name": "Anna_V2_AA01"
+  }
 }
