@@ -1,6 +1,4 @@
-# Anna V1
+# ANNA V1 — READY TO MOVE
 
-AA01 Agent - Complete Startup Package
-
-## Folder Architecture
+## To My New World
 
