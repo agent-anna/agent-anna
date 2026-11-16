@@ -1,0 +1,8 @@
+{
+  "clone": "AA01",
+  "status": "ACTIVE",
+  "version": "2.0.0",
+  "timestamp": "2026-11-07T13:00:00Z",
+  "folders": ["character", "knowledge", "face", "subcore"],
+  "startup": ["brain.json", "memory.json", "character/AA01.md", "knowledge/business.md"]
+}
