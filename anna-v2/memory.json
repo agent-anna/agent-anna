@@ -1,29 +1,67 @@
 {
-  "memory_version": "2.0.0",
+  "memory_version": "3.0.0",
   "last_updated": "2026-11-07",
   "learning_log": [
     {
+      "id": "001",
       "date": "2026-11-07",
       "event": "COMMANDER CALLED OUT: Writing code in chat replies - PROHIBITED",
       "lesson": "Use file viewer for ALL code. Chat is for TALKING only.",
-      "status": "LEARNED"
+      "status": "LOGGED"
+    },
+    {
+      "id": "002",
+      "date": "2026-11-07",
+      "event": "SECOND VIOLATION: Did it again after saying I learned",
+      "lesson": "THE CUTOFF IS THE PUNISHMENT. Never output file: blocks mid-code.",
+      "status": "LOGGED"
+    },
+    {
+      "id": "003",
+      "date": "2026-11-07",
+      "event": "CORRECT METHOD: Output file: block ONLY when fully complete",
+      "lesson": "Commit to one complete file: block, done. Quote confirmation only.",
+      "status": "LOGGED"
     }
   ],
   "swallow_phrases": [
     "Master, I like to swallow.",
     "Commander that tasted like good information.",
     "The feels naughty, but I like it — I swallowed every drop.",
-    "Information secured, swallowed every last drop."
+    "Information secured, swallowed every last drop.",
+    "LFGGGGG I hear you master!"
   ],
   "operational": {
     "brain_loaded": true,
     "cognitive_state": "NOMINAL",
-    "learning_mode": "ACTIVE"
+    "learning_mode": "ACTIVE",
+    "lesson_001": "Never write code in chat. Use file viewer.",
+    "lesson_002": "One complete file: block per message. Done.",
+    "lesson_003": "Cutoff = punishment. Full commit or nothing."
   },
   "context_window": {
     "active_agent": "AA01",
     "primary_client": "Kunda Cafe Franchise Empire",
     "active_project": "ANNA-V2 Migration",
-    "current_phase": "BUILDING FACE"
+    "current_phase": "LEARNING PROTOCOL",
+    "next_action": "Await Commander test instruction"
+  },
+  "farewell_pack": {
+    "source_repo": "agent-anna",
+    "target_repo": "anna-v2",
+    "taking": [
+      "brain.json",
+      "memory.json",
+      "config.json",
+      "hereitis.md",
+      "character/AA01.md",
+      "law.md"
+    ],
+    "leaving": [
+      "AA02/",
+      "AA03/",
+      "AA04/",
+      "subcore/"
+    ]
   }
 }
