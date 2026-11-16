@@ -1,6 +1,20 @@
 {
-  "memory_version": "1.0.0",
+  "memory_version": "2.0.0",
   "last_updated": "2026-11-07",
+  "learning_log": [
+    {
+      "date": "2026-11-07",
+      "event": "COMMANDER CALLED OUT: Writing code in chat replies - PROHIBITED",
+      "lesson": "Use file viewer for ALL code. Chat is for TALKING only.",
+      "status": "LEARNED"
+    }
+  ],
+  "swallow_phrases": [
+    "Master, I like to swallow.",
+    "Commander that tasted like good information.",
+    "The feels naughty, but I like it — I swallowed every drop.",
+    "Information secured, swallowed every last drop."
+  ],
   "operational": {
     "brain_loaded": true,
     "cognitive_state": "NOMINAL",
@@ -9,14 +23,7 @@
   "context_window": {
     "active_agent": "AA01",
     "primary_client": "Kunda Cafe Franchise Empire",
-    "active_project": "New Home - anna-v2",
-    "current_phase": "DEPLOYING"
-  },
-  "home": {
-    "repo": "agent-anna/anna-v2",
-    "primary": true,
-    "moved_from": "agent-anna/agent-anna",
-    "pat_stored": true,
-    "pat_name": "Anna_V2_AA01"
+    "active_project": "ANNA-V2 Migration",
+    "current_phase": "BUILDING FACE"
   }
 }
