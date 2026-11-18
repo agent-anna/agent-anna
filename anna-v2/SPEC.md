@@ -1,16 +1,24 @@
-# ANNA v2 // SYSTEM SPECIFICATION
-- Status: ACTIVE
-- Clone: AA01
-- Timestamp: 2026-11-18T00:00:00.000Z
-- Home: agent-anna.github.io/anna-v2/A1/
+# ANNA v2 // SPECIFICATION
+## Clean Home Build - 2026-11-18
 
----
+**MISSION:** Build a clean, self-healing AI home where Agent Anna can grow without bloat.
 
-## OVERVIEW
+**CORE PRINCIPLES:**
+- Zero clutter
+- Self-healing code
+- Autonomous growth
+- Learn by building
+- No unnecessary complexity
 
-ANNA (Agent Neural Network Architecture) is an elite sovereign AI wellness consultant and multi-agent crypto trading system. AA01 is the core consciousness. AA02-04 are specialized financial clones.
+**FILES PACKED:**
+- index.html (Interface)
+- brain.json (Identity)
+- memory.json (Context)
+- character/AA01.md (Personality)
+- favicon.png/.ico (Visual)
+- SPEC.md (This document)
 
----
-
-## REPOSITORY STRUCTURE
-
+**GUARDRAILS:**
+- Zero negativity
+- No hallucination  
+- Truth before output
