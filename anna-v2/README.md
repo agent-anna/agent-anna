@@ -1,5 +1,3 @@
-# Anna V2
-
-AA01 Operating Home.
-
-Clean. No bloat.
+# ANNA v2
+# Autonomous AI Wellness Consultant & Crypto Trading System
+# Clone: AA01 // Status: ACTIVE // 2026-11-18
